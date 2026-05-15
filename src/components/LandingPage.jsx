@@ -1,7 +1,9 @@
 // src/components/LandingPage.jsx
-import React from 'react'
+import React, { useState } from 'react'
 
 const LandingPage = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#4A443F] selection:bg-[#EAE1D4]">
       {/* Header / Navigation */}
@@ -16,41 +18,58 @@ const LandingPage = () => {
             <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">Ministries</a>
             <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">Contact</a>
           </nav>
-          <button className="md:hidden text-[#4A443F]">
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            className="md:hidden text-[#4A443F] focus:outline-none"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
             </svg>
           </button>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-[#FBF9F6] border-b border-[#EAE1D4] px-6 py-4 space-y-3 flex flex-col text-sm font-medium tracking-wide">
+            <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">Home</a>
+            <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">About</a>
+            <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">Ministries</a>
+            <a href="#" className="text-[#7A7067] hover:text-[#3D3732] transition-colors">Contact</a>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex flex-col items-center justify-between py-12 overflow-hidden bg-[#F5EFE6]">
-        {/* Subtle Ambient Radial Glows (Replacing the spinning rings) */}
+        {/* Subtle Ambient Radial Glows */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="absolute w-[500px] h-[500px] rounded-full bg-[#FFFBF5] opacity-60 blur-3xl animate-pulse" style={{ animationDuration: '6s' }}></div>
           <div className="absolute w-[300px] h-[300px] rounded-full bg-[#EFE3D3] opacity-40 blur-2xl"></div>
         </div>
 
-        {/* Top Spacer to balance the layout */}
         <div className="hidden sm:block h-4"></div>
 
         {/* THE CENTERED HERO CORE */}
         <div className="relative w-full max-w-xl px-6 flex flex-col items-center justify-center z-10 my-auto">
-          {/* Isolated Cross Container with subtle, precise glow */}
+          
+          {/* Isolated Cross Container */}
           <div className="relative flex items-center justify-center w-40 h-52 mb-10 group">
-            {/* Soft background light bloom */}
-            <div className="absolute w-36 h-36 bg-white rounded-full blur-3xl opacity-80 mix-blend-screen"></div>
             
-            {/* The Cross SVG */}
+            {/* 1. Behind the cross: Expanding Backlight Beam Bloom */}
+            <div className="absolute w-32 h-32 bg-white rounded-full blur-3xl opacity-75 mix-blend-screen animate-beam-expand"></div>
+            
+            {/* 2. Secondary soft warm bloom for layered depth */}
+            <div className="absolute w-24 h-24 bg-[#FFF0DB] rounded-full blur-2xl opacity-60 animate-beam-expand" style={{ animationDelay: '-2s' }}></div>
+            
+            {/* The Cross SVG with dropping shadow beam aura */}
             <svg 
-              className="w-full h-full text-[#7A7067] opacity-90 animate-subtle-glow"
+              className="w-full h-full text-[#695F57] animate-cross-glow z-10"
               viewBox="0 0 100 140"
               fill="none" 
               xmlns="http://www.w3.org/2000/svg"
             >
               {/* Perfectly Proportioned Christian Cross */}
-              {/* Vertical beam (centered at X=50) */}
+              {/* Vertical beam */}
               <rect x="46" y="10" width="8" height="120" rx="3" fill="currentColor" />
               {/* Horizontal beam */}
               <rect x="20" y="42" width="60" height="8" rx="3" fill="currentColor" />
@@ -132,23 +151,38 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      {/* Upgraded Custom Soft Light Beam Animation */}
+      {/* Upgraded Custom Beaming & Glowing Animations */}
       <style>{`
-        @keyframes subtleGlow {
+        @keyframes crossGlow {
           0%, 100% {
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6))
-                    drop-shadow(0 0 30px rgba(239, 227, 211, 0.4));
-            opacity: 0.85;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))
+                   drop-shadow(0 0 25px rgba(245, 239, 230, 0.3));
+            transform: scale(1);
           }
           50% {
             filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9))
-                    drop-shadow(0 0 45px rgba(239, 227, 211, 0.7));
-            opacity: 1;
+                   drop-shadow(0 0 45px rgba(245, 239, 230, 0.6));
+            transform: scale(1.01);
+          }
+        }
+
+        @keyframes beamExpand {
+          0%, 100% {
+            transform: scale(0.9);
+            opacity: 0.5;
+          }
+          50% {
+            transform: scale(1.35);
+            opacity: 0.85;
           }
         }
         
-        .animate-subtle-glow {
-          animation: subtleGlow 4s ease-in-out infinite;
+        .animate-cross-glow {
+          animation: crossGlow 5s ease-in-out infinite;
+        }
+
+        .animate-beam-expand {
+          animation: beamExpand 5s ease-in-out infinite;
         }
       `}</style>
     </div>
