@@ -5,173 +5,128 @@ const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#FBF9F6] text-[#4A443F] selection:bg-[#EAE1D4]">
+    <div className="min-h-screen bg-[#F7F4EF] text-[#403A35] overflow-hidden">
       
-      {/* Header / Navigation */}
-      <header className="bg-[#FBF9F6]/80 backdrop-blur-md sticky top-0 z-50 border-b border-[#EAE1D4]">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+      {/* Floating Top Bar */}
+      <div className="fixed top-0 left-0 w-full z-50 pointer-events-none">
+        <div className="flex justify-between items-center px-6 md:px-10 py-6">
           
-          <div className="text-xl font-medium tracking-wide text-[#3D3732]">
-            Gereja Baptis Tawau
+          {/* Church Name */}
+          <div className="pointer-events-auto">
+            <h1 className="text-sm md:text-base tracking-[0.25em] uppercase font-light text-[#5B534D]">
+              Gereja Baptis Tawau
+            </h1>
           </div>
 
-          <nav className="hidden md:flex space-x-8 text-sm font-medium tracking-wide">
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
+          {/* Floating Menu Button */}
+          <div className="pointer-events-auto">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="w-12 h-12 rounded-full bg-white/40 backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.06)] flex items-center justify-center hover:scale-105 transition-all duration-300"
+              aria-label="Toggle Menu"
             >
-              Home
-            </a>
+              <div className="relative w-5 h-5">
+                <span
+                  className={`absolute left-0 top-1 w-5 h-[1.5px] bg-[#4A443F] transition-all duration-300 ${
+                    isMenuOpen ? 'rotate-45 top-2' : ''
+                  }`}
+                ></span>
 
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              About
-            </a>
-
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              Ministries
-            </a>
-
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              Contact
-            </a>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-[#4A443F] focus:outline-none"
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMenuOpen}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d={
-                  isMenuOpen
-                    ? 'M6 18L18 6M6 6l12 12'
-                    : 'M4 6h16M4 12h16M4 18h16'
-                }
-              />
-            </svg>
-          </button>
+                <span
+                  className={`absolute left-0 top-3 w-5 h-[1.5px] bg-[#4A443F] transition-all duration-300 ${
+                    isMenuOpen ? '-rotate-45 top-2' : ''
+                  }`}
+                ></span>
+              </div>
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Mobile Dropdown Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-[#FBF9F6] border-b border-[#EAE1D4] px-6 py-4 space-y-3 flex flex-col text-sm font-medium tracking-wide">
-            
+      {/* Fullscreen Overlay Menu */}
+      <div
+        className={`fixed inset-0 z-40 bg-[#F7F4EF]/95 backdrop-blur-2xl transition-all duration-500 flex items-center justify-center ${
+          isMenuOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex flex-col items-center space-y-8">
+          
+          {['Home', 'About', 'Ministries', 'Contact'].map((item) => (
             <a
+              key={item}
               href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-4xl md:text-6xl font-light tracking-wide text-[#4A443F] hover:opacity-50 transition-opacity duration-300"
             >
-              Home
+              {item}
             </a>
+          ))}
+        </div>
+      </div>
 
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              About
-            </a>
-
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              Ministries
-            </a>
-
-            <a
-              href="#"
-              className="text-[#7A7067] hover:text-[#3D3732] transition-colors"
-            >
-              Contact
-            </a>
-          </div>
-        )}
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex flex-col items-center justify-between py-12 overflow-hidden bg-[#F5EFE6]">
+      {/* HERO */}
+      <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
         
-        {/* Ambient Background Glow */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        {/* Background Ambient Layers */}
+        <div className="absolute inset-0">
           
-          <div
-            className="absolute w-[500px] h-[500px] rounded-full bg-[#FFFBF5] opacity-60 blur-3xl animate-pulse"
-            style={{ animationDuration: '6s' }}
-          ></div>
+          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-white opacity-70 blur-[140px]"></div>
 
-          <div className="absolute w-[300px] h-[300px] rounded-full bg-[#EFE3D3] opacity-40 blur-2xl"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-[#EFE2D2] opacity-50 blur-[120px]"></div>
+
+          <div className="absolute top-[20%] left-[-10%] w-[400px] h-[400px] bg-[#F3E9DD] opacity-40 blur-[100px]"></div>
         </div>
 
-        <div className="hidden sm:block h-4"></div>
-
-        {/* Hero Core */}
-        <div className="relative w-full max-w-xl px-6 flex flex-col items-center justify-center z-10 my-auto">
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center">
           
-          {/* Church Logo Container */}
-          <div className="relative flex items-center justify-center w-[340px] sm:w-[420px] mb-10 group">
+          {/* Logo */}
+          <div className="relative mb-16 animate-float">
             
-            {/* Main Glow */}
-            <div className="absolute w-56 h-56 bg-white rounded-full blur-3xl opacity-40 animate-beam-expand"></div>
+            {/* Glow */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-72 h-72 rounded-full bg-white opacity-40 blur-[90px]"></div>
+            </div>
 
-            {/* Secondary Warm Glow */}
-            <div
-              className="absolute w-40 h-40 bg-[#FFF0DB] rounded-full blur-2xl opacity-30 animate-beam-expand"
-              style={{ animationDelay: '-2s' }}
-            ></div>
-
-            {/* Logo */}
+            {/* Logo Image */}
             <img
               src="/logo.png"
               alt="Gereja Baptis Tawau Logo"
-              className="relative z-10 w-full h-auto object-contain animate-logo-glow"
+              className="relative z-10 w-[320px] md:w-[460px] object-contain drop-shadow-[0_10px_40px_rgba(255,255,255,0.25)]"
             />
           </div>
 
-          {/* Verse */}
-          <div className="text-center space-y-4">
+          {/* Main Scripture */}
+          <div className="space-y-8">
             
-            <p className="text-[#5C544E] text-lg md:text-xl font-serif italic tracking-wide leading-relaxed max-w-md mx-auto">
-              "Come to me, all you who are weary and burdened, and I will give you rest."
+            <p className="max-w-4xl mx-auto text-3xl md:text-6xl leading-[1.2] font-serif font-light tracking-tight text-[#4A443F]">
+              “Come to me, all you who are weary and burdened,
+              and I will give you rest.”
             </p>
 
-            <p className="text-[#9C8E82] text-xs uppercase tracking-widest font-medium">
-              — Matthew 11:28
+            <p className="text-xs md:text-sm tracking-[0.4em] uppercase text-[#9B8E83]">
+              Matthew 11:28
             </p>
           </div>
 
-          {/* CTA Button */}
-          <div className="mt-8">
-            <button className="bg-[#4A443F] text-[#FBF9F6] px-8 py-3 rounded-md text-sm font-medium tracking-wide hover:bg-[#5C544E] transition-all shadow-sm hover:shadow-md">
-              Member Portal
+          {/* CTA */}
+          <div className="mt-14">
+            <button className="group relative overflow-hidden px-10 py-4 rounded-full bg-[#4A443F] text-[#F7F4EF] text-sm tracking-[0.2em] uppercase font-medium hover:scale-[1.03] transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
+              
+              <span className="relative z-10">Member Portal</span>
+
+              <div className="absolute inset-0 bg-[#5A524C] translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
           </div>
         </div>
 
-        {/* Bottom Arrow */}
-        <div className="text-[#9C8E82] animate-bounce opacity-40 mt-4">
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-30 animate-bounce">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
+            className="w-5 h-5 text-[#7A7067]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -187,134 +142,108 @@ const LandingPage = () => {
       </section>
 
       {/* Welcome Section */}
-      <section className="py-24 bg-[#FBF9F6]">
-        <div className="container mx-auto px-6 max-w-3xl text-center space-y-6">
+      <section className="relative py-32 px-6">
+        <div className="max-w-4xl mx-auto text-center">
           
-          <h2 className="text-2xl md:text-3xl font-normal tracking-wide text-[#3D3732]">
-            A Place for Everyone
+          <p className="text-sm uppercase tracking-[0.3em] text-[#A09184] mb-8">
+            Welcome
+          </p>
+
+          <h2 className="text-4xl md:text-6xl font-serif font-light leading-[1.25] text-[#403A35]">
+            A community of faith,
+            hope, and love.
           </h2>
 
-          <div className="w-12 h-[1px] bg-[#CDBCAC] mx-auto"></div>
-
-          <p className="text-[#7A7067] text-base md:text-lg font-light leading-relaxed max-w-2xl mx-auto">
-            Gereja Baptis Tawau is a community of faith, hope, and love.
-            Whether you're seeking spiritual growth, fellowship, or a place to
-            serve, you are welcome here. Join us as we worship, learn, and grow
-            together in Christ.
+          <p className="mt-10 text-lg md:text-xl leading-[2] text-[#756B63] font-light max-w-3xl mx-auto">
+            Whether you are seeking spiritual growth, fellowship,
+            healing, or simply a place to belong, you are welcome here.
+            Together we worship, learn, serve, and grow in Christ.
           </p>
         </div>
       </section>
 
-      {/* Quick Info Cards */}
-      <section className="py-20 bg-[#F5EFE6]/50 border-t border-b border-[#EAE1D4]">
-        <div className="container mx-auto px-6">
+      {/* Modern Info Cards */}
+      <section className="relative pb-32 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          {/* Card 1 */}
+          <div className="group bg-white/50 backdrop-blur-md rounded-[2rem] p-10 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
             
-            <div className="bg-[#FBF9F6] p-8 rounded-lg border border-[#EAE1D4]/60 text-center space-y-3 shadow-sm">
-              <div className="text-[#9C8E82] text-xl font-light">⛪</div>
+            <div className="text-3xl mb-8 opacity-70">⛪</div>
 
-              <h3 className="text-md font-medium tracking-wide text-[#3D3732]">
-                Worship Services
-              </h3>
+            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
+              Worship
+            </h3>
 
-              <p className="text-[#7A7067] text-sm font-light">
-                Sunday 9:00 AM & 11:00 AM
-              </p>
-            </div>
+            <p className="text-[#756B63] leading-relaxed">
+              Sunday services at 9:00 AM and 11:00 AM in a welcoming atmosphere of worship and fellowship.
+            </p>
+          </div>
 
-            <div className="bg-[#FBF9F6] p-8 rounded-lg border border-[#EAE1D4]/60 text-center space-y-3 shadow-sm">
-              <div className="text-[#9C8E82] text-xl font-light">🙏</div>
+          {/* Card 2 */}
+          <div className="group bg-white/50 backdrop-blur-md rounded-[2rem] p-10 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
+            
+            <div className="text-3xl mb-8 opacity-70">🙏</div>
 
-              <h3 className="text-md font-medium tracking-wide text-[#3D3732]">
-                Prayer Meeting
-              </h3>
+            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
+              Prayer
+            </h3>
 
-              <p className="text-[#7A7067] text-sm font-light">
-                Wednesday 7:30 PM
-              </p>
-            </div>
+            <p className="text-[#756B63] leading-relaxed">
+              Join our midweek prayer gatherings every Wednesday at 7:30 PM as we seek God together.
+            </p>
+          </div>
 
-            <div className="bg-[#FBF9F6] p-8 rounded-lg border border-[#EAE1D4]/60 text-center space-y-3 shadow-sm">
-              <div className="text-[#9C8E82] text-xl font-light">
-                👨‍👩‍👧‍👦
-              </div>
+          {/* Card 3 */}
+          <div className="group bg-white/50 backdrop-blur-md rounded-[2rem] p-10 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
+            
+            <div className="text-3xl mb-8 opacity-70">🤝</div>
 
-              <h3 className="text-md font-medium tracking-wide text-[#3D3732]">
-                Fellowship
-              </h3>
+            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
+              Fellowship
+            </h3>
 
-              <p className="text-[#7A7067] text-sm font-light">
-                Saturday 4:00 PM
-              </p>
-            </div>
+            <p className="text-[#756B63] leading-relaxed">
+              Experience authentic community through gatherings, ministries, and shared life together.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#3D3732] text-[#EAE1D4] py-12 border-t border-[#4A443F]">
-        <div className="container mx-auto px-6 max-w-5xl">
+      {/* Minimal Footer */}
+      <footer className="pb-12 px-6">
+        <div className="max-w-6xl mx-auto text-center">
           
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-            
-            <div className="text-center md:text-left">
-              <h3 className="text-lg font-medium tracking-wide text-[#FBF9F6]">
-                Gereja Baptis Tawau
-              </h3>
+          <p className="text-[#9C8E82] text-sm tracking-[0.2em] uppercase">
+            Gereja Baptis Tawau
+          </p>
 
-              <p className="text-[#9C8E82] text-xs mt-1">
-                Jalan Belunu, Tawau, Sabah
-              </p>
-            </div>
+          <p className="mt-3 text-[#B0A49A] text-sm">
+            Jalan Belunu, Tawau, Sabah
+          </p>
 
-            <div className="text-center md:text-right text-xs text-[#9C8E82] space-y-1">
-              <p>© 2026 Gereja Baptis Tawau. All rights reserved.</p>
+          <div className="w-16 h-px bg-[#DDD3C8] mx-auto my-8"></div>
 
-              <p className="font-light opacity-75">
-                Built for His glory
-              </p>
-            </div>
-          </div>
+          <p className="text-[#B0A49A] text-xs">
+            © 2026 All Rights Reserved
+          </p>
         </div>
       </footer>
 
-      {/* Custom Animations */}
+      {/* Animations */}
       <style>{`
-        @keyframes logoGlow {
+        @keyframes float {
           0%, 100% {
-            filter:
-              drop-shadow(0 0 8px rgba(255,255,255,0.25))
-              drop-shadow(0 0 20px rgba(255,255,255,0.15));
-            transform: scale(1);
+            transform: translateY(0px);
           }
 
           50% {
-            filter:
-              drop-shadow(0 0 18px rgba(255,255,255,0.45))
-              drop-shadow(0 0 40px rgba(255,255,255,0.25));
-            transform: scale(1.01);
+            transform: translateY(-8px);
           }
         }
 
-        @keyframes beamExpand {
-          0%, 100% {
-            transform: scale(0.9);
-            opacity: 0.5;
-          }
-
-          50% {
-            transform: scale(1.35);
-            opacity: 0.85;
-          }
-        }
-
-        .animate-logo-glow {
-          animation: logoGlow 5s ease-in-out infinite;
-        }
-
-        .animate-beam-expand {
-          animation: beamExpand 5s ease-in-out infinite;
+        .animate-float {
+          animation: float 7s ease-in-out infinite;
         }
       `}</style>
     </div>
