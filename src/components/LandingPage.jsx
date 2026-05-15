@@ -89,7 +89,7 @@ const LandingPage = () => {
 
             {/* Logo Image */}
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="Gereja Baptis Tawau Logo"
               className="relative z-10 w-[240px] sm:w-[320px] md:w-[460px] object-contain"
             />
