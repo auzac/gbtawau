@@ -21,7 +21,7 @@ const LandingPage = () => {
           {/* Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="w-11 h-11 rounded-full bg-white/80 shadow-[0_6px_25px_rgba(0,0,0,0.06)] flex items-center justify-center transition-all duration-300 hover:scale-105"
+            className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center transition-transform duration-300 hover:scale-105"
             aria-label="Toggle Menu"
           >
             <div className="relative w-5 h-5">
@@ -44,7 +44,7 @@ const LandingPage = () => {
 
       {/* Fullscreen Menu */}
       <div
-        className={`fixed inset-0 z-40 bg-[#F7F4EF]/98 transition-all duration-500 flex items-center justify-center ${
+        className={`fixed inset-0 z-40 bg-[#F7F4EF] transition-opacity duration-500 flex items-center justify-center ${
           isMenuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
@@ -71,34 +71,36 @@ const LandingPage = () => {
         {/* Optimized Ambient Background */}
         <div className="absolute inset-0 overflow-hidden">
           
-          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[320px] md:w-[700px] h-[320px] md:h-[700px] bg-white opacity-50 blur-[60px] md:blur-[120px]"></div>
+          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[320px] md:w-[620px] h-[320px] md:h-[620px] bg-white opacity-40 blur-[35px] md:blur-[70px]"></div>
 
-          <div className="absolute bottom-[-10%] right-[-10%] w-[220px] md:w-[420px] h-[220px] md:h-[420px] bg-[#EFE2D2] opacity-40 blur-[50px] md:blur-[100px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[220px] md:w-[380px] h-[220px] md:h-[380px] bg-[#EFE2D2] opacity-30 blur-[30px] md:blur-[50px]"></div>
         </div>
 
         {/* Hero Content */}
         <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center">
           
           {/* Logo */}
-          <div className="relative mb-12 sm:mb-16 animate-float">
+          <div className="relative mb-12 sm:mb-16 animate-float will-change-transform">
             
             {/* Soft Glow */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-52 sm:w-72 h-52 sm:h-72 rounded-full bg-white opacity-30 blur-[60px]"></div>
+              <div className="w-48 sm:w-64 h-48 sm:h-64 rounded-full bg-white opacity-20 blur-[35px]"></div>
             </div>
 
-            {/* Logo Image */}
+            {/* Logo */}
             <img
               src="/logo.webp"
               alt="Gereja Baptis Tawau Logo"
-              className="relative z-10 w-[240px] sm:w-[320px] md:w-[460px] object-contain"
+              loading="eager"
+              decoding="async"
+              className="relative z-10 w-[220px] sm:w-[300px] md:w-[420px] object-contain"
             />
           </div>
 
           {/* Scripture */}
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8 px-2">
             
-            <p className="max-w-4xl mx-auto text-2xl sm:text-4xl md:text-6xl leading-[1.25] font-serif font-light tracking-tight text-[#4A443F] px-2">
+            <p className="max-w-4xl mx-auto text-2xl sm:text-4xl md:text-6xl leading-[1.25] font-serif font-light tracking-tight text-[#4A443F]">
               “Come to me, all you who are weary and burdened,
               and I will give you rest.”
             </p>
@@ -111,7 +113,7 @@ const LandingPage = () => {
           {/* CTA */}
           <div className="mt-12 sm:mt-14">
             
-            <button className="group relative overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[#4A443F] text-[#F7F4EF] text-[11px] sm:text-sm tracking-[0.2em] uppercase font-medium hover:scale-[1.03] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+            <button className="group relative overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[#4A443F] text-[#F7F4EF] text-[11px] sm:text-sm tracking-[0.2em] uppercase font-medium hover:scale-[1.03] transition-transform duration-300 shadow-sm">
               
               <span className="relative z-10">
                 Member Portal
@@ -143,8 +145,10 @@ const LandingPage = () => {
       </section>
 
       {/* Welcome */}
-      <section className="relative py-24 md:py-32 px-6">
-        
+      <section
+        className="relative py-24 md:py-32 px-6"
+        style={{ contentVisibility: 'auto' }}
+      >
         <div className="max-w-4xl mx-auto text-center">
           
           <p className="text-[10px] sm:text-sm uppercase tracking-[0.3em] text-[#A09184] mb-6 sm:mb-8">
@@ -165,12 +169,14 @@ const LandingPage = () => {
       </section>
 
       {/* Info Cards */}
-      <section className="relative pb-24 md:pb-32 px-6">
-        
+      <section
+        className="relative pb-24 md:pb-32 px-6"
+        style={{ contentVisibility: 'auto' }}
+      >
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 md:gap-8">
           
           {/* Card 1 */}
-          <div className="bg-white/60 rounded-[2rem] p-8 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
+          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
             
             <div className="text-3xl mb-6 opacity-70">
               ⛪
@@ -186,7 +192,7 @@ const LandingPage = () => {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-white/60 rounded-[2rem] p-8 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
+          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
             
             <div className="text-3xl mb-6 opacity-70">
               🙏
@@ -202,7 +208,7 @@ const LandingPage = () => {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-white/60 rounded-[2rem] p-8 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-all duration-300">
+          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
             
             <div className="text-3xl mb-6 opacity-70">
               🤝
@@ -219,9 +225,11 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Minimal Footer */}
-      <footer className="pb-10 px-6">
-        
+      {/* Footer */}
+      <footer
+        className="pb-10 px-6"
+        style={{ contentVisibility: 'auto' }}
+      >
         <div className="max-w-6xl mx-auto text-center">
           
           <p className="text-[#9C8E82] text-xs sm:text-sm tracking-[0.2em] uppercase">
@@ -240,7 +248,7 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      {/* Floating Animation */}
+      {/* Optimized Animation */}
       <style>{`
         @keyframes float {
           0%, 100% {
@@ -248,12 +256,18 @@ const LandingPage = () => {
           }
 
           50% {
-            transform: translateY(-6px);
+            transform: translateY(-5px);
           }
         }
 
         .animate-float {
-          animation: float 7s ease-in-out infinite;
+          animation: float 12s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+          .animate-float {
+            animation: none;
+          }
         }
       `}</style>
     </div>
