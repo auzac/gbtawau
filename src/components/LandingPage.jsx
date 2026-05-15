@@ -24,19 +24,60 @@ const LandingPage = () => {
         </div>
       </header>
 
-      {/* Hero Section with Bible Verse */}
-      <section className="relative bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-24 md:py-32">
-        <div className="absolute inset-0 bg-black opacity-30"></div>
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Welcome Home</h1>
-          <div className="max-w-3xl mx-auto">
-            <p className="text-xl md:text-2xl italic mb-4">
+      {/* Hero Section with Centered Cross and Glow Animation */}
+      <section className="relative bg-gradient-to-r from-indigo-700 to-purple-700 min-h-[80vh] flex items-center justify-center overflow-hidden">
+        {/* Background overlay */}
+        <div className="absolute inset-0 bg-black opacity-40"></div>
+        
+        {/* Animated light beams/rays from behind the cross */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute w-96 h-96 rounded-full bg-yellow-300 opacity-20 animate-ping" style={{ animationDuration: '3s' }}></div>
+          <div className="absolute w-72 h-72 rounded-full bg-yellow-400 opacity-30 animate-pulse" style={{ animationDuration: '2s' }}></div>
+          <div className="absolute w-48 h-48 rounded-full bg-yellow-200 opacity-40 animate-ping" style={{ animationDuration: '4s' }}></div>
+        </div>
+
+        {/* Rotating light beams */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute w-[500px] h-[500px] rounded-full border-4 border-yellow-300/20 animate-spin" style={{ animationDuration: '20s' }}></div>
+          <div className="absolute w-[400px] h-[400px] rounded-full border-2 border-yellow-400/30 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}></div>
+          <div className="absolute w-[600px] h-[600px] rounded-full border border-yellow-500/20 animate-spin" style={{ animationDuration: '25s' }}></div>
+        </div>
+
+        {/* The Cross */}
+        <div className="relative z-10 text-center">
+          {/* Glow effect behind cross */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 bg-yellow-400 rounded-full blur-2xl opacity-60 animate-pulse"></div>
+          </div>
+          
+          {/* Cross SVG with subtle animation */}
+          <div className="transform hover:scale-105 transition-transform duration-500">
+            <svg 
+              className="w-32 h-32 md:w-48 md:h-48 text-white drop-shadow-2xl animate-glow"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Vertical beam */}
+              <rect x="45" y="10" width="10" height="80" rx="2" fill="currentColor" />
+              {/* Horizontal beam */}
+              <rect x="20" y="42" width="60" height="10" rx="2" fill="currentColor" />
+              {/* Optional: Jesus text (INRI) */}
+              <text x="50" y="68" fontSize="8" fill="currentColor" textAnchor="middle" fontFamily="serif" className="opacity-80">INRI</text>
+            </svg>
+          </div>
+
+          {/* Bible Verse below cross */}
+          <div className="mt-8 max-w-2xl mx-auto px-4">
+            <p className="text-white text-xl md:text-2xl italic leading-relaxed">
               "Come to me, all you who are weary and burdened, and I will give you rest."
             </p>
-            <p className="text-lg md:text-xl">— Matthew 11:28</p>
+            <p className="text-white/80 text-lg mt-2">— Matthew 11:28</p>
           </div>
+
+          {/* Member Portal Button */}
           <div className="mt-10">
-            <button className="bg-white text-indigo-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg">
+            <button className="bg-white text-indigo-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg hover:shadow-xl transform hover:scale-105">
               Member Portal
             </button>
           </div>
@@ -59,17 +100,17 @@ const LandingPage = () => {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition">
               <div className="text-indigo-600 text-4xl mb-3">⛪</div>
               <h3 className="text-xl font-semibold mb-2">Worship Services</h3>
               <p className="text-gray-600">Sunday 9:00 AM & 11:00 AM</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition">
               <div className="text-indigo-600 text-4xl mb-3">🙏</div>
               <h3 className="text-xl font-semibold mb-2">Prayer Meeting</h3>
               <p className="text-gray-600">Wednesday 7:30 PM</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition">
               <div className="text-indigo-600 text-4xl mb-3">👨‍👩‍👧‍👦</div>
               <h3 className="text-xl font-semibold mb-2">Fellowship</h3>
               <p className="text-gray-600">Saturday 4:00 PM</p>
@@ -93,9 +134,26 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Add custom animation styles */}
+      <style>{`
+        @keyframes glow {
+          0%, 100% {
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+            opacity: 1;
+          }
+          50% {
+            filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8));
+            opacity: 0.95;
+          }
+        }
+        
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   )
 }
 
-//
 export default LandingPage
