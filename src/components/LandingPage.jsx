@@ -1,277 +1,505 @@
-// src/components/LandingPage.jsx
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
-const LandingPage = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+const NAV_LINKS = [
+  { en: 'Home', bm: 'Utama', href: '#home' },
+  { en: 'About', bm: 'Tentang Kami', href: '#about' },
+  { en: 'Ministries', bm: 'Pelayanan', href: '#ministries' },
+  { en: 'Events', bm: 'Acara', href: '#events' },
+  { en: 'Contact', bm: 'Hubungi', href: '#contact' },
+]
+
+const SERVICES = [
+  { time: '9:00 AM', lang: 'English Service', note: 'Perkhidmatan Inggeris' },
+  { time: '11:00 AM', lang: 'Bahasa Malaysia Service', note: 'Perkhidmatan BM' },
+]
+
+const MINISTRIES = [
+  {
+    icon: '✦',
+    en: 'Youth Ministry',
+    bm: 'Pelayanan Belia',
+    desc: 'Empowering the next generation to live boldly for Christ.',
+    descBM: 'Memperkasakan generasi muda untuk hidup dalam Kristus.',
+  },
+  {
+    icon: '✦',
+    en: "Children's Church",
+    bm: 'Gereja Kanak-Kanak',
+    desc: "A safe, joyful space where children encounter God's love.",
+    descBM: 'Ruang yang selamat dan gembira untuk kanak-kanak mengenali kasih Tuhan.',
+  },
+  {
+    icon: '✦',
+    en: 'Community Outreach',
+    bm: 'Penjangkauan Komuniti',
+    desc: 'Serving Tawau through compassion, care, and generosity.',
+    descBM: 'Melayani Tawau dengan belas kasihan dan kemurahan hati.',
+  },
+  {
+    icon: '✦',
+    en: 'Prayer & Worship',
+    bm: 'Doa & Penyembahan',
+    desc: 'Gathering mid-week to seek God in prayer and song.',
+    descBM: 'Berkumpul pada pertengahan minggu untuk berdoa dan memuji Tuhan.',
+  },
+]
+
+const EVENTS = [
+  { date: 'Jun 1', day: 'Sunday', en: 'Communion Sunday', bm: 'Hari Perjamuan Kudus', time: '9:00 & 11:00 AM' },
+  { date: 'Jun 4', day: 'Wednesday', en: 'Midweek Prayer', bm: 'Doa Pertengahan Minggu', time: '7:30 PM' },
+  { date: 'Jun 15', day: 'Sunday', en: 'Youth Sunday', bm: 'Hari Belia', time: '11:00 AM' },
+  { date: 'Jun 22', day: 'Sunday', en: 'Baptism Service', bm: 'Majlis Pembaptisan', time: '9:00 AM' },
+]
+
+export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [lang, setLang] = useState('en')
+  const [scrolled, setScrolled] = useState(false)
+  const heroRef = useRef(null)
+
+  const t = (en, bm) => lang === 'bm' ? bm : en
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
   return (
-    <div className="min-h-screen bg-[#F7F4EF] text-[#403A35] overflow-hidden">
-      
-      {/* Floating Top Controls */}
-      <div className="fixed top-0 left-0 w-full z-50">
-        <div className="flex justify-between items-center px-5 md:px-10 py-5">
-          
-          {/* Church Name */}
+    <div style={{ fontFamily: "'Lora', 'Georgia', serif", background: '#FAF8F5', color: '#2D2926', minHeight: '100vh', overflowX: 'hidden' }}>
+      <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+      {/* ── NAV ── */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        padding: '0 1.25rem',
+        background: scrolled ? 'rgba(250,248,245,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        transition: 'background 0.4s, backdrop-filter 0.4s',
+        borderBottom: scrolled ? '1px solid rgba(180,160,140,0.15)' : '1px solid transparent',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+
+          {/* Logo text */}
           <div>
-            <h1 className="text-[11px] sm:text-sm tracking-[0.28em] uppercase font-light text-[#5B534D]">
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8A7A6E', fontWeight: 400 }}>
               Gereja Baptis Tawau
-            </h1>
+            </span>
           </div>
 
-          {/* Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center transition-transform duration-300 hover:scale-105"
-            aria-label="Toggle Menu"
-          >
-            <div className="relative w-5 h-5">
-              
-              <span
-                className={`absolute left-0 w-5 h-[1.5px] bg-[#4A443F] transition-all duration-300 ${
-                  isMenuOpen ? 'rotate-45 top-2' : 'top-1'
-                }`}
-              ></span>
+          {/* Right controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
-              <span
-                className={`absolute left-0 w-5 h-[1.5px] bg-[#4A443F] transition-all duration-300 ${
-                  isMenuOpen ? '-rotate-45 top-2' : 'top-3'
-                }`}
-              ></span>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Fullscreen Menu */}
-      <div
-        className={`fixed inset-0 z-40 bg-[#F7F4EF] transition-opacity duration-500 flex items-center justify-center ${
-          isMenuOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="flex flex-col items-center space-y-8">
-          
-          {['Home', 'About', 'Ministries', 'Contact'].map((item) => (
-            <a
-              key={item}
-              href="#"
-              onClick={() => setIsMenuOpen(false)}
-              className="text-3xl sm:text-5xl md:text-6xl font-light tracking-wide text-[#4A443F] hover:opacity-50 transition-opacity duration-300"
+            {/* Language toggle */}
+            <button
+              onClick={() => setLang(l => l === 'en' ? 'bm' : 'en')}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: '#8A7A6E', background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(180,160,140,0.3)',
+                borderRadius: 20, padding: '5px 12px', cursor: 'pointer',
+                fontWeight: 500, transition: 'all 0.2s',
+              }}
             >
-              {item}
-            </a>
-          ))}
-        </div>
-      </div>
+              {lang === 'en' ? 'BM' : 'EN'}
+            </button>
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden bg-[#F7F4EF]">
-        
-        {/* Optimized Ambient Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          
-          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[320px] md:w-[620px] h-[320px] md:h-[620px] bg-white opacity-40 blur-[35px] md:blur-[70px]"></div>
-
-          <div className="absolute bottom-[-10%] right-[-10%] w-[220px] md:w-[380px] h-[220px] md:h-[380px] bg-[#EFE2D2] opacity-30 blur-[30px] md:blur-[50px]"></div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center">
-          
-          {/* Logo */}
-          <div className="relative mb-12 sm:mb-16 animate-float will-change-transform">
-            
-            {/* Soft Glow */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-48 sm:w-64 h-48 sm:h-64 rounded-full bg-white opacity-20 blur-[35px]"></div>
-            </div>
-
-            {/* Logo */}
-            <img
-              src="/logo.webp"
-              alt="Gereja Baptis Tawau Logo"
-              loading="eager"
-              decoding="async"
-              className="relative z-10 w-[220px] sm:w-[300px] md:w-[420px] object-contain"
-            />
-          </div>
-
-          {/* Scripture */}
-          <div className="space-y-6 sm:space-y-8 px-2">
-            
-            <p className="max-w-4xl mx-auto text-2xl sm:text-4xl md:text-6xl leading-[1.25] font-serif font-light tracking-tight text-[#4A443F]">
-              “Come to me, all you who are weary and burdened,
-              and I will give you rest.”
-            </p>
-
-            <p className="text-[10px] sm:text-sm tracking-[0.35em] uppercase text-[#9B8E83]">
-              Matthew 11:28
-            </p>
-          </div>
-
-          {/* CTA */}
-          <div className="mt-12 sm:mt-14">
-            
-            <button className="group relative overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[#4A443F] text-[#F7F4EF] text-[11px] sm:text-sm tracking-[0.2em] uppercase font-medium hover:scale-[1.03] transition-transform duration-300 shadow-sm">
-              
-              <span className="relative z-10">
-                Member Portal
-              </span>
-
-              <div className="absolute inset-0 bg-[#5A524C] translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            {/* Hamburger */}
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Toggle menu"
+              style={{
+                width: 42, height: 42, borderRadius: '50%',
+                background: menuOpen ? '#2D2926' : 'rgba(255,255,255,0.85)',
+                border: '1px solid rgba(180,160,140,0.25)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 5, cursor: 'pointer', transition: 'background 0.3s',
+              }}
+            >
+              {[0, 1].map(i => (
+                <span key={i} style={{
+                  display: 'block', width: 18, height: 1.5,
+                  background: menuOpen ? '#FAF8F5' : '#4A3F38',
+                  borderRadius: 2,
+                  transition: 'transform 0.3s, opacity 0.3s',
+                  transform: menuOpen
+                    ? i === 0 ? 'rotate(45deg) translate(4px, 4px)' : 'rotate(-45deg) translate(4px, -4px)'
+                    : 'none',
+                }} />
+              ))}
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 opacity-25 animate-bounce">
-          
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4 sm:w-5 sm:h-5 text-[#7A7067]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+      {/* ── FULLSCREEN MENU ── */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 90,
+        background: '#2D2926',
+        opacity: menuOpen ? 1 : 0,
+        pointerEvents: menuOpen ? 'all' : 'none',
+        transition: 'opacity 0.45s cubic-bezier(.4,0,.2,1)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 0,
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          {NAV_LINKS.map((item, i) => (
+            <div key={item.en} style={{
+              overflow: 'hidden',
+              transform: menuOpen ? 'translateY(0)' : 'translateY(20px)',
+              opacity: menuOpen ? 1 : 0,
+              transition: `transform 0.5s ${0.05 * i + 0.1}s cubic-bezier(.4,0,.2,1), opacity 0.5s ${0.05 * i + 0.1}s`,
+            }}>
+              <a
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: 'block',
+                  fontFamily: "'Lora', serif",
+                  fontSize: 'clamp(2rem, 8vw, 3.5rem)',
+                  fontWeight: 400, color: '#F5F0EB',
+                  textDecoration: 'none', letterSpacing: '-0.01em',
+                  padding: '0.3rem 0',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#C9A882' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#F5F0EB' }}
+              >
+                {t(item.en, item.bm)}
+              </a>
+            </div>
+          ))}
+        </div>
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          color: '#6B5E55', fontSize: 11, letterSpacing: '0.25em',
+          textTransform: 'uppercase', marginTop: '3rem',
+          opacity: menuOpen ? 1 : 0, transition: 'opacity 0.5s 0.35s',
+        }}>
+          Jalan Belunu, Tawau, Sabah
+        </p>
+      </div>
+
+      {/* ── HERO ── */}
+      <section id="home" ref={heroRef} style={{
+        minHeight: '100svh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '7rem 1.5rem 4rem',
+        position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(170deg, #FAF8F5 0%, #F0E9DF 100%)',
+      }}>
+
+        {/* Decorative orbs */}
+        <div style={{ position: 'absolute', top: '8%', left: '-5%', width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(210,185,160,0.25) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', bottom: '10%', right: '-8%', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(185,160,130,0.18) 0%, transparent 70%)' }} />
+
+        {/* Thin decorative line */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 1, height: '12vh', background: 'linear-gradient(to bottom, transparent, rgba(180,155,125,0.35))' }} />
+
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 680 }}>
+
+          {/* Logo */}
+          <div style={{ marginBottom: '2.5rem' }}>
+            <img
+              src="/logo.webp"
+              alt="Gereja Baptis Tawau"
+              loading="eager"
+              style={{ width: 'clamp(120px, 28vw, 180px)', objectFit: 'contain', opacity: 0.92 }}
             />
-          </svg>
+          </div>
+
+          {/* Label */}
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase',
+            color: '#B09882', marginBottom: '1.5rem', fontWeight: 500,
+          }}>
+            {t('Est. Tawau, Sabah', 'Ditubuhkan di Tawau, Sabah')}
+          </p>
+
+          {/* Scripture */}
+          <blockquote style={{ margin: 0, padding: 0 }}>
+            <p style={{
+              fontSize: 'clamp(1.45rem, 4.5vw, 2.4rem)',
+              fontWeight: 400, lineHeight: 1.45, color: '#2D2926',
+              fontStyle: 'italic', marginBottom: '1.25rem',
+              letterSpacing: '-0.01em',
+            }}>
+              "Come to me, all you who are weary and burdened, and I will give you rest."
+            </p>
+            <cite style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontStyle: 'normal', fontSize: 11, letterSpacing: '0.3em',
+              textTransform: 'uppercase', color: '#B09882',
+            }}>
+              Matthew 11:28
+            </cite>
+          </blockquote>
+
+          {/* CTAs */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: '2.5rem' }}>
+            <a href="#about" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontWeight: 500, color: '#FAF8F5',
+              background: '#2D2926', borderRadius: 999,
+              padding: '14px 28px', textDecoration: 'none',
+              transition: 'background 0.25s, transform 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#4A3F38'; e.currentTarget.style.transform = 'scale(1.02)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#2D2926'; e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              {t('Plan Your Visit', 'Rancang Lawatan')}
+            </a>
+            <a href="#contact" style={{
+              display: 'inline-flex', alignItems: 'center',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontWeight: 500, color: '#5A4E46',
+              background: 'transparent',
+              border: '1px solid rgba(100,80,65,0.3)',
+              borderRadius: 999, padding: '14px 28px',
+              textDecoration: 'none', transition: 'border-color 0.25s, transform 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(100,80,65,0.7)'; e.currentTarget.style.transform = 'scale(1.02)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(100,80,65,0.3)'; e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              {t('Get in Touch', 'Hubungi Kami')}
+            </a>
+          </div>
+        </div>
+
+        {/* Scroll cue */}
+        <div style={{
+          position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+          opacity: 0.4, animation: 'bob 2.5s ease-in-out infinite',
+        }}>
+          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, transparent, #8A7A6E)' }} />
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#8A7A6E' }} />
         </div>
       </section>
 
-      {/* Welcome */}
-      <section
-        className="relative py-24 md:py-32 px-6"
-        style={{ contentVisibility: 'auto' }}
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          
-          <p className="text-[10px] sm:text-sm uppercase tracking-[0.3em] text-[#A09184] mb-6 sm:mb-8">
-            Welcome
-          </p>
+      {/* ── SERVICE TIMES PILL BAR ── */}
+      <div style={{
+        background: '#2D2926', padding: '1.25rem 1.5rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 'clamp(1rem, 4vw, 3rem)', flexWrap: 'wrap',
+      }}>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#8A7A6E' }}>
+          {t('Sunday Services', 'Kebaktian Ahad')}
+        </span>
+        {SERVICES.map(s => (
+          <div key={s.time} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#C9A882' }} />
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#E8DDD4', fontWeight: 400 }}>
+              <strong style={{ fontWeight: 500 }}>{s.time}</strong>
+              {' '}
+              <span style={{ color: '#8A7A6E', fontSize: 11 }}>·</span>
+              {' '}
+              <span style={{ color: '#A89080', fontSize: 12 }}>{t(s.lang, s.note)}</span>
+            </span>
+          </div>
+        ))}
+      </div>
 
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-serif font-light leading-[1.25] text-[#403A35]">
-            A community of faith,
-            hope, and love.
+      {/* ── ABOUT / WELCOME ── */}
+      <section id="about" style={{ padding: 'clamp(4rem, 10vw, 7rem) 1.5rem' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B09882', marginBottom: '1.5rem' }}>
+            {t('Welcome', 'Selamat Datang')}
+          </p>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 400, lineHeight: 1.3, margin: '0 0 1.5rem', letterSpacing: '-0.02em' }}>
+            {t(
+              <>A community of <em>faith,</em> hope, and love.</>,
+              <>Komuniti <em>iman,</em> harapan, dan kasih.</>
+            )}
           </h2>
-
-          <p className="mt-8 sm:mt-10 text-base sm:text-lg md:text-xl leading-[1.9] text-[#756B63] font-light max-w-3xl mx-auto">
-            Whether you are seeking spiritual growth, fellowship,
-            healing, or simply a place to belong, you are welcome here.
-            Together we worship, learn, serve, and grow in Christ.
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(15px, 2.5vw, 17px)', lineHeight: 1.85, color: '#7A6E66', fontWeight: 300, maxWidth: 560, margin: '0 auto' }}>
+            {t(
+              'Whether you are seeking spiritual growth, fellowship, healing, or simply a place to belong — you are welcome here. Together we worship, learn, serve, and grow in Christ.',
+              'Sama ada anda mencari pertumbuhan rohani, persekutuan, penyembuhan, atau sekadar tempat untuk diterima — anda dialu-alukan di sini. Bersama-sama kita menyembah, belajar, melayani, dan bertumbuh dalam Kristus.'
+            )}
           </p>
-        </div>
-      </section>
 
-      {/* Info Cards */}
-      <section
-        className="relative pb-24 md:pb-32 px-6"
-        style={{ contentVisibility: 'auto' }}
-      >
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 md:gap-8">
-          
-          {/* Card 1 */}
-          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
-            
-            <div className="text-3xl mb-6 opacity-70">
-              ⛪
-            </div>
-
-            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
-              Worship
-            </h3>
-
-            <p className="text-[#756B63] leading-relaxed">
-              Sunday services at 9:00 AM and 11:00 AM in a welcoming atmosphere of worship and fellowship.
-            </p>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
-            
-            <div className="text-3xl mb-6 opacity-70">
-              🙏
-            </div>
-
-            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
-              Prayer
-            </h3>
-
-            <p className="text-[#756B63] leading-relaxed">
-              Join our midweek prayer gatherings every Wednesday at 7:30 PM as we seek God together.
-            </p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-white/70 rounded-[2rem] p-8 md:p-10 shadow-sm hover:-translate-y-1 transition-transform duration-300">
-            
-            <div className="text-3xl mb-6 opacity-70">
-              🤝
-            </div>
-
-            <h3 className="text-2xl font-serif font-light text-[#403A35] mb-4">
-              Fellowship
-            </h3>
-
-            <p className="text-[#756B63] leading-relaxed">
-              Experience authentic community through gatherings, ministries, and shared life together.
-            </p>
+          {/* Divider ornament */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '2.5rem 0 0' }}>
+            <div style={{ width: 40, height: 1, background: 'rgba(180,155,125,0.4)' }} />
+            <div style={{ width: 5, height: 5, borderRadius: '50%', border: '1px solid rgba(180,155,125,0.5)' }} />
+            <div style={{ width: 40, height: 1, background: 'rgba(180,155,125,0.4)' }} />
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        className="pb-10 px-6"
-        style={{ contentVisibility: 'auto' }}
-      >
-        <div className="max-w-6xl mx-auto text-center">
-          
-          <p className="text-[#9C8E82] text-xs sm:text-sm tracking-[0.2em] uppercase">
-            Gereja Baptis Tawau
-          </p>
+      {/* ── MINISTRIES ── */}
+      <section id="ministries" style={{ padding: '0 1.25rem clamp(4rem, 10vw, 7rem)', background: '#FAF8F5' }}>
+        <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B09882', marginBottom: 12 }}>
+              {t('Our Ministries', 'Pelayanan Kami')}
+            </p>
+            <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.5rem)', fontWeight: 400, margin: 0, letterSpacing: '-0.02em' }}>
+              {t('Serving together in love', 'Melayani bersama dalam kasih')}
+            </h2>
+          </div>
 
-          <p className="mt-3 text-[#B0A49A] text-sm">
-            Jalan Belunu, Tawau, Sabah
-          </p>
-
-          <div className="w-16 h-px bg-[#DDD3C8] mx-auto my-8"></div>
-
-          <p className="text-[#B0A49A] text-xs">
-            © 2026 All Rights Reserved
-          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 16 }}>
+            {MINISTRIES.map((m, i) => (
+              <div key={m.en} style={{
+                background: i % 2 === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(240,233,225,0.55)',
+                border: '1px solid rgba(180,155,125,0.18)',
+                borderRadius: 20, padding: 'clamp(1.25rem, 4vw, 1.75rem)',
+                transition: 'transform 0.25s, box-shadow 0.25s',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(80,55,35,0.08)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(200,168,130,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', fontSize: 16, color: '#A08060' }}>
+                  {m.icon}
+                </div>
+                <h3 style={{ fontFamily: "'Lora', serif", fontSize: 'clamp(1rem, 3vw, 1.2rem)', fontWeight: 500, margin: '0 0 0.6rem', color: '#2D2926' }}>
+                  {t(m.en, m.bm)}
+                </h3>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.75, color: '#8A7A6E', margin: 0, fontWeight: 300 }}>
+                  {t(m.desc, m.descBM)}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* ── EVENTS ── */}
+      <section id="events" style={{ padding: 'clamp(4rem, 10vw, 6rem) 1.25rem', background: '#F2EBE1' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B09882', marginBottom: 12 }}>
+              {t('Upcoming', 'Acara Akan Datang')}
+            </p>
+            <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.5rem)', fontWeight: 400, margin: 0, letterSpacing: '-0.02em' }}>
+              {t("What's happening", 'Apa yang berlaku')}
+            </h2>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {EVENTS.map((ev, i) => (
+              <div key={i} style={{
+                background: 'rgba(255,255,255,0.75)',
+                border: '1px solid rgba(180,155,125,0.2)',
+                borderRadius: 16,
+                display: 'flex', alignItems: 'center', gap: 16,
+                padding: '1rem 1.25rem',
+                transition: 'transform 0.2s',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
+              >
+                {/* Date block */}
+                <div style={{ minWidth: 52, textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ fontFamily: "'Lora', serif", fontSize: 22, fontWeight: 500, color: '#2D2926', lineHeight: 1 }}>{ev.date.split(' ')[1]}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#B09882', marginTop: 2 }}>{ev.date.split(' ')[0]}</div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ width: 1, height: 40, background: 'rgba(180,155,125,0.25)', flexShrink: 0 }} />
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "'Lora', serif", fontSize: 'clamp(14px, 3vw, 16px)', fontWeight: 500, margin: '0 0 3px', color: '#2D2926' }}>
+                    {t(ev.en, ev.bm)}
+                  </p>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#A08070', margin: 0 }}>
+                    {ev.day} · {ev.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTACT ── */}
+      <section id="contact" style={{ padding: 'clamp(4rem, 10vw, 7rem) 1.25rem', background: '#FAF8F5' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B09882', marginBottom: 12 }}>
+            {t('Find Us', 'Lokasi Kami')}
+          </p>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.5rem)', fontWeight: 400, margin: '0 0 1rem', letterSpacing: '-0.02em' }}>
+            {t("We'd love to meet you", 'Kami ingin berjumpa anda')}
+          </h2>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: '#8A7A6E', lineHeight: 1.8, fontWeight: 300, marginBottom: '2.5rem' }}>
+            Jalan Belunu, Tawau, Sabah, Malaysia
+          </p>
+
+          {/* Contact cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 12, marginBottom: '2rem' }}>
+            {[
+              { label: t('Sunday Worship', 'Kebaktian Ahad'), value: '9:00 & 11:00 AM', icon: '◯' },
+              { label: t('Wednesday Prayer', 'Doa Rabu'), value: '7:30 PM', icon: '◯' },
+              { label: t('Phone', 'Telefon'), value: '+60 XX-XXX XXXX', icon: '◯' },
+            ].map(c => (
+              <div key={c.label} style={{
+                background: 'rgba(255,255,255,0.8)',
+                border: '1px solid rgba(180,155,125,0.2)',
+                borderRadius: 16, padding: '1.25rem 1rem',
+              }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#B09882', margin: '0 0 8px' }}>{c.label}</p>
+                <p style={{ fontFamily: "'Lora', serif", fontSize: 15, fontWeight: 500, color: '#2D2926', margin: 0 }}>{c.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Member portal CTA */}
+          <a href="#" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontWeight: 500, color: '#FAF8F5',
+            background: '#2D2926', borderRadius: 999,
+            padding: '14px 32px', textDecoration: 'none',
+            transition: 'background 0.25s, transform 0.2s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#4A3F38' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#2D2926' }}
+          >
+            {t('Member Portal', 'Portal Ahli')}
+            <span style={{ fontSize: 16, opacity: 0.7 }}>→</span>
+          </a>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background: '#2D2926', padding: '2.5rem 1.5rem 2rem', textAlign: 'center' }}>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#6B5E55', marginBottom: 8 }}>
+          Gereja Baptis Tawau
+        </p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#5A4E46', margin: '0 0 1.5rem' }}>
+          Jalan Belunu, Tawau, Sabah
+        </p>
+        <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.1)', margin: '0 auto 1.5rem' }} />
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#4A4038', margin: 0 }}>
+          © 2026 All Rights Reserved
+        </p>
       </footer>
 
-      {/* Optimized Animation */}
       <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-
-          50% {
-            transform: translateY(-5px);
-          }
+        @keyframes bob {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50% { transform: translateX(-50%) translateY(6px); }
         }
-
-        .animate-float {
-          animation: float 12s ease-in-out infinite;
-        }
-
-        @media (max-width: 768px) {
-          .animate-float {
-            animation: none;
-          }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation: none !important; transition-duration: 0.01ms !important; }
         }
       `}</style>
     </div>
   )
 }
-
-export default LandingPage
