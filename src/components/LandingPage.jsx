@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
@@ -6,11 +6,6 @@ const NAV_LINKS = [
   { en: 'Ministries', bm: 'Pelayanan', href: '#ministries' },
   { en: 'Events', bm: 'Acara', href: '#events' },
   { en: 'Contact', bm: 'Hubungi', href: '#contact' },
-]
-
-const SERVICES = [
-  { time: '9:00 AM', lang: 'English Service', note: 'Perkhidmatan Inggeris' },
-  { time: '11:00 AM', lang: 'Bahasa Malaysia Service', note: 'Perkhidmatan BM' },
 ]
 
 const MINISTRIES = [
@@ -55,7 +50,6 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [lang, setLang] = useState('en')
   const [scrolled, setScrolled] = useState(false)
-  const heroRef = useRef(null)
 
   const t = (en, bm) => lang === 'bm' ? bm : en
 
@@ -187,128 +181,148 @@ export default function LandingPage() {
       </div>
 
       {/* ── HERO ── */}
-      <section id="home" ref={heroRef} style={{
+      <section id="home" style={{
         minHeight: '100svh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '7rem 1.5rem 4rem',
+        padding: '7rem 1.5rem 5rem',
         position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(170deg, #FAF8F5 0%, #F0E9DF 100%)',
+        textAlign: 'center',
       }}>
 
         {/* Decorative orbs */}
         <div style={{ position: 'absolute', top: '8%', left: '-5%', width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(210,185,160,0.25) 0%, transparent 70%)' }} />
         <div style={{ position: 'absolute', bottom: '10%', right: '-8%', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(185,160,130,0.18) 0%, transparent 70%)' }} />
-
-        {/* Thin decorative line */}
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 1, height: '12vh', background: 'linear-gradient(to bottom, transparent, rgba(180,155,125,0.35))' }} />
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 680 }}>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 600 }}>
 
-          {/* Logo */}
-          <div style={{ marginBottom: '2.5rem' }}>
+          {/* Logo — centered, prominent */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
             <img
               src="/logo.webp"
               alt="Gereja Baptis Tawau"
               loading="eager"
-              style={{ width: 'clamp(120px, 28vw, 180px)', objectFit: 'contain', opacity: 0.92 }}
+              style={{ width: 'clamp(140px, 38vw, 200px)', objectFit: 'contain', opacity: 0.93 }}
             />
           </div>
 
-          {/* Label */}
-          <p style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase',
-            color: '#B09882', marginBottom: '1.5rem', fontWeight: 500,
-          }}>
-            {t('Est. Tawau, Sabah', 'Ditubuhkan di Tawau, Sabah')}
-          </p>
-
           {/* Scripture */}
-          <blockquote style={{ margin: 0, padding: 0 }}>
+          <blockquote style={{ margin: '0 0 2rem', padding: 0 }}>
             <p style={{
-              fontSize: 'clamp(1.45rem, 4.5vw, 2.4rem)',
-              fontWeight: 400, lineHeight: 1.45, color: '#2D2926',
-              fontStyle: 'italic', marginBottom: '1.25rem',
+              fontSize: 'clamp(1.3rem, 4vw, 2rem)',
+              fontWeight: 400, lineHeight: 1.5, color: '#2D2926',
+              fontStyle: 'italic', marginBottom: '0.85rem',
               letterSpacing: '-0.01em',
             }}>
               "Come to me, all you who are weary and burdened, and I will give you rest."
             </p>
             <cite style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontStyle: 'normal', fontSize: 11, letterSpacing: '0.3em',
+              fontStyle: 'normal', fontSize: 10, letterSpacing: '0.3em',
               textTransform: 'uppercase', color: '#B09882',
             }}>
               Matthew 11:28
             </cite>
           </blockquote>
 
-          {/* CTAs */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: '2.5rem' }}>
-            <a href="#about" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
+          {/* Primary CTA — Masuk / Welcome */}
+          <div style={{ marginBottom: '2.5rem' }}>
+            <a href="#today" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase',
               fontWeight: 500, color: '#FAF8F5',
               background: '#2D2926', borderRadius: 999,
-              padding: '14px 28px', textDecoration: 'none',
+              padding: '15px 36px', textDecoration: 'none',
               transition: 'background 0.25s, transform 0.2s',
+              boxShadow: '0 4px 20px rgba(45,41,38,0.18)',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = '#4A3F38'; e.currentTarget.style.transform = 'scale(1.02)' }}
               onMouseLeave={e => { e.currentTarget.style.background = '#2D2926'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              {t('Plan Your Visit', 'Rancang Lawatan')}
+              {/* Door/enter icon */}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              {t('Welcome', 'Masuk')}
             </a>
-            <a href="#contact" style={{
-              display: 'inline-flex', alignItems: 'center',
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
-              fontWeight: 500, color: '#5A4E46',
-              background: 'transparent',
-              border: '1px solid rgba(100,80,65,0.3)',
-              borderRadius: 999, padding: '14px 28px',
-              textDecoration: 'none', transition: 'border-color 0.25s, transform 0.2s',
+          </div>
+
+          {/* Quick action buttons — Calendar & Roster */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+
+            {/* Calendar / Events */}
+            <a href="#events" style={{
+              display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.75)',
+              border: '1px solid rgba(180,155,125,0.25)',
+              borderRadius: 20, padding: '16px 24px',
+              textDecoration: 'none', minWidth: 110,
+              transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(100,80,65,0.7)'; e.currentTarget.style.transform = 'scale(1.02)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(100,80,65,0.3)'; e.currentTarget.style.transform = 'scale(1)' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(80,55,35,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.95)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.75)' }}
             >
-              {t('Get in Touch', 'Hubungi Kami')}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="3"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <circle cx="8" cy="15" r="1" fill="#7A6A5E"/>
+                <circle cx="12" cy="15" r="1" fill="#7A6A5E"/>
+              </svg>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+                color: '#7A6A5E', fontWeight: 500,
+              }}>
+                {t('Calendar', 'Kalendar')}
+              </span>
             </a>
+
+            {/* Roster / Worship Team */}
+            <a href="#roster" style={{
+              display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.75)',
+              border: '1px solid rgba(180,155,125,0.25)',
+              borderRadius: 20, padding: '16px 24px',
+              textDecoration: 'none', minWidth: 110,
+              transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(80,55,35,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.95)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.75)' }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="9" cy="7" r="3"/>
+                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <path d="M21 21v-2a4 4 0 0 0-3-3.85"/>
+              </svg>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+                color: '#7A6A5E', fontWeight: 500,
+              }}>
+                {t('Roster', 'Jadual')}
+              </span>
+            </a>
+
           </div>
         </div>
 
         {/* Scroll cue */}
         <div style={{
-          position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-          opacity: 0.4, animation: 'bob 2.5s ease-in-out infinite',
+          opacity: 0.35, animation: 'bob 2.5s ease-in-out infinite',
         }}>
-          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, transparent, #8A7A6E)' }} />
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#8A7A6E' }} />
+          <div style={{ width: 1, height: 36, background: 'linear-gradient(to bottom, transparent, #8A7A6E)' }} />
+          <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#8A7A6E' }} />
         </div>
       </section>
-
-      {/* ── SERVICE TIMES PILL BAR ── */}
-      <div style={{
-        background: '#2D2926', padding: '1.25rem 1.5rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 'clamp(1rem, 4vw, 3rem)', flexWrap: 'wrap',
-      }}>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#8A7A6E' }}>
-          {t('Sunday Services', 'Kebaktian Ahad')}
-        </span>
-        {SERVICES.map(s => (
-          <div key={s.time} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#C9A882' }} />
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#E8DDD4', fontWeight: 400 }}>
-              <strong style={{ fontWeight: 500 }}>{s.time}</strong>
-              {' '}
-              <span style={{ color: '#8A7A6E', fontSize: 11 }}>·</span>
-              {' '}
-              <span style={{ color: '#A89080', fontSize: 12 }}>{t(s.lang, s.note)}</span>
-            </span>
-          </div>
-        ))}
-      </div>
 
       {/* ── ABOUT / WELCOME ── */}
       <section id="about" style={{ padding: 'clamp(4rem, 10vw, 7rem) 1.5rem' }}>
