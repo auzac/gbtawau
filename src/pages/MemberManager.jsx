@@ -93,7 +93,7 @@ function Badge({ variant='adult', children }) {
       display:'inline-flex', alignItems:'center', gap:'3px',
       padding:'2px 8px', borderRadius:'20px', fontSize:'11px', fontWeight:600,
       background:s.bg, color:s.color, whiteSpace:'nowrap',
-      fontFamily:'system-ui, sans-serif',
+      fontFamily:"'DM Sans', system-ui, sans-serif",
     }}>
       {children}
     </span>
@@ -113,7 +113,7 @@ function StatCard({ icon: Icon, label, value, sub, dark }) {
         <span style={{
           fontSize:'10px', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase',
           color: dark ? '#78716C' : C.textMuted,
-          fontFamily:'system-ui, sans-serif',
+          fontFamily:"'DM Sans', system-ui, sans-serif",
           overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
         }}>{label}</span>
         {Icon && <Icon size={13} style={{ color: dark ? '#78716C' : C.accent, flexShrink:0 }} />}
@@ -121,10 +121,10 @@ function StatCard({ icon: Icon, label, value, sub, dark }) {
       <span style={{
         fontSize:'30px', fontWeight:700, lineHeight:1,
         color: dark ? '#FFFFFF' : C.text,
-        fontFamily:"'Georgia', 'Times New Roman', serif",
+        fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif",
         fontVariantNumeric:'tabular-nums',
       }}>{value}</span>
-      {sub && <span style={{ fontSize:'11px', color: dark ? '#78716C' : C.textMuted, fontFamily:'system-ui, sans-serif' }}>{sub}</span>}
+      {sub && <span style={{ fontSize:'11px', color: dark ? '#78716C' : C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{sub}</span>}
     </div>
   )
 }
@@ -135,7 +135,7 @@ function FieldLabel({ children }) {
     <label style={{
       display:'block', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em',
       textTransform:'uppercase', color:C.textMuted, marginBottom:'6px',
-      fontFamily:'system-ui, sans-serif',
+      fontFamily:"'DM Sans', system-ui, sans-serif",
     }}>{children}</label>
   )
 }
@@ -145,7 +145,7 @@ function SectionLabel({ children, style={} }) {
   return (
     <p style={{
       margin:'0 0 10px', fontSize:'10px', fontWeight:700, letterSpacing:'0.12em',
-      textTransform:'uppercase', color:C.textMuted, fontFamily:'system-ui, sans-serif',
+      textTransform:'uppercase', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif",
       ...style,
     }}>{children}</p>
   )
@@ -164,7 +164,7 @@ function MemberProfileModal({ member, onClose, isMobile }) {
           <Icon size={15} style={{ color:C.accentDark }} />
         </div>
         <div style={{ minWidth:0 }}>
-          <p style={{ margin:0, fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>{label}</p>
+          <p style={{ margin:0, fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{label}</p>
           <p style={{ margin:'3px 0 0', fontSize:'14px', color:C.text, wordBreak:'break-word', fontFamily:'system-ui, sans-serif' }}>{value}</p>
         </div>
       </div>
@@ -203,14 +203,14 @@ function MemberProfileModal({ member, onClose, isMobile }) {
             }}>
               {isDeceased
                 ? <Cross size={18} style={{ color:'#9CA3AF' }} />
-                : <span style={{ fontSize:'19px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Georgia', serif" }}>{member.name.charAt(0)}</span>
+                : <span style={{ fontSize:'19px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Lora', 'Georgia', serif" }}>{member.name.charAt(0)}</span>
               }
             </div>
             <div>
-              <h2 style={{ margin:0, fontSize:'20px', fontWeight:700, lineHeight:1.1, color: isDeceased ? C.textMuted : C.text, fontFamily:"'Georgia', 'Times New Roman', serif" }}>
+              <h2 style={{ margin:0, fontSize:'20px', fontWeight:700, lineHeight:1.1, color: isDeceased ? C.textMuted : C.text, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
                 {member.name}
               </h2>
-              {isDeceased && <p style={{ margin:'4px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>Home with the Lord{member.date_of_death?` · ${toDisplay(member.date_of_death)}`:''}</p>}
+              {isDeceased && <p style={{ margin:'4px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Home with the Lord{member.date_of_death?` · ${toDisplay(member.date_of_death)}`:''}</p>}
             </div>
           </div>
           <button onClick={onClose} style={{ width:'32px', height:'32px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -233,8 +233,8 @@ function MemberProfileModal({ member, onClose, isMobile }) {
               { label:'Baptism Date',     val:toDisplay(member.baptism_date) },
             ].map(({ label, val }) => (
               <div key={label} style={{ background:C.surfaceAlt, borderRadius:'12px', padding:'12px' }}>
-                <p style={{ margin:'0 0 4px', fontSize:'10px', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>{label}</p>
-                <p style={{ margin:0, fontSize:'14px', fontWeight:600, color:C.text, fontFamily:"'Georgia', serif" }}>{val}</p>
+                <p style={{ margin:'0 0 4px', fontSize:'10px', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{label}</p>
+                <p style={{ margin:0, fontSize:'14px', fontWeight:600, color:C.text, fontFamily:"'Lora', 'Georgia', serif" }}>{val}</p>
               </div>
             ))}
           </div>
@@ -268,7 +268,7 @@ function ModalShell({ title, onClose, isMobile, children }) {
           </div>
         )}
         <div style={{ padding: isMobile ? '8px 20px 16px' : '24px 24px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h2 style={{ margin:0, fontSize:isMobile?'20px':'22px', fontWeight:700, color:C.text, fontFamily:"'Georgia', 'Times New Roman', serif" }}>
+          <h2 style={{ margin:0, fontSize:isMobile?'20px':'22px', fontWeight:700, color:C.text, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
             {title}
           </h2>
           <button onClick={onClose} style={{ width:'32px', height:'32px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -287,15 +287,15 @@ function ModalShell({ title, onClose, isMobile, children }) {
 // ─── Shared button styles (defined after C) ───────────────────────────────────
 const btnBase = {
   display:'inline-flex', alignItems:'center', justifyContent:'center',
-  gap:'7px', borderRadius:'99px', fontFamily:'system-ui, sans-serif',
+  gap:'7px', borderRadius:'99px', fontFamily:"'DM Sans', system-ui, sans-serif",
   fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', border:'none',
 }
 const btnPrimary    = { ...btnBase, padding:'10px 18px', fontSize:'14px', background:C.text,    color:'#fff' }
 const btnSecondary  = { ...btnBase, padding:'10px 18px', fontSize:'14px', background:C.surface, color:C.textMid, border:`1.5px solid ${C.border}` }
 const btnPrimaryFull   = { ...btnPrimary,   width:'100%', padding:'13px', borderRadius:'12px', fontSize:'15px' }
 const btnSecondaryFull = { ...btnSecondary, width:'100%', padding:'13px', borderRadius:'12px', fontSize:'15px' }
-const rowBtnEdit = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', color:C.textMid, fontFamily:'system-ui, sans-serif' }
-const rowBtnDel  = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:'pointer', color:'#DC2626', fontFamily:'system-ui, sans-serif' }
+const rowBtnEdit = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif" }
+const rowBtnDel  = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:'pointer', color:'#DC2626', fontFamily:"'DM Sans', system-ui, sans-serif" }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MemberManager() {
@@ -498,13 +498,16 @@ export default function MemberManager() {
   if (loading) return (
     <div style={{ minHeight:'100vh', background:C.bg, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'14px' }}>
       <div style={{ width:'34px', height:'34px', borderRadius:'50%', border:`3px solid ${C.border}`, borderTopColor:C.accent, animation:'spin 0.8s linear infinite' }} />
-      <p style={{ color:C.textMuted, fontSize:'13px', margin:0, fontFamily:'system-ui, sans-serif' }}>Loading directory…</p>
+      <p style={{ color:C.textMuted, fontSize:'13px', margin:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Loading directory…</p>
       <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   )
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
+
+      {/* Google Fonts */}
+      <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
       {/* ── Toast */}
       {savedMessage && (
@@ -514,7 +517,7 @@ export default function MemberManager() {
             padding:'9px 18px', borderRadius:'99px',
             background: savedMessage.isError ? '#DC2626' : C.text,
             color:'#fff', fontSize:'13px', fontWeight:600,
-            fontFamily:'system-ui, sans-serif',
+            fontFamily:"'DM Sans', system-ui, sans-serif",
             boxShadow:'0 4px 20px rgba(0,0,0,0.2)', whiteSpace:'nowrap',
           }}>
             {savedMessage.isError ? <AlertCircle size={14} /> : <CheckCircle size={14} />}
@@ -534,15 +537,15 @@ export default function MemberManager() {
               <ArrowLeft size={16} style={{ color:C.textMid }} />
             </button>
             <div>
-              <h1 style={{ margin:0, fontSize:'17px', fontWeight:700, color:C.text, lineHeight:1.1, fontFamily:"'Georgia', 'Times New Roman', serif" }}>
+              <h1 style={{ margin:0, fontSize:'17px', fontWeight:700, color:C.text, lineHeight:1.1, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
                 Member Management
               </h1>
-              <p style={{ margin:0, fontSize:'11px', color:C.textMuted, fontFamily:'system-ui, sans-serif', letterSpacing:'0.03em' }}>
+              <p style={{ margin:0, fontSize:'11px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif", letterSpacing:'0.03em' }}>
                 Church Directory
               </p>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px', borderRadius:'99px', border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', fontSize:'13px', color:C.textMid, fontFamily:'system-ui, sans-serif', fontWeight:500 }}>
+          <button onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px', borderRadius:'99px', border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', fontSize:'13px', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", fontWeight:500 }}>
             <LogOut size={13} />
             {!isMobile && 'Sign out'}
           </button>
@@ -582,8 +585,8 @@ export default function MemberManager() {
                     <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
                       <Icon size={14} style={{ color:C.textMuted }} />
                       <div>
-                        <p style={{ margin:0, fontSize:'13px', fontWeight:600, color:C.text, fontFamily:"'Georgia', serif" }}>{label}</p>
-                        <p style={{ margin:'1px 0 0', fontSize:'10px', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>{sub}</p>
+                        <p style={{ margin:0, fontSize:'13px', fontWeight:600, color:C.text, fontFamily:"'Lora', 'Georgia', serif" }}>{label}</p>
+                        <p style={{ margin:'1px 0 0', fontSize:'10px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{sub}</p>
                       </div>
                     </div>
                     <Badge variant={variant}>{value}</Badge>
@@ -607,7 +610,7 @@ export default function MemberManager() {
               </div>
             </div>
 
-            <p style={{ margin:0, fontSize:'10px', color:C.textMuted, fontFamily:'system-ui, sans-serif', textAlign:'center', letterSpacing:'0.05em' }}>
+            <p style={{ margin:0, fontSize:'10px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif", textAlign:'center', letterSpacing:'0.05em' }}>
               Synced to Supabase
             </p>
           </aside>
@@ -653,10 +656,10 @@ export default function MemberManager() {
             <div style={{ padding: isMobile ? '14px 16px 12px' : '18px 20px 14px' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'12px', marginBottom:'12px' }}>
                 <div>
-                  <h2 style={{ margin:0, fontSize:'16px', fontWeight:700, color:C.text, fontFamily:"'Georgia', 'Times New Roman', serif" }}>
+                  <h2 style={{ margin:0, fontSize:'16px', fontWeight:700, color:C.text, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
                     Member Directory
                   </h2>
-                  <p style={{ margin:'2px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>
+                  <p style={{ margin:'2px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>
                     {filteredMembers.length !== members.length
                       ? `${filteredMembers.length} of ${members.length} shown`
                       : `${members.length} total members`}
@@ -681,7 +684,7 @@ export default function MemberManager() {
                     border:`1.5px solid ${ageFilter===g.key ? C.text : C.border}`,
                     background: ageFilter===g.key ? C.text : C.surface,
                     color: ageFilter===g.key ? '#fff' : C.textMid,
-                    cursor:'pointer', fontFamily:'system-ui, sans-serif',
+                    cursor:'pointer', fontFamily:"'DM Sans', system-ui, sans-serif",
                     display:'flex', alignItems:'center', gap:'5px',
                   }}>
                     {g.label}
@@ -699,12 +702,12 @@ export default function MemberManager() {
                 <div style={{ width:'48px', height:'48px', borderRadius:'14px', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
                   <Users size={22} style={{ color:C.textMuted }} />
                 </div>
-                <p style={{ color:C.textMid, fontSize:'15px', margin:0, fontFamily:"'Georgia', serif" }}>
+                <p style={{ color:C.textMid, fontSize:'15px', margin:0, fontFamily:"'Lora', 'Georgia', serif" }}>
                   {searchTerm||ageFilter!=='all' ? 'No members match your filters' : 'No members yet'}
                 </p>
                 <button
                   onClick={searchTerm||ageFilter!=='all' ? ()=>{ setSearchTerm(''); setAgeFilter('all') } : openAdd}
-                  style={{ marginTop:'12px', color:C.accentDark, background:'none', border:'none', cursor:'pointer', fontSize:'14px', fontFamily:'system-ui, sans-serif', fontWeight:600 }}
+                  style={{ marginTop:'12px', color:C.accentDark, background:'none', border:'none', cursor:'pointer', fontSize:'14px', fontFamily:"'DM Sans', system-ui, sans-serif", fontWeight:600 }}
                 >
                   {searchTerm||ageFilter!=='all' ? 'Clear filters' : 'Add your first member →'}
                 </button>
@@ -730,15 +733,15 @@ export default function MemberManager() {
                       }}>
                         {isDeceased
                           ? <Cross size={15} style={{ color:'#9CA3AF' }} />
-                          : <span style={{ fontSize:'16px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Georgia', serif" }}>{member.name.charAt(0)}</span>
+                          : <span style={{ fontSize:'16px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Lora', 'Georgia', serif" }}>{member.name.charAt(0)}</span>
                         }
                       </div>
                       <div style={{ flex:1, minWidth:0 }}>
                         <button onClick={() => setSelectedMember(member)} style={{ background:'none', border:'none', cursor:'pointer', padding:0, textAlign:'left', width:'100%' }}>
-                          <p style={{ margin:0, fontSize:'15px', fontWeight:700, color: isDeceased ? C.textMuted : C.text, textDecoration: isDeceased ? 'line-through' : 'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'Georgia', 'Times New Roman', serif" }}>
+                          <p style={{ margin:0, fontSize:'15px', fontWeight:700, color: isDeceased ? C.textMuted : C.text, textDecoration: isDeceased ? 'line-through' : 'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
                             {member.name}
                           </p>
-                          <p style={{ margin:'2px 0 0', fontSize:'12px', color:C.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif' }}>
+                          <p style={{ margin:'2px 0 0', fontSize:'12px', color:C.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans', system-ui, sans-serif" }}>
                             {member.address}{age!==null&&!isDeceased?` · ${age} yrs`:''}
                           </p>
                         </button>
@@ -766,14 +769,14 @@ export default function MemberManager() {
                 <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px', minWidth:'900px' }}>
                   <thead>
                     <tr style={{ background:C.surfaceAlt }}>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'22%' }}>Name</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'8%' }}>Sex</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'22%' }}>Address</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>DOB</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'10%' }}>Age</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Status</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Marital</th>
-                      <th style={{ padding:'12px 16px', textAlign:'right', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Actions</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'22%' }}>Name</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'8%' }}>Sex</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'22%' }}>Address</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>DOB</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'10%' }}>Age</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Status</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Marital</th>
+                      <th style={{ padding:'12px 16px', textAlign:'right', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -797,7 +800,7 @@ export default function MemberManager() {
                               }}>
                                 {isDeceased
                                   ? <Cross size={13} style={{ color:'#9CA3AF' }} />
-                                  : <span style={{ fontSize:'13px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Georgia', serif" }}>{member.name.charAt(0)}</span>
+                                  : <span style={{ fontSize:'13px', fontWeight:700, color:member.sex==='Male'?'#1D4ED8':'#BE185D', fontFamily:"'Lora', 'Georgia', serif" }}>{member.name.charAt(0)}</span>
                                 }
                               </div>
                               <button onClick={() => setSelectedMember(member)} style={{
@@ -805,7 +808,7 @@ export default function MemberManager() {
                                 fontSize:'14px', fontWeight:600, textAlign:'left',
                                 color: isDeceased ? C.textMuted : C.text,
                                 textDecoration: isDeceased ? 'line-through' : 'none',
-                                fontFamily:"'Georgia', 'Times New Roman', serif",
+                                fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif",
                                 overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
                               }}>
                                 {member.name}
@@ -817,11 +820,11 @@ export default function MemberManager() {
                             <Badge variant={member.sex==='Male'?'male':'female'}>{member.sex||'Male'}</Badge>
                           </td>
                           {/* Address */}
-                          <td style={{ padding:'12px 16px', color:C.textMid, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif', fontSize:'13px' }}>
+                          <td style={{ padding:'12px 16px', color:C.textMid, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:'13px' }}>
                             {member.address}
                           </td>
                           {/* DOB */}
-                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif', fontSize:'13px' }}>
+                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap', fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:'13px' }}>
                             <span style={{ color:C.textMid }}>{toDisplay(member.dob)}</span>
                           </td>
                           {/* Age */}
@@ -834,7 +837,7 @@ export default function MemberManager() {
                               ? <Badge variant="deceased">Deceased</Badge>
                               : member.baptism_date
                                 ? <Badge variant="baptised"><UserCheck size={10} style={{ marginRight:'2px' }} />Baptised</Badge>
-                                : <span style={{ color:C.textMuted, fontSize:'12px', fontFamily:'system-ui, sans-serif' }}>—</span>
+                                : <span style={{ color:C.textMuted, fontSize:'12px', fontFamily:"'DM Sans', system-ui, sans-serif" }}>—</span>
                             }
                           </td>
                           {/* Marital */}
@@ -856,7 +859,7 @@ export default function MemberManager() {
           </div>
 
           {isMobile && (
-            <p style={{ textAlign:'center', fontSize:'10px', color:C.textMuted, margin:0, fontFamily:'system-ui, sans-serif', letterSpacing:'0.05em' }}>
+            <p style={{ textAlign:'center', fontSize:'10px', color:C.textMuted, margin:0, fontFamily:"'DM Sans', system-ui, sans-serif", letterSpacing:'0.05em' }}>
               Synced to Supabase · Cloud storage
             </p>
           )}
@@ -878,7 +881,7 @@ export default function MemberManager() {
                 {SEX_OPTIONS.map(s => (
                   <label key={s} style={{
                     display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', flex:1,
-                    fontSize:'14px', color:C.textMid, fontFamily:'system-ui, sans-serif',
+                    fontSize:'14px', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif",
                     padding:'10px 14px', borderRadius:'10px',
                     border:`1.5px solid ${formData.sex===s ? C.accentDark : C.border}`,
                     background: formData.sex===s ? C.accentBg : C.surface,
@@ -931,7 +934,7 @@ export default function MemberManager() {
                 <input type="checkbox" name="isDeceased" checked={formData.isDeceased} onChange={handleInputChange} style={{ width:'18px', height:'18px', accentColor:C.accentDark, cursor:'pointer' }} />
                 <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                   <Cross size={14} style={{ color:C.textMuted }} />
-                  <span style={{ fontSize:'14px', color:C.text, fontFamily:'system-ui, sans-serif' }}>Mark as Deceased</span>
+                  <span style={{ fontSize:'14px', color:C.text, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Mark as Deceased</span>
                 </div>
               </label>
               {formData.isDeceased && (
@@ -956,14 +959,14 @@ export default function MemberManager() {
           <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             {[
               { n:1, title:'Download the template', sub:'Fill in with member data. Dates in DD/MM/YYYY format.', btn: <button onClick={downloadTemplate} style={{ ...btnPrimary, fontSize:'13px', padding:'8px 16px' }}><Download size={13} />Download Template</button> },
-              { n:2, title:'Upload your CSV', sub:'Select your completed CSV file.', btn: <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} style={{ fontSize:'13px', color:C.textMid, fontFamily:'system-ui, sans-serif' }} /> },
+              { n:2, title:'Upload your CSV', sub:'Select your completed CSV file.', btn: <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} style={{ fontSize:'13px', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif" }} /> },
             ].map(({ n, title, sub, btn }) => (
               <div key={n} style={{ background:C.surfaceAlt, borderRadius:'14px', padding:'16px' }}>
                 <div style={{ display:'flex', gap:'10px', alignItems:'flex-start', marginBottom:'10px' }}>
-                  <div style={{ width:'26px', height:'26px', borderRadius:'50%', background:C.text, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700, flexShrink:0, fontFamily:'system-ui, sans-serif' }}>{n}</div>
+                  <div style={{ width:'26px', height:'26px', borderRadius:'50%', background:C.text, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700, flexShrink:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{n}</div>
                   <div>
-                    <p style={{ margin:0, fontSize:'14px', fontWeight:700, color:C.text, fontFamily:"'Georgia', serif" }}>{title}</p>
-                    <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>{sub}</p>
+                    <p style={{ margin:0, fontSize:'14px', fontWeight:700, color:C.text, fontFamily:"'Lora', 'Georgia', serif" }}>{title}</p>
+                    <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{sub}</p>
                   </div>
                 </div>
                 {btn}
@@ -975,27 +978,27 @@ export default function MemberManager() {
                 {importErrors.slice(0,8).map((err,i) => (
                   <div key={i} style={{ display:'flex', gap:'6px', alignItems:'flex-start', marginTop: i===0?0:'6px' }}>
                     <AlertCircle size={13} style={{ color:'#DC2626', flexShrink:0, marginTop:'1px' }} />
-                    <p style={{ margin:0, fontSize:'12px', color:'#DC2626', fontFamily:'system-ui, sans-serif' }}>{err}</p>
+                    <p style={{ margin:0, fontSize:'12px', color:'#DC2626', fontFamily:"'DM Sans', system-ui, sans-serif" }}>{err}</p>
                   </div>
                 ))}
-                {importErrors.length > 8 && <p style={{ margin:'6px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif' }}>…and {importErrors.length-8} more</p>}
+                {importErrors.length > 8 && <p style={{ margin:'6px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>…and {importErrors.length-8} more</p>}
               </div>
             )}
 
             {importPreview.length > 0 && (
               <div>
-                <p style={{ margin:'0 0 10px', fontSize:'14px', fontWeight:600, color:C.text, fontFamily:"'Georgia', serif" }}>
+                <p style={{ margin:'0 0 10px', fontSize:'14px', fontWeight:600, color:C.text, fontFamily:"'Lora', 'Georgia', serif" }}>
                   {importPreview.length} members ready to import
                 </p>
                 <div style={{ border:`1.5px solid ${C.border}`, borderRadius:'12px', overflow:'hidden', maxHeight:'160px', overflowY:'auto' }}>
                   {importPreview.slice(0,8).map((m,i) => (
                     <div key={i} style={{ display:'flex', justifyContent:'space-between', gap:'10px', padding:'9px 14px', borderTop:i===0?'none':`1px solid ${C.border}`, background:C.surface }}>
-                      <span style={{ fontSize:'13px', fontWeight:600, color:C.text, fontFamily:"'Georgia', serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.name}</span>
-                      <span style={{ fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif', whiteSpace:'nowrap' }}>{m.sex} · {toDisplay(m.dob)}</span>
+                      <span style={{ fontSize:'13px', fontWeight:600, color:C.text, fontFamily:"'Lora', 'Georgia', serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.name}</span>
+                      <span style={{ fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif", whiteSpace:'nowrap' }}>{m.sex} · {toDisplay(m.dob)}</span>
                     </div>
                   ))}
                   {importPreview.length > 8 && (
-                    <div style={{ padding:'9px 14px', textAlign:'center', fontSize:'12px', color:C.textMuted, fontFamily:'system-ui, sans-serif', borderTop:`1px solid ${C.border}` }}>
+                    <div style={{ padding:'9px 14px', textAlign:'center', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif", borderTop:`1px solid ${C.border}` }}>
                       …and {importPreview.length-8} more
                     </div>
                   )}
@@ -1021,7 +1024,7 @@ export default function MemberManager() {
           outline: none;
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box;
-          font-family: system-ui, sans-serif;
+          font-family: 'DM Sans', system-ui, sans-serif;
         }
         .mm-input:focus {
           border-color: ${C.accentDark};
