@@ -400,7 +400,7 @@ function AdminDashboard() {
                   </tr>
                 ))}
               </tbody>
-             </>
+             </table>
           </div>
         )}
 
