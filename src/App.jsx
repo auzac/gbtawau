@@ -1,10 +1,12 @@
 // src/App.jsx
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import LandingPage from './components/LandingPage'
 import Login from './pages/Login'
-import AdminDashboard from './pages/AdminDashboard'
+import StaffHub from './pages/StaffHub'
+import MemberManager from './pages/MemberManager'
+import ContentManager from './pages/ContentManager'
+import AdminTools from './pages/AdminTools'
 
 function App() {
   return (
@@ -17,11 +19,11 @@ function App() {
           {/* Auth */}
           <Route path="/login" element={<Login />} />
 
-          {/* Admin */}
-          <Route
-            path="/admin/dashboard"
-            element={<AdminDashboard />}
-          />
+          {/* Staff Portal (protected routes - auth coming later) */}
+          <Route path="/staff" element={<StaffHub />} />
+          <Route path="/staff/members" element={<MemberManager />} />
+          <Route path="/staff/content" element={<ContentManager />} />
+          <Route path="/staff/admin" element={<AdminTools />} />
         </Routes>
       </div>
     </BrowserRouter>
