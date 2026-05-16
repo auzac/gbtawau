@@ -15,7 +15,12 @@ import {
   Search,
   X,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Upload,
+  MapPin,
+  User,
+  Trash
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -35,6 +40,7 @@ function ContentManager() {
   const [verseSearchTerm, setVerseSearchTerm] = useState('')
   const [showAddVerseForm, setShowAddVerseForm] = useState(false)
   const [selectedVerseId, setSelectedVerseId] = useState(null)
+  const [isImportingVerses, setIsImportingVerses] = useState(false)
   const [newVerseForm, setNewVerseForm] = useState({ reference: '', text: '', theme: '' })
   const [activeVerse, setActiveVerseState] = useState({
     id: null,
@@ -56,7 +62,7 @@ function ContentManager() {
   // Modal States
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
-  const [eventForm, setEventForm] = useState({ date: '', titleEn: '', time: '', descriptionEn: '' })
+  const [eventForm, setEventForm] = useState({ date: '', titleEn: '', time: '', descriptionEn: '', location: '', pic: '' })
 
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false)
   const [editingRosterWeek, setEditingRosterWeek] = useState(null)
@@ -146,7 +152,9 @@ function ContentManager() {
         date: event.date,
         titleEn: event.title_en,
         time: event.time,
-        descriptionEn: event.description_en
+        descriptionEn: event.description_en,
+        location: event.location || '',
+        pic: event.pic || ''
       })))
     }
   }
@@ -206,7 +214,7 @@ function ContentManager() {
       showSaved('Verse added to library')
       setNewVerseForm({ reference: '', text: '', theme: '' })
       setShowAddVerseForm(false)
-      loadVerseLibrary()
+      await loadVerseLibrary()
     } else {
       showSaved('Error saving verse', true)
     }
@@ -227,11 +235,109 @@ function ContentManager() {
 
     if (!error) {
       showSaved('Verse activated for homepage')
-      loadActiveVerse()
+      await Promise.all([loadVerseLibrary(), loadActiveVerse()])
       setSelectedVerseId(null)
     } else {
       showSaved('Error activating verse', true)
     }
+  }
+
+  const deleteVerse = async (verseId, verseReference) => {
+    if (window.confirm(`Delete "${verseReference}" from library? This cannot be undone.`)) {
+      const { error } = await supabase
+        .from('verse_library')
+        .delete()
+        .eq('id', verseId)
+
+      if (!error) {
+        showSaved('Verse deleted')
+        if (selectedVerseId === verseId) setSelectedVerseId(null)
+        await loadVerseLibrary()
+      } else {
+        showSaved('Error deleting verse', true)
+      }
+    }
+  }
+
+  const exportVersesToCSV = () => {
+    const headers = ['Reference', 'Text', 'Theme']
+    const rows = verseLibrary.map(v => [
+      `"${v.reference}"`,
+      `"${v.text.replace(/"/g, '""')}"`,
+      `"${v.theme || ''}"`
+    ])
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `verse_library_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    showSaved('Verses exported')
+  }
+
+  const importVersesFromCSV = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      const csvText = event.target.result
+      const lines = csvText.split(/\r?\n/)
+      const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
+      
+      const referenceIdx = headers.findIndex(h => h.toLowerCase() === 'reference')
+      const textIdx = headers.findIndex(h => h.toLowerCase() === 'text')
+      const themeIdx = headers.findIndex(h => h.toLowerCase() === 'theme')
+
+      if (referenceIdx === -1 || textIdx === -1) {
+        showSaved('CSV must have Reference and Text columns', true)
+        return
+      }
+
+      let imported = 0
+      let errors = 0
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue
+        
+        // Simple CSV parsing
+        const row = []
+        let inQuote = false
+        let field = ''
+        for (const char of lines[i]) {
+          if (char === '"') {
+            inQuote = !inQuote
+          } else if (char === ',' && !inQuote) {
+            row.push(field.trim())
+            field = ''
+          } else {
+            field += char
+          }
+        }
+        row.push(field.trim())
+        
+        const reference = row[referenceIdx]?.replace(/^"|"$/g, '')
+        const text = row[textIdx]?.replace(/^"|"$/g, '')
+        const theme = themeIdx !== -1 ? row[themeIdx]?.replace(/^"|"$/g, '') : ''
+
+        if (reference && text) {
+          const { error } = await supabase
+            .from('verse_library')
+            .insert({ reference, text, theme, is_active: false })
+            .select()
+          
+          if (!error) imported++
+          else errors++
+        }
+      }
+
+      showSaved(`Imported ${imported} verses, ${errors} errors`)
+      await loadVerseLibrary()
+    }
+    reader.readAsText(file, 'UTF-8')
+    e.target.value = ''
   }
 
   const getSelectedVerse = () => {
@@ -242,7 +348,7 @@ function ContentManager() {
   // ─── Event Functions ────────────────────────────────────────────────────────
   const handleAddEvent = () => {
     setEditingEvent(null)
-    setEventForm({ date: '', titleEn: '', time: '', descriptionEn: '' })
+    setEventForm({ date: '', titleEn: '', time: '', descriptionEn: '', location: '', pic: '' })
     setIsEventModalOpen(true)
   }
 
@@ -252,7 +358,9 @@ function ContentManager() {
       date: event.date,
       titleEn: event.titleEn,
       time: formatTimeForInput(event.time),
-      descriptionEn: event.descriptionEn || ''
+      descriptionEn: event.descriptionEn || '',
+      location: event.location || '',
+      pic: event.pic || ''
     })
     setIsEventModalOpen(true)
   }
@@ -265,7 +373,9 @@ function ContentManager() {
           date: eventForm.date,
           title_en: eventForm.titleEn,
           time: eventForm.time,
-          description_en: eventForm.descriptionEn
+          description_en: eventForm.descriptionEn,
+          location: eventForm.location,
+          pic: eventForm.pic
         })
         .eq('id', editingEvent.id)
 
@@ -277,7 +387,9 @@ function ContentManager() {
           date: eventForm.date,
           title_en: eventForm.titleEn,
           time: eventForm.time,
-          description_en: eventForm.descriptionEn
+          description_en: eventForm.descriptionEn,
+          location: eventForm.location,
+          pic: eventForm.pic
         })
 
       if (!error) showSaved('Event added')
@@ -477,7 +589,22 @@ function ContentManager() {
             
             {/* LEFT COLUMN: Verse Library */}
             <div className="bg-white border border-[#E7E0D7] rounded-2xl p-5 shadow-sm">
-              <h2 className="text-lg font-serif text-[#2D2926] mb-4">Verse Library</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-serif text-[#2D2926]">Verse Library</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={exportVersesToCSV}
+                    className="p-2 rounded-lg hover:bg-[#F5F1EB] transition"
+                    title="Export verses"
+                  >
+                    <Download size={16} className="text-[#5E5247]" />
+                  </button>
+                  <label className="p-2 rounded-lg hover:bg-[#F5F1EB] transition cursor-pointer">
+                    <Upload size={16} className="text-[#5E5247]" />
+                    <input type="file" accept=".csv" onChange={importVersesFromCSV} className="hidden" />
+                  </label>
+                </div>
+              </div>
               
               {/* Search Bar */}
               <div className="relative mb-4">
@@ -510,8 +637,7 @@ function ContentManager() {
                   ).map(verse => (
                     <div
                       key={verse.id}
-                      onClick={() => setSelectedVerseId(verse.id)}
-                      className={`border rounded-xl p-3 cursor-pointer transition-all ${
+                      className={`border rounded-xl p-3 transition-all ${
                         selectedVerseId === verse.id
                           ? 'border-[#C4A88B] bg-[#F5EFE6] ring-2 ring-[#C4A88B]/30'
                           : verse.is_active
@@ -520,14 +646,27 @@ function ContentManager() {
                       }`}
                     >
                       <div className="flex justify-between items-start">
-                        <div className="flex-1">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => setSelectedVerseId(verse.id)}
+                        >
                           <p className="font-medium text-[#2D2926] text-sm">{verse.reference}</p>
                           <p className="text-xs text-[#7A6A5E] mt-1 line-clamp-1">{verse.text}</p>
                           {verse.theme && <p className="text-[10px] text-[#B0A49A] mt-1">{verse.theme}</p>}
                         </div>
-                        {verse.is_active && (
-                          <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full ml-2 whitespace-nowrap">Active</span>
-                        )}
+                        <div className="flex items-center gap-1 ml-2">
+                          {verse.is_active && (
+                            <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full whitespace-nowrap">Active</span>
+                          )}
+                          {!verse.is_active && (
+                            <button
+                              onClick={() => deleteVerse(verse.id, verse.reference)}
+                              className="p-1 rounded hover:bg-red-50 transition"
+                            >
+                              <Trash size={14} className="text-[#B07C68]" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -662,6 +801,12 @@ function ContentManager() {
                           </div>
                           <p className="text-xs sm:text-sm text-[#8B7E72] mb-2 sm:mb-3">{formatTimeForDisplay(event.time)}</p>
                           <p className="text-xs sm:text-sm text-[#5E5247] leading-relaxed">{event.descriptionEn}</p>
+                          {(event.location || event.pic) && (
+                            <div className="flex flex-wrap gap-3 mt-2 text-xs text-[#8A7A6E]">
+                              {event.location && <div className="flex items-center gap-1"><MapPin size={12} /> {event.location}</div>}
+                              {event.pic && <div className="flex items-center gap-1"><User size={12} /> {event.pic}</div>}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-start gap-1 sm:gap-2">
@@ -815,6 +960,8 @@ function ContentManager() {
               <input type="date" value={eventForm.date} onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Event Title" value={eventForm.titleEn} onChange={(e) => setEventForm(prev => ({ ...prev, titleEn: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="time" value={eventForm.time} onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Location (e.g., Main Hall, Room 101)" value={eventForm.location} onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Person In Charge (PIC)" value={eventForm.pic} onChange={(e) => setEventForm(prev => ({ ...prev, pic: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <textarea placeholder="Description" value={eventForm.descriptionEn} onChange={(e) => setEventForm(prev => ({ ...prev, descriptionEn: e.target.value }))} rows={3} className="w-full px-4 py-2 border rounded-xl text-sm resize-none" />
               <button onClick={handleSaveEvent} className="w-full bg-[#2D2926] text-white py-2 rounded-xl hover:bg-[#433A34] transition">Save Event</button>
             </div>
