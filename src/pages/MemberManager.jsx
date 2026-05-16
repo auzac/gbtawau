@@ -294,8 +294,8 @@ const btnPrimary    = { ...btnBase, padding:'10px 18px', fontSize:'14px', backgr
 const btnSecondary  = { ...btnBase, padding:'10px 18px', fontSize:'14px', background:C.surface, color:C.textMid, border:`1.5px solid ${C.border}` }
 const btnPrimaryFull   = { ...btnPrimary,   width:'100%', padding:'13px', borderRadius:'12px', fontSize:'15px' }
 const btnSecondaryFull = { ...btnSecondary, width:'100%', padding:'13px', borderRadius:'12px', fontSize:'15px' }
-const rowBtnEdit = { padding:'5px 10px', borderRadius:'8px', fontSize:'11px', fontWeight:600, border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', color:C.textMid, fontFamily:'system-ui, sans-serif' }
-const rowBtnDel  = { padding:'5px 10px', borderRadius:'8px', fontSize:'11px', fontWeight:600, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:'pointer', color:'#DC2626', fontFamily:'system-ui, sans-serif' }
+const rowBtnEdit = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:`1.5px solid ${C.border}`, background:C.surface, cursor:'pointer', color:C.textMid, fontFamily:'system-ui, sans-serif' }
+const rowBtnDel  = { padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:600, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:'pointer', color:'#DC2626', fontFamily:'system-ui, sans-serif' }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MemberManager() {
@@ -528,7 +528,7 @@ export default function MemberManager() {
 
       {/* ── Header */}
       <header style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, zIndex:50 }}>
-        <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 20px', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ maxWidth:'1400px', margin:'0 auto', padding:'0 20px', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
             <button onClick={() => navigate('/staff')} style={{ width:'36px', height:'36px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <ArrowLeft size={16} style={{ color:C.textMid }} />
@@ -550,11 +550,11 @@ export default function MemberManager() {
       </header>
 
       {/* ── Body */}
-      <div style={{ maxWidth:'1200px', margin:'0 auto', padding: isMobile ? '20px 16px 48px' : '28px 24px 56px', display:'flex', gap:'24px', alignItems:'flex-start' }}>
+      <div style={{ maxWidth:'1400px', margin:'0 auto', padding: isMobile ? '20px 16px 48px' : '28px 28px 56px', display:'flex', gap:'28px', alignItems:'flex-start' }}>
 
         {/* ── Sidebar (desktop) */}
         {!isMobile && (
-          <aside style={{ width:'260px', flexShrink:0, position:'sticky', top:'84px', display:'flex', flexDirection:'column', gap:'20px' }}>
+          <aside style={{ width:'280px', flexShrink:0, position:'sticky', top:'84px', display:'flex', flexDirection:'column', gap:'20px' }}>
 
             <div>
               <SectionLabel>Overview</SectionLabel>
@@ -667,7 +667,7 @@ export default function MemberManager() {
                     type="text" placeholder="Search…" value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className="mm-input"
-                    style={{ width: isMobile ? '130px' : '220px', padding:'8px 12px 8px 34px', borderRadius:'99px', fontSize:'13px' }}
+                    style={{ width: isMobile ? '130px' : '240px', padding:'8px 12px 8px 34px', borderRadius:'99px', fontSize:'13px' }}
                   />
                   <Search size={13} style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:C.textMuted, pointerEvents:'none' }} />
                 </div>
@@ -761,29 +761,19 @@ export default function MemberManager() {
               </div>
 
             ) : (
-              /* ── Desktop: table */
+              /* ── Desktop: table with wider layout */
               <div style={{ overflowX:'auto' }}>
-                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px', minWidth:'900px' }}>
                   <thead>
                     <tr style={{ background:C.surfaceAlt }}>
-                      {[
-                        { label:'Name',           w:'auto'  },
-                        { label:'Sex',            w:'80px'  },
-                        { label:'Address',        w:'180px' },
-                        { label:'Date of Birth',  w:'140px' },
-                        { label:'Status',         w:'110px' },
-                        { label:'Marital',        w:'100px' },
-                        { label:'',               w:'120px' },
-                      ].map((col, i) => (
-                        <th key={i} style={{
-                          padding:'10px 16px', textAlign:'left',
-                          fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase',
-                          color:C.textMid, whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif',
-                          width: col.w,
-                        }}>
-                          {col.label}
-                        </th>
-                      ))}
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'22%' }}>Name</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'8%' }}>Sex</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'22%' }}>Address</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>DOB</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'10%' }}>Age</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Status</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Marital</th>
+                      <th style={{ padding:'12px 16px', textAlign:'right', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:'system-ui, sans-serif', width:'12%' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -816,24 +806,27 @@ export default function MemberManager() {
                                 color: isDeceased ? C.textMuted : C.text,
                                 textDecoration: isDeceased ? 'line-through' : 'none',
                                 fontFamily:"'Georgia', 'Times New Roman', serif",
-                                maxWidth:'170px', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
                               }}>
                                 {member.name}
                               </button>
                             </div>
                           </td>
                           {/* Sex */}
-                          <td style={{ padding:'12px 16px' }}>
+                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
                             <Badge variant={member.sex==='Male'?'male':'female'}>{member.sex||'Male'}</Badge>
                           </td>
                           {/* Address */}
-                          <td style={{ padding:'12px 16px', color:C.textMid, maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif', fontSize:'13px' }}>
+                          <td style={{ padding:'12px 16px', color:C.textMid, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif', fontSize:'13px' }}>
                             {member.address}
                           </td>
                           {/* DOB */}
                           <td style={{ padding:'12px 16px', whiteSpace:'nowrap', fontFamily:'system-ui, sans-serif', fontSize:'13px' }}>
                             <span style={{ color:C.textMid }}>{toDisplay(member.dob)}</span>
-                            {age!==null&&!isDeceased && <span style={{ marginLeft:'6px' }}><Badge variant={ageVariant(age)}>{age}y</Badge></span>}
+                          </td>
+                          {/* Age */}
+                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
+                            {age!==null&&!isDeceased && <Badge variant={ageVariant(age)}>{age} yrs</Badge>}
                           </td>
                           {/* Status */}
                           <td style={{ padding:'12px 16px' }}>
@@ -850,7 +843,7 @@ export default function MemberManager() {
                           </td>
                           {/* Actions */}
                           <td style={{ padding:'12px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
-                            <button onClick={() => handleEdit(member)} style={{ ...rowBtnEdit, marginRight:'6px' }}>Edit</button>
+                            <button onClick={() => handleEdit(member)} style={{ ...rowBtnEdit, marginRight:'8px' }}>Edit</button>
                             <button onClick={() => handleDelete(member.id, member.name)} style={rowBtnDel}>Delete</button>
                           </td>
                         </tr>
@@ -1043,7 +1036,6 @@ export default function MemberManager() {
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         button { transition: opacity 0.12s; }
         button:active { opacity: 0.78; }
-        thead tr th:first-child { border-radius: 0; }
       `}</style>
     </div>
   )
