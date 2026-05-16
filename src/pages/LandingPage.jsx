@@ -1,5 +1,3 @@
-// src/pages/LandingPage.jsx
-
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -7,7 +5,6 @@ import { supabase } from '../lib/supabase'
 const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
   { en: 'About', bm: 'Tentang Kami', href: '#about' },
-  { en: 'Events', bm: 'Acara', href: '#events' },
   { en: 'Contact', bm: 'Hubungi', href: '#contact' },
   { en: 'Staff', bm: 'Kakitangan', href: '/login', isRouterLink: true },
 ]
@@ -20,6 +17,10 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const [activeModal, setActiveModal] = useState(null)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [selectedWeek, setSelectedWeek] = useState(0)
+
   const [verse, setVerse] = useState({
     reference: 'Matthew 11:28',
     text: 'Come to me, all you who are weary and burdened, and I will give you rest.',
@@ -27,6 +28,7 @@ export default function LandingPage() {
   })
 
   const [events, setEvents] = useState([])
+  const [roster, setRoster] = useState([])
 
   const t = (en, bm) => (lang === 'bm' ? bm : en)
 
@@ -43,12 +45,12 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    document.body.style.overflow = menuOpen || activeModal ? 'hidden' : ''
 
     return () => {
       document.body.style.overflow = ''
     }
-  }, [menuOpen])
+  }, [menuOpen, activeModal])
 
   const loadContent = async () => {
     setLoading(true)
@@ -56,6 +58,7 @@ export default function LandingPage() {
     await Promise.all([
       loadActiveVerse(),
       loadUpcomingEvents(),
+      loadRoster(),
     ])
 
     setLoading(false)
@@ -64,24 +67,31 @@ export default function LandingPage() {
   const loadActiveVerse = async () => {
     const { data, error } = await supabase
       .from('verse_library')
-      .select('*')
+      .select('reference, text, theme')
       .eq('is_active', true)
       .maybeSingle()
 
     if (!error && data) {
-      setVerse({
-        reference: data.reference,
-        text: data.text,
-        theme: data.theme || '',
-      })
+      setVerse(data)
     }
   }
 
   const loadUpcomingEvents = async () => {
+    const today = new Date().toISOString().split('T')[0]
+
     const { data, error } = await supabase
       .from('events')
-      .select('*')
-      .gte('date', new Date().toISOString().split('T')[0])
+      .select(`
+        id,
+        title_en,
+        title_bm,
+        description_en,
+        description_bm,
+        date,
+        time,
+        location
+      `)
+      .gte('date', today)
       .order('date', { ascending: true })
       .order('time', { ascending: true })
       .limit(6)
@@ -90,6 +100,31 @@ export default function LandingPage() {
       setEvents(data)
     }
   }
+
+  const loadRoster = async () => {
+    const now = new Date()
+
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .split('T')[0]
+
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0]
+
+    const { data, error } = await supabase
+      .from('roster')
+      .select('id, week_start, leader, pianist, reader')
+      .gte('week_start', firstDay)
+      .lte('week_start', lastDay)
+      .order('week_start', { ascending: true })
+
+    if (!error && data) {
+      setRoster(data)
+    }
+  }
+
+  const currentMonthRoster = roster
 
   const formatTimeForDisplay = (time24) => {
     if (!time24) return ''
@@ -132,61 +167,52 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="bg-[#FAF8F5] text-[#2D2926] overflow-x-hidden">
-      {/* Fonts */}
+    <div
+      className="min-h-screen overflow-x-hidden bg-[#FAF8F5] text-[#2D2926]"
+      style={{ fontFamily: "'Lora', serif" }}
+    >
       <link
         href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet"
       />
 
-      {/* NAVBAR */}
+      {/* NAV */}
       <nav
         className={`
           fixed top-0 left-0 right-0 z-50
-          transition-all duration-300
+          transition-all duration-500
           px-5
-          ${scrolled
-            ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20'
-            : 'bg-transparent border-b border-transparent'}
+          ${
+            scrolled
+              ? 'bg-[#FAF8F5]/90 backdrop-blur-xl border-b border-[#EADFD2]'
+              : 'bg-transparent border-b border-transparent'
+          }
         `}
       >
         <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
 
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="relative w-4 h-4 opacity-70">
-              <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-4 bg-[#A58B75] rounded-full" />
-              <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-[#A58B75] rounded-full" />
-            </div>
+          <span
+            className="uppercase tracking-[0.22em] text-[11px] text-[#8A7A6E]"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Gereja Baptis Tawau
+          </span>
 
-            <span
-              className="
-                uppercase tracking-[0.22em]
-                text-[11px]
-                text-[#8A7A6E]
-                font-normal
-              "
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              Gereja Baptis Tawau
-            </span>
-          </div>
-
-          {/* Controls */}
           <div className="flex items-center gap-3">
 
-            {/* Language */}
             <button
               onClick={() => setLang((l) => (l === 'en' ? 'bm' : 'en'))}
               className="
-                h-9 px-4 rounded-full
-                border border-[#d9c9b7]/40
-                bg-white/70
-                text-[#8A7A6E]
-                uppercase tracking-[0.14em]
+                rounded-full
+                border border-[#D8C8B7]
+                bg-white/80
+                px-4
+                py-2
                 text-[11px]
-                font-medium
-                transition-all duration-200
+                uppercase
+                tracking-[0.14em]
+                text-[#8A7A6E]
+                transition
                 hover:bg-white
               "
               style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -194,43 +220,54 @@ export default function LandingPage() {
               {lang === 'en' ? 'BM' : 'EN'}
             </button>
 
-            {/* Hamburger */}
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Toggle menu"
               className={`
-                w-11 h-11 rounded-full
-                border border-[#d9c9b7]/30
-                flex flex-col items-center justify-center gap-[5px]
+                w-11 h-11 rounded-full border
+                flex items-center justify-center
                 transition-all duration-300
-                ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}
+                ${
+                  menuOpen
+                    ? 'bg-[#2D2926] border-[#2D2926]'
+                    : 'bg-white/85 border-[#D8C8B7]'
+                }
               `}
             >
-              {[0, 1].map((i) => (
-                <span
-                  key={i}
-                  className={`
-                    block w-[18px] h-[1.5px] rounded-full
-                    transition-all duration-300
-                    ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'}
-                    ${menuOpen && i === 0 ? 'rotate-45 translate-y-[3px]' : ''}
-                    ${menuOpen && i === 1 ? '-rotate-45 -translate-y-[3px]' : ''}
-                  `}
-                />
-              ))}
+              <div className="flex flex-col gap-[5px]">
+                {[0, 1].map((i) => (
+                  <span
+                    key={i}
+                    className={`
+                      block w-[18px] h-[1.5px] rounded-full transition-all duration-300
+                      ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'}
+                    `}
+                    style={{
+                      transform: menuOpen
+                        ? i === 0
+                          ? 'rotate(45deg) translate(4px, 4px)'
+                          : 'rotate(-45deg) translate(4px, -4px)'
+                        : 'none',
+                    }}
+                  />
+                ))}
+              </div>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU */}
+      {/* MENU */}
       <div
         className={`
           fixed inset-0 z-40
           bg-[#2D2926]
           flex flex-col items-center justify-center
           transition-all duration-500
-          ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+          ${
+            menuOpen
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none'
+          }
         `}
       >
         <div className="text-center">
@@ -242,25 +279,23 @@ export default function LandingPage() {
                 transition-all duration-500
                 ${menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}
               `}
-              style={{
-                transitionDelay: `${i * 60 + 100}ms`,
-              }}
+              style={{ transitionDelay: `${i * 70}ms` }}
             >
               {item.isRouterLink ? (
                 <button
                   onClick={() => handleNavClick(item)}
                   className="
-                    block w-full
-                    py-1
+                    block
+                    w-full
+                    bg-transparent
+                    border-none
                     text-[#F5F0EB]
-                    hover:text-[#C9A882]
-                    transition-colors
                     text-[clamp(2rem,8vw,3.5rem)]
+                    py-2
+                    transition-colors
+                    hover:text-[#C9A882]
                   "
-                  style={{
-                    fontFamily: "'Lora', serif",
-                    fontWeight: 400,
-                  }}
+                  style={{ fontFamily: "'Lora', serif" }}
                 >
                   {t(item.en, item.bm)}
                 </button>
@@ -270,16 +305,13 @@ export default function LandingPage() {
                   onClick={() => setMenuOpen(false)}
                   className="
                     block
-                    py-1
                     text-[#F5F0EB]
-                    hover:text-[#C9A882]
-                    transition-colors
                     text-[clamp(2rem,8vw,3.5rem)]
+                    py-2
+                    transition-colors
+                    hover:text-[#C9A882]
                   "
-                  style={{
-                    fontFamily: "'Lora', serif",
-                    fontWeight: 400,
-                  }}
+                  style={{ fontFamily: "'Lora', serif" }}
                 >
                   {t(item.en, item.bm)}
                 </a>
@@ -309,48 +341,40 @@ export default function LandingPage() {
           relative
           min-h-screen
           flex flex-col items-center justify-center
-          text-center
           px-6
           pt-32
           pb-20
+          text-center
           overflow-hidden
-          bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]
+          bg-gradient-to-br from-[#FAF8F5] to-[#F0E9DF]
         "
       >
 
-        {/* Ambient Orbs */}
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
-
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[12vh] bg-gradient-to-b from-transparent to-[#b49b7d]/40" />
+        <div className="relative z-10 max-w-2xl w-full">
 
-        <div className="relative z-10 w-full max-w-2xl">
-
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-10">
             <img
               src="/logo.webp"
               alt="Gereja Baptis Tawau"
-              loading="eager"
               className="w-[clamp(140px,38vw,200px)] object-contain opacity-95"
             />
           </div>
 
-          {/* Verse */}
           <blockquote className="mb-10">
             <p
               className="
                 italic
-                text-[clamp(1.3rem,4vw,2rem)]
-                leading-relaxed
-                tracking-[-0.01em]
+                text-[clamp(1.35rem,4vw,2rem)]
+                leading-[1.6]
+                tracking-[-0.02em]
                 text-[#2D2926]
                 mb-4
               "
-              style={{ fontFamily: "'Lora', serif" }}
             >
-              "{verse.text}"
+              “{verse.text}”
             </p>
 
             <cite
@@ -367,150 +391,99 @@ export default function LandingPage() {
             </cite>
           </blockquote>
 
-          {/* Welcome CTA */}
-          <div className="mb-10">
+          {/* ACTION BUTTONS */}
+          <div className="flex flex-wrap justify-center gap-3">
+
             <a
               href="#about"
               className="
-                inline-flex items-center gap-3
-                px-9 py-4
+                inline-flex
+                items-center
+                gap-2
                 rounded-full
                 bg-[#2D2926]
+                px-7
+                py-4
                 text-[#FAF8F5]
-                uppercase tracking-[0.12em]
-                text-sm font-medium
-                transition-all duration-300
-                hover:bg-[#4A3F38]
+                transition-all
+                duration-300
+                hover:bg-[#463C35]
                 hover:scale-[1.02]
-                shadow-lg shadow-black/10
+                shadow-[0_10px_30px_rgba(45,41,38,0.14)]
               "
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontSize: '12px',
+                fontWeight: 500,
+              }}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
-                <polyline points="10 17 15 12 10 7"/>
-                <line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-
-              {t('Welcome', 'Masuk')}
+              Welcome
             </a>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="flex flex-wrap justify-center gap-3">
-
-            {/* Events */}
-            <a
-              href="#events"
+            <button
+              onClick={() => setActiveModal('events')}
               className="
-                min-w-[120px]
-                rounded-2xl
-                px-6 py-5
-                bg-white/70
-                border border-[#d9c9b7]/30
+                rounded-full
+                border
+                border-[#D8C8B7]
+                bg-white/80
                 backdrop-blur-sm
-                flex flex-col items-center gap-3
-                transition-all duration-300
-                hover:-translate-y-1
-                hover:shadow-xl hover:shadow-black/5
+                px-7
+                py-4
+                text-[#7A6A5E]
+                transition-all
+                duration-300
+                hover:-translate-y-[2px]
+                hover:bg-white
+                hover:shadow-[0_10px_30px_rgba(80,55,35,0.08)]
               "
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontSize: '11px',
+                fontWeight: 500,
+              }}
             >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#7A6A5E"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="3"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
+              {t('Events', 'Acara')}
+            </button>
 
-              <span
-                className="
-                  uppercase tracking-[0.18em]
-                  text-[10px]
-                  text-[#7A6A5E]
-                  font-medium
-                "
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
-              >
-                {t('Calendar', 'Kalendar')}
-              </span>
-            </a>
-
-            {/* Roster */}
-            <a
-              href="#contact"
+            <button
+              onClick={() => setActiveModal('roster')}
               className="
-                min-w-[120px]
-                rounded-2xl
-                px-6 py-5
-                bg-white/70
-                border border-[#d9c9b7]/30
+                rounded-full
+                border
+                border-[#D8C8B7]
+                bg-white/80
                 backdrop-blur-sm
-                flex flex-col items-center gap-3
-                transition-all duration-300
-                hover:-translate-y-1
-                hover:shadow-xl hover:shadow-black/5
+                px-7
+                py-4
+                text-[#7A6A5E]
+                transition-all
+                duration-300
+                hover:-translate-y-[2px]
+                hover:bg-white
+                hover:shadow-[0_10px_30px_rgba(80,55,35,0.08)]
               "
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontSize: '11px',
+                fontWeight: 500,
+              }}
             >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#7A6A5E"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="7" r="3"/>
-                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
-              </svg>
-
-              <span
-                className="
-                  uppercase tracking-[0.18em]
-                  text-[10px]
-                  text-[#7A6A5E]
-                  font-medium
-                "
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
-              >
-                {t('Contact', 'Hubungi')}
-              </span>
-            </a>
+              Roster
+            </button>
           </div>
-        </div>
-
-        {/* Scroll Cue */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-35 animate-bob flex flex-col items-center gap-2">
-          <div className="w-px h-9 bg-gradient-to-b from-transparent to-[#8A7A6E]" />
-          <div className="w-1 h-1 rounded-full bg-[#8A7A6E]" />
         </div>
       </section>
 
       {/* ABOUT */}
-      <section
-        id="about"
-        className="px-6 py-20 md:py-28"
-      >
-        <div className="max-w-3xl mx-auto text-center">
+      <section id="about" className="px-6 py-24">
+        <div className="max-w-2xl mx-auto text-center">
 
           <p
             className="
@@ -525,180 +498,33 @@ export default function LandingPage() {
             {t('Welcome', 'Selamat Datang')}
           </p>
 
-          <h2
-            className="
-              text-[clamp(1.9rem,5vw,3rem)]
-              leading-tight
-              tracking-[-0.02em]
-              mb-6
-              text-[#2D2926]
-            "
-            style={{
-              fontFamily: "'Lora', serif",
-              fontWeight: 400,
-            }}
-          >
+          <h2 className="text-[clamp(1.8rem,5vw,3rem)] leading-tight tracking-[-0.03em] mb-6">
             {t(
-              <>A community of <em>faith,</em> hope, and love.</>,
-              <>Komuniti <em>iman,</em> harapan, dan kasih.</>
+              'A community of faith, hope, and love.',
+              'Komuniti iman, harapan, dan kasih.'
             )}
           </h2>
 
           <p
             className="
               text-[#7A6E66]
-              leading-8
+              leading-[2]
               text-[15px]
-              md:text-[17px]
-              max-w-2xl
-              mx-auto
               font-light
             "
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             {t(
               'Whether you are seeking spiritual growth, fellowship, healing, or simply a place to belong — you are welcome here. Together we worship, learn, serve, and grow in Christ.',
-              'Sama ada anda mencari pertumbuhan rohani, persekutuan, penyembuhan, atau sekadar tempat untuk diterima — anda dialu-alukan di sini. Bersama-sama kita menyembah, belajar, melayani, dan bertumbuh dalam Kristus.'
+              'Sama ada anda mencari pertumbuhan rohani, persekutuan, penyembuhan, atau sekadar tempat untuk diterima — anda dialu-alukan di sini.'
             )}
           </p>
-
-          {/* Divider */}
-          <div className="flex items-center justify-center gap-3 mt-10">
-            <div className="w-10 h-px bg-[#b49b7d]/40" />
-            <div className="w-[5px] h-[5px] rounded-full border border-[#b49b7d]/50" />
-            <div className="w-10 h-px bg-[#b49b7d]/40" />
-          </div>
-        </div>
-      </section>
-
-      {/* EVENTS */}
-      <section
-        id="events"
-        className="bg-[#F2EBE1] px-5 py-20 md:py-24"
-      >
-        <div className="max-w-3xl mx-auto">
-
-          <div className="text-center mb-12">
-            <p
-              className="
-                uppercase
-                tracking-[0.3em]
-                text-[10px]
-                text-[#B09882]
-                mb-3
-              "
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              {t('Upcoming', 'Acara Akan Datang')}
-            </p>
-
-            <h2
-              className="
-                text-[clamp(1.7rem,4vw,2.5rem)]
-                tracking-[-0.02em]
-              "
-              style={{
-                fontFamily: "'Lora', serif",
-                fontWeight: 400,
-              }}
-            >
-              {t("What's happening", 'Apa yang berlaku')}
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3">
-
-            {events.length === 0 ? (
-              <div className="text-center py-10 text-[#8A7A6E]">
-                {t('No upcoming events', 'Tiada acara akan datang')}
-              </div>
-            ) : (
-              events.map((event) => {
-                const { day, month, dayName } = formatEventDate(event.date)
-
-                return (
-                  <div
-                    key={event.id}
-                    className="
-                      bg-white/70
-                      border border-[#d9c9b7]/30
-                      rounded-2xl
-                      px-6 py-5
-                      flex items-center gap-5
-                      transition-all duration-300
-                      hover:translate-x-1
-                    "
-                  >
-                    {/* Date */}
-                    <div className="min-w-[54px] text-center shrink-0">
-                      <div
-                        className="text-[24px] leading-none text-[#2D2926]"
-                        style={{
-                          fontFamily: "'Lora', serif",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {day}
-                      </div>
-
-                      <div
-                        className="
-                          uppercase
-                          tracking-[0.18em]
-                          text-[10px]
-                          text-[#B09882]
-                          mt-1
-                        "
-                        style={{ fontFamily: "'DM Sans', sans-serif" }}
-                      >
-                        {month}
-                      </div>
-                    </div>
-
-                    <div className="w-px h-11 bg-[#b49b7d]/25 shrink-0" />
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-[16px] mb-1 text-[#2D2926]"
-                        style={{
-                          fontFamily: "'Lora', serif",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {t(event.title_en, event.title_bm || event.title_en)}
-                      </p>
-
-                      <p
-                        className="text-[12px] text-[#A08070]"
-                        style={{ fontFamily: "'DM Sans', sans-serif" }}
-                      >
-                        {dayName} · {formatTimeForDisplay(event.time)}
-                      </p>
-
-                      {event.location && (
-                        <p
-                          className="text-[10px] text-[#B09882] mt-1"
-                          style={{ fontFamily: "'DM Sans', sans-serif" }}
-                        >
-                          📍 {event.location}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
         </div>
       </section>
 
       {/* CONTACT */}
-      <section
-        id="contact"
-        className="px-6 py-20 md:py-24 bg-[#FAF8F5]"
-      >
-        <div className="max-w-2xl mx-auto text-center">
+      <section id="contact" className="px-6 py-20 bg-[#F4EEE6]">
+        <div className="max-w-xl mx-auto text-center">
 
           <p
             className="
@@ -706,42 +532,25 @@ export default function LandingPage() {
               tracking-[0.3em]
               text-[10px]
               text-[#B09882]
-              mb-3
+              mb-4
             "
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             {t('Find Us', 'Lokasi Kami')}
           </p>
 
-          <h2
-            className="
-              text-[clamp(1.7rem,4vw,2.5rem)]
-              tracking-[-0.02em]
-              mb-4
-            "
-            style={{
-              fontFamily: "'Lora', serif",
-              fontWeight: 400,
-            }}
-          >
+          <h2 className="text-[clamp(1.5rem,4vw,2.2rem)] tracking-[-0.03em] mb-3">
             {t("We'd love to meet you", 'Kami ingin berjumpa anda')}
           </h2>
 
           <p
-            className="
-              text-[#8A7A6E]
-              text-sm md:text-base
-              leading-7
-              mb-10
-              font-light
-            "
+            className="text-[#8A7A6E] text-[14px] leading-7 mb-10"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             Jalan Kuhara, 91000 Tawau, Sabah
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
+          <div className="grid gap-3 sm:grid-cols-3">
             {[
               {
                 label: t('Sunday Worship', 'Kebaktian Ahad'),
@@ -759,33 +568,26 @@ export default function LandingPage() {
               <div
                 key={item.label}
                 className="
-                  bg-white/70
-                  border border-[#d9c9b7]/30
-                  backdrop-blur-sm
-                  rounded-2xl
+                  rounded-3xl
+                  border border-[#E6D8C8]
+                  bg-white/75
                   p-5
                 "
               >
                 <p
                   className="
                     uppercase
-                    tracking-[0.2em]
+                    tracking-[0.18em]
                     text-[10px]
                     text-[#B09882]
-                    mb-2
+                    mb-3
                   "
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
                   {item.label}
                 </p>
 
-                <p
-                  className="text-[15px] text-[#2D2926]"
-                  style={{
-                    fontFamily: "'Lora', serif",
-                    fontWeight: 500,
-                  }}
-                >
+                <p className="text-[#2D2926] text-[15px] font-medium">
                   {item.value}
                 </p>
               </div>
@@ -795,7 +597,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#2D2926] px-6 py-10 text-center">
+      <footer className="bg-[#2D2926] px-6 py-12 text-center">
 
         <p
           className="
@@ -803,67 +605,263 @@ export default function LandingPage() {
             tracking-[0.28em]
             text-[10px]
             text-[#6B5E55]
-            mb-2
+            mb-4
           "
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
           Gereja Baptis Tawau
         </p>
 
-        <p
-          className="
-            text-[#5A4E46]
-            text-sm
-            mb-6
-          "
-          style={{ fontFamily: "'DM Sans', sans-serif" }}
-        >
-          Jalan Kuhara, 91000 Tawau, Sabah
-        </p>
-
         <div className="w-8 h-px bg-white/10 mx-auto mb-6" />
 
         <p
-          className="
-            text-[#7A6A5E]
-            text-sm italic
-          "
+          className="text-[#7A6A5E] italic text-[14px]"
           style={{ fontFamily: "'Lora', serif" }}
         >
           A new beginning.
         </p>
       </footer>
 
-      <style>{`
-        html {
-          scroll-behavior: smooth;
-        }
+      {/* EVENTS MODAL */}
+      {activeModal === 'events' && (
+        <div className="fixed inset-0 z-[200] bg-[#2D2926]/45 backdrop-blur-md flex items-center justify-center px-5 py-8">
 
-        * {
-          box-sizing: border-box;
-        }
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] bg-[#FAF8F5] shadow-2xl border border-[#E6D8C8] p-6 sm:p-8">
 
-        @keyframes bob {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-          }
+            <button
+              onClick={() => {
+                setActiveModal(null)
+                setSelectedEvent(null)
+              }}
+              className="absolute top-5 right-5 w-10 h-10 rounded-full bg-[#F3ECE3] text-[#7A6A5E] hover:bg-[#EADFD2] transition"
+            >
+              ✕
+            </button>
 
-          50% {
-            transform: translateX(-50%) translateY(6px);
-          }
-        }
+            <div className="text-center mb-8">
+              <p
+                className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-3"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                {t('Upcoming', 'Akan Datang')}
+              </p>
 
-        .animate-bob {
-          animation: bob 2.5s ease-in-out infinite;
-        }
+              <h2 className="text-[clamp(1.7rem,4vw,2.5rem)] tracking-[-0.03em]">
+                {t('Events', 'Acara')}
+              </h2>
+            </div>
 
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation: none !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
-      `}</style>
+            {selectedEvent ? (
+              <div>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="mb-6 text-[#8A7A6E] text-sm hover:text-[#2D2926] transition"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  ← {t('Back', 'Kembali')}
+                </button>
+
+                <div className="space-y-5">
+
+                  <div>
+                    <p
+                      className="uppercase tracking-[0.18em] text-[10px] text-[#B09882] mb-2"
+                      style={{ fontFamily: "'DM Sans', sans-serif" }}
+                    >
+                      {formatEventDate(selectedEvent.date).day}{' '}
+                      {formatEventDate(selectedEvent.date).month}
+                    </p>
+
+                    <h3 className="text-3xl leading-tight tracking-[-0.02em]">
+                      {t(
+                        selectedEvent.title_en,
+                        selectedEvent.title_bm || selectedEvent.title_en
+                      )}
+                    </h3>
+                  </div>
+
+                  <div
+                    className="flex flex-wrap gap-3 text-sm text-[#8A7A6E]"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    <span>
+                      {formatTimeForDisplay(selectedEvent.time)}
+                    </span>
+
+                    {selectedEvent.location && (
+                      <span>
+                        · {selectedEvent.location}
+                      </span>
+                    )}
+                  </div>
+
+                  <p
+                    className="leading-8 text-[#5E534B] text-[15px]"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    {t(
+                      selectedEvent.description_en,
+                      selectedEvent.description_bm || selectedEvent.description_en
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {events.map((event) => {
+                  const { day, month, dayName } = formatEventDate(event.date)
+
+                  return (
+                    <button
+                      key={event.id}
+                      onClick={() => setSelectedEvent(event)}
+                      className="w-full text-left flex items-center gap-5 rounded-3xl border border-[#E6D8C8] bg-white/75 p-5 hover:bg-white hover:translate-x-[2px] transition-all"
+                    >
+                      <div className="min-w-[52px] text-center">
+                        <div className="text-2xl font-medium">
+                          {day}
+                        </div>
+
+                        <div
+                          className="uppercase tracking-[0.18em] text-[10px] text-[#B09882]"
+                          style={{ fontFamily: "'DM Sans', sans-serif" }}
+                        >
+                          {month}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[16px] mb-1 font-medium">
+                          {t(event.title_en, event.title_bm || event.title_en)}
+                        </p>
+
+                        <p
+                          className="text-[#9A8A7B] text-xs"
+                          style={{ fontFamily: "'DM Sans', sans-serif" }}
+                        >
+                          {dayName} · {formatTimeForDisplay(event.time)}
+                        </p>
+                      </div>
+
+                      <span className="text-[#B09882] text-lg">
+                        →
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ROSTER MODAL */}
+      {activeModal === 'roster' && (
+        <div className="fixed inset-0 z-[200] bg-[#2D2926]/45 backdrop-blur-md flex items-center justify-center px-5 py-8">
+
+          <div className="relative w-full max-w-xl rounded-[32px] bg-[#FAF8F5] border border-[#E6D8C8] p-6 sm:p-8 shadow-2xl">
+
+            <button
+              onClick={() => setActiveModal(null)}
+              className="absolute top-5 right-5 w-10 h-10 rounded-full bg-[#F3ECE3] text-[#7A6A5E] hover:bg-[#EADFD2] transition"
+            >
+              ✕
+            </button>
+
+            <div className="text-center mb-8">
+              <p
+                className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-3"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                {t('Schedule', 'Jadual')}
+              </p>
+
+              <h2 className="text-[clamp(1.7rem,4vw,2.4rem)]">
+                {t('Week', 'Minggu')}
+              </h2>
+            </div>
+
+            <div className="flex justify-center gap-2 mb-8">
+              {currentMonthRoster.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedWeek(index)}
+                  className={`
+                    w-11 h-11 rounded-full transition-all text-sm
+                    ${
+                      selectedWeek === index
+                        ? 'bg-[#2D2926] text-white'
+                        : 'bg-[#F3ECE3] text-[#8A7A6E] hover:bg-[#E8DDD0]'
+                    }
+                  `}
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 500,
+                  }}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+
+            {currentMonthRoster[selectedWeek] && (
+              <div className="rounded-[28px] border border-[#E6D8C8] bg-white/75 p-6">
+
+                <div className="mb-6 text-center">
+                  <p
+                    className="uppercase tracking-[0.18em] text-[10px] text-[#B09882] mb-2"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    {t('Week Starting', 'Minggu Bermula')}
+                  </p>
+
+                  <h3 className="text-2xl font-medium">
+                    {new Date(
+                      currentMonthRoster[selectedWeek].week_start
+                    ).toLocaleDateString('en-MY', {
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </h3>
+                </div>
+
+                <div className="space-y-5">
+                  {[
+                    {
+                      label: t('Leader', 'Pemimpin'),
+                      value: currentMonthRoster[selectedWeek].leader,
+                    },
+                    {
+                      label: t('Pianist', 'Pemain Piano'),
+                      value: currentMonthRoster[selectedWeek].pianist,
+                    },
+                    {
+                      label: t('Reader', 'Pembaca'),
+                      value: currentMonthRoster[selectedWeek].reader,
+                    },
+                  ].map((role) => (
+                    <div
+                      key={role.label}
+                      className="border-b border-[#EFE4D8] pb-4 last:border-none last:pb-0"
+                    >
+                      <p
+                        className="uppercase tracking-[0.16em] text-[10px] text-[#B09882] mb-2"
+                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                      >
+                        {role.label}
+                      </p>
+
+                      <p className="text-[18px] font-medium">
+                        {role.value || '—'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
