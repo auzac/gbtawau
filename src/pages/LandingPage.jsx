@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, MapPin, Clock, Phone } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, Calendar, User, MapPinned, ArrowLeft } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
 
@@ -31,6 +31,10 @@ export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
 
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null) // null = list view, object = detail view
+
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
   useEffect(() => {
@@ -56,6 +60,16 @@ export default function LandingPage() {
     }, 6000)
     return () => clearInterval(interval)
   }, [autoplay, carouselItems.length])
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isModalOpen])
 
   const loadContent = async () => {
     setLoading(true)
@@ -90,7 +104,6 @@ export default function LandingPage() {
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true })
       .order('time', { ascending: true })
-      .limit(6)
 
     if (!error && data) {
       setEvents(data)
@@ -121,7 +134,7 @@ export default function LandingPage() {
   }
 
   const formatEventDate = (dateStr) => {
-    if (!dateStr) return {}
+    if (!dateStr) return { day: '', month: '', dayName: '' }
     const date = new Date(dateStr)
     return {
       day: date.getDate(),
@@ -149,12 +162,33 @@ export default function LandingPage() {
     setTimeout(() => setAutoplay(true), 10000)
   }
 
-  // Scroll to footer (for Contact card)
   const scrollToFooter = () => {
     const footer = document.getElementById('footer')
     if (footer) {
       footer.scrollIntoView({ behavior: 'smooth' })
     }
+  }
+
+  // Open modal with event list
+  const openEventsModal = () => {
+    setSelectedEvent(null)
+    setIsModalOpen(true)
+  }
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedEvent(null)
+  }
+
+  // Show event details
+  const showEventDetails = (event) => {
+    setSelectedEvent(event)
+  }
+
+  // Go back to list view
+  const backToList = () => {
+    setSelectedEvent(null)
   }
 
   if (loading) {
@@ -172,7 +206,7 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-      {/* NAVBAR (unchanged from original, but uses toggleLocale) */}
+      {/* NAVBAR (unchanged) */}
       <nav
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5
@@ -256,7 +290,7 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {/* ========== HERO SECTION (original buttons restored) ========== */}
+      {/* HERO SECTION */}
       <section
         id="home"
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
@@ -282,7 +316,7 @@ export default function LandingPage() {
             </cite>
           </blockquote>
 
-          {/* Welcome CTA (restored) */}
+          {/* Welcome CTA */}
           <div className="mb-10">
             <a
               href="#about"
@@ -297,33 +331,25 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* Quick Action Cards (restored) */}
+          {/* Quick Action Cards */}
           <div className="flex flex-wrap justify-center gap-3">
-            {/* Calendar (links to Events) */}
-            <a
-              href="#events"
-              className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+            {/* EVENTS button - opens modal */}
+            <button
+              onClick={openEventsModal}
+              className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="3"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
+              <Calendar size={22} stroke="#7A6A5E" strokeWidth="1.5" />
               <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
-                {t('hero_calendar')}
+                {t('events_button')}
               </span>
-            </a>
+            </button>
 
-            {/* Contact (scrolls to footer) */}
+            {/* CONTACT button (scroll to footer) */}
             <button
               onClick={scrollToFooter}
               className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="7" r="3"/>
-                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
-              </svg>
+              <User size={22} stroke="#7A6A5E" strokeWidth="1.5" />
               <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
                 {t('hero_contact')}
               </span>
@@ -338,12 +364,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== NEW CAROUSEL SECTION (below hero, above About) ========== */}
+      {/* CAROUSEL SECTION */}
       {carouselItems.length > 0 && (
         <section className="px-5 py-12 md:py-16 bg-white/40">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-center text-[clamp(1.3rem,3vw,1.8rem)] font-['Lora',serif] tracking-[-0.01em] text-[#2D2926] mb-8">
-              {t('announcements_title') || (locale === 'bm' ? 'Pengumuman' : 'Announcements')}
+              {t('announcements_title')}
             </h2>
             <div
               className="relative w-full rounded-2xl overflow-hidden shadow-lg"
@@ -378,7 +404,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Navigation Arrows */}
               {carouselItems.length > 1 && (
                 <>
                   <button
@@ -418,7 +443,7 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* ABOUT (unchanged) */}
+      {/* ABOUT SECTION */}
       <section id="about" className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">
@@ -438,46 +463,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* EVENTS (unchanged) */}
-      <section id="events" className="bg-[#F2EBE1] px-5 py-20 md:py-24">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-3 font-['DM_Sans',sans-serif]">
-              {t('events_title')}
-            </p>
-            <h2 className="text-[clamp(1.7rem,4vw,2.5rem)] tracking-[-0.02em] font-['Lora',serif] font-normal">
-              {t('events_subtitle')}
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {events.length === 0 ? (
-              <div className="text-center py-10 text-[#8A7A6E]">{t('events_empty')}</div>
-            ) : (
-              events.map((event) => {
-                const { day, month, dayName } = formatEventDate(event.date)
-                const title = locale === 'bm' && event.title_bm ? event.title_bm : event.title_en
-                return (
-                  <div key={event.id} className="bg-white/70 border border-[#d9c9b7]/30 rounded-2xl px-6 py-5 flex items-center gap-5 transition-all duration-300 hover:translate-x-1">
-                    <div className="min-w-[54px] text-center shrink-0">
-                      <div className="text-[24px] leading-none text-[#2D2926] font-['Lora',serif] font-medium">{day}</div>
-                      <div className="uppercase tracking-[0.18em] text-[10px] text-[#B09882] mt-1 font-['DM_Sans',sans-serif]">{month}</div>
-                    </div>
-                    <div className="w-px h-11 bg-[#b49b7d]/25 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[16px] mb-1 text-[#2D2926] font-['Lora',serif] font-medium">{title}</p>
-                      <p className="text-[12px] text-[#A08070] font-['DM_Sans',sans-serif]">{dayName} · {formatTimeForDisplay(event.time)}</p>
-                      {event.location && <p className="text-[10px] text-[#B09882] mt-1 font-['DM_Sans',sans-serif]">📍 {event.location}</p>}
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER with id="footer" and contact info */}
+      {/* FOOTER */}
       <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
         <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">
           {t('footer_church')}
@@ -501,6 +487,139 @@ export default function LandingPage() {
           {t('footer_tagline')}
         </p>
       </footer>
+
+      {/* EVENTS MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-[#d9c9b7]/40">
+              <h2 className="text-xl font-['Lora',serif] text-[#2D2926]">
+                {selectedEvent ? t('event_details_title') : t('events_modal_title')}
+              </h2>
+              <button onClick={closeModal} className="p-1 hover:bg-[#d9c9b7]/30 rounded-full transition">
+                <X size={20} className="text-[#7A6A5E]" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-5">
+              {!selectedEvent ? (
+                // List view
+                events.length === 0 ? (
+                  <p className="text-center text-[#8A7A6E] py-10">{t('no_events')}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {events.map((event) => {
+                      const { day, month, dayName } = formatEventDate(event.date)
+                      const title = locale === 'bm' && event.title_bm ? event.title_bm : event.title_en
+                      return (
+                        <button
+                          key={event.id}
+                          onClick={() => showEventDetails(event)}
+                          className="w-full text-left bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-4 flex items-center gap-4 transition hover:shadow-md hover:-translate-y-0.5"
+                        >
+                          <div className="min-w-[60px] text-center">
+                            <div className="text-2xl font-['Lora',serif] font-medium text-[#2D2926]">{day}</div>
+                            <div className="uppercase text-[10px] text-[#B09882] font-['DM_Sans',sans-serif]">{month}</div>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-['Lora',serif] font-medium text-[#2D2926]">{title}</h3>
+                            <p className="text-xs text-[#A08070] mt-1">{dayName} · {formatTimeForDisplay(event.time)}</p>
+                          </div>
+                          <ArrowLeft size={18} className="text-[#B09882] rotate-180" />
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              ) : (
+                // Detail view
+                <div>
+                  <button
+                    onClick={backToList}
+                    className="inline-flex items-center gap-2 text-sm text-[#7A6A5E] hover:text-[#2D2926] mb-4 transition"
+                  >
+                    <ArrowLeft size={16} />
+                    {t('events_modal_back')}
+                  </button>
+
+                  <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5 space-y-4">
+                    <h3 className="text-2xl font-['Lora',serif] text-[#2D2926]">
+                      {locale === 'bm' && selectedEvent.title_bm ? selectedEvent.title_bm : selectedEvent.title_en}
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Calendar size={18} className="text-[#B09882] mt-0.5" />
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_date')}</p>
+                          <p className="text-[#2D2926]">
+                            {new Date(selectedEvent.date).toLocaleDateString(locale === 'bm' ? 'ms-MY' : 'en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {selectedEvent.time && (
+                        <div className="flex items-start gap-3">
+                          <Clock size={18} className="text-[#B09882] mt-0.5" />
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_time')}</p>
+                            <p className="text-[#2D2926]">{formatTimeForDisplay(selectedEvent.time)}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedEvent.location && (
+                        <div className="flex items-start gap-3">
+                          <MapPinned size={18} className="text-[#B09882] mt-0.5" />
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_location')}</p>
+                            <p className="text-[#2D2926]">{selectedEvent.location}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* PIC field – adjust column name as needed */}
+                      <div className="flex items-start gap-3">
+                        <User size={18} className="text-[#B09882] mt-0.5" />
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_pic')}</p>
+                          <p className="text-[#2D2926]">{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</p>
+                        </div>
+                      </div>
+
+                      {(selectedEvent.description_en || selectedEvent.description_bm) && (
+                        <div className="pt-2">
+                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif] mb-1">{t('event_description')}</p>
+                          <p className="text-[#5A4E46] text-sm leading-relaxed">
+                            {locale === 'bm' && selectedEvent.description_bm ? selectedEvent.description_bm : selectedEvent.description_en}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer (Close button) */}
+            <div className="p-5 border-t border-[#d9c9b7]/40 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-5 py-2 rounded-full bg-[#2D2926] text-[#FAF8F5] text-sm uppercase tracking-wide hover:bg-[#4A3F38] transition"
+              >
+                {t('events_modal_close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         html { scroll-behavior: smooth; }
