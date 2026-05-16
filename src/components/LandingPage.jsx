@@ -449,7 +449,7 @@ export default function LandingPage() {
             {t("We'd love to meet you", 'Kami ingin berjumpa anda')}
           </h2>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: '#8A7A6E', lineHeight: 1.8, fontWeight: 300, marginBottom: '2.5rem' }}>
-            Jalan Belunu, Tawau, Sabah, Malaysia
+            Jalan Kuhara, 91000 Tawau, Sabah
           </p>
 
           {/* Contact cards */}
@@ -495,7 +495,7 @@ export default function LandingPage() {
           Gereja Baptis Tawau
         </p>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#5A4E46', margin: '0 0 1.5rem' }}>
-          Jalan Belunu, Tawau, Sabah
+          Jalan Kuhara, 91000 Tawau, Sabah
         </p>
         <div style={{ width: 32, height: 1, background: 'rgba(255,255,255,0.1)', margin: '0 auto 1.5rem' }} />
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#4A4038', margin: 0 }}>
