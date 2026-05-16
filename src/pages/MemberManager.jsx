@@ -620,35 +620,43 @@ export default function AdminDashboard() {
               )}
 
               {importPreview.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-[#2D2926] mb-2">{importPreview.length} members ready to import</p>
-                  <div className="max-h-40 overflow-y-auto border border-[#EAE1D4] rounded-xl text-xs">
-                    <table className="w-full">
-                      <thead><tr className="bg-[#F5EFE6]"><th className="p-2 text-left text-[#5B534D]">Name</th><th className="p-2 text-left text-[#5B534D]">Sex</th><th className="p-2 text-left text-[#5B534D]">DOB</th></tr></thead>
-                      <tbody>
-                        {importPreview.slice(0, 8).map((m, i) => (
-                          <tr key={i} className="border-t border-[#EAE1D4]">
-                            <td className="p-2">{m.name}</td>
-                            <td className="p-2">{m.sex}</td>
-                            <td className="p-2">{toDisplay(m.dob)}</td>
-                          </tr>
-                        ))}
-                        {importPreview.length > 8 && (
-                          <tr className="border-t border-[#EAE1D4]">
-                            <td className="p-2 text-[#9A8B80] col-span-3">…and {importPreview.length - 8} more</td>
-                          </table>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <button
-                    onClick={confirmImport}
-                    className="w-full mt-3 bg-[#2D2926] text-white py-2.5 rounded-full text-sm font-medium hover:bg-[#4A3F38] transition"
-                  >
-                    Import {importPreview.length} Members
-                  </button>
-                </div>
-              )}
+  <div>
+    <p className="text-sm font-medium text-[#2D2926] mb-2">{importPreview.length} members ready to import</p>
+    <div className="max-h-40 overflow-y-auto border border-[#EAE1D4] rounded-xl text-xs">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-[#F5EFE6]">
+            <th className="p-2 text-left text-[#5B534D]">Name</th>
+            <th className="p-2 text-left text-[#5B534D]">Sex</th>
+            <th className="p-2 text-left text-[#5B534D]">DOB</th>
+          </tr>
+        </thead>
+        <tbody>
+          {importPreview.slice(0, 8).map((m, i) => (
+            <tr key={i} className="border-t border-[#EAE1D4]">
+              <td className="p-2">{m.name}</td>
+              <td className="p-2">{m.sex}</td>
+              <td className="p-2">{toDisplay(m.dob)}</td>
+            </tr>
+          ))}
+          {importPreview.length > 8 && (
+            <tr className="border-t border-[#EAE1D4]">
+              <td colSpan="3" className="p-2 text-[#9A8B80] text-center">
+                …and {importPreview.length - 8} more
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+    <button
+      onClick={confirmImport}
+      className="w-full mt-3 bg-[#2D2926] text-white py-2.5 rounded-full text-sm font-medium hover:bg-[#4A3F38] transition"
+    >
+      Import {importPreview.length} Members
+    </button>
+  </div>
+)}
             </div>
           </div>
         </div>
