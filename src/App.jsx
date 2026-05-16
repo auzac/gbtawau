@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 import LandingPage from './pages/LandingPage'
@@ -9,7 +9,7 @@ import MemberManager from './pages/MemberManager'
 import ContentManager from './pages/ContentManager'
 import AdminTools from './pages/AdminTools'
 
-// Protected Route wrapper component - MUST be inside AuthProvider
+// Protected Route wrapper component
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   
@@ -30,8 +30,6 @@ function ProtectedRoute({ children }) {
 
 // This component MUST be inside AuthProvider to use useAuth
 function AppRoutes() {
-  const { user, loading } = useAuth()
-
   return (
     <Routes>
       {/* Public Website */}
