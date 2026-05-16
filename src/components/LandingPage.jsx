@@ -176,7 +176,7 @@ export default function LandingPage() {
           textTransform: 'uppercase', marginTop: '3rem',
           opacity: menuOpen ? 1 : 0, transition: 'opacity 0.5s 0.35s',
         }}>
-          Jalan Belunu, Tawau, Sabah
+          Jalan Kuhara, 91000 Tawau, Sabah
         </p>
       </div>
 
