@@ -1,5 +1,5 @@
 // src/pages/StaffHub.jsx
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users,
@@ -11,10 +11,42 @@ import {
 } from 'lucide-react'
 
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 function StaffHub() {
   const navigate = useNavigate()
-  const { signOut } = useAuth()  // ✅ MOVED INSIDE the component
+  const { signOut } = useAuth()
+  
+  const [stats, setStats] = useState({
+    totalMembers: null,
+    upcomingEvents: null
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    setLoading(true)
+    
+    // Fetch total members count
+    const { count: membersCount, error: membersError } = await supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+    
+    // Fetch upcoming events count (today and future)
+    const { count: eventsCount, error: eventsError } = await supabase
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .gte('date', new Date().toISOString().split('T')[0])
+    
+    setStats({
+      totalMembers: membersError ? 0 : membersCount || 0,
+      upcomingEvents: eventsError ? 0 : eventsCount || 0
+    })
+    setLoading(false)
+  }
 
   const handleLogout = async () => {
     await signOut()
@@ -54,22 +86,25 @@ function StaffHub() {
     }
   ]
 
-  const stats = [
+  const statItems = [
     {
       label: 'Total Members',
-      value: '248',
+      value: stats.totalMembers,
       icon: UserRound
     },
     {
       label: 'Upcoming Events',
-      value: '4',
+      value: stats.upcomingEvents,
       icon: CalendarDays
     }
   ]
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5]">
+    <div className="min-h-screen bg-[#FAF8F5]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       
+      {/* Google Fonts */}
+      <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
       {/* HEADER */}
       <header className="sticky top-0 z-20 border-b border-[#EAE1D4]/80 bg-white/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
@@ -77,7 +112,7 @@ function StaffHub() {
             
             {/* Brand */}
             <div>
-              <h1 className="font-serif text-[18px] text-[#2D2926] leading-none">
+              <h1 className="font-serif text-[18px] text-[#2D2926] leading-none" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
                 Gereja Baptis Tawau
               </h1>
               <p className="text-[10px] tracking-[0.22em] uppercase text-[#9A8D82] mt-1">
@@ -102,10 +137,9 @@ function StaffHub() {
 
         {/* Welcome */}
         <div className="mb-10">
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#2D2926] font-light tracking-[-0.02em]">
+          <h2 className="font-serif text-3xl sm:text-4xl text-[#2D2926] font-light tracking-[-0.02em]" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
             Welcome back
           </h2>
-
           <p className="text-[#8A7A6E] text-sm mt-2">
             Manage church operations and internal content.
           </p>
@@ -113,8 +147,9 @@ function StaffHub() {
 
         {/* Stats */}
         <div className="grid sm:grid-cols-2 gap-5 mb-8">
-          {stats.map((stat) => {
+          {statItems.map((stat) => {
             const Icon = stat.icon
+            const displayValue = loading ? '—' : stat.value
 
             return (
               <div
@@ -122,23 +157,16 @@ function StaffHub() {
                 className="bg-white border border-[#ECE4D9] rounded-3xl p-6"
               >
                 <div className="flex items-start justify-between">
-                  
                   <div>
                     <p className="text-sm text-[#8A7A6E] mb-3">
                       {stat.label}
                     </p>
-
-                    <h3 className="text-4xl font-light text-[#2D2926] tracking-[-0.04em]">
-                      {stat.value}
+                    <h3 className="text-4xl font-light text-[#2D2926] tracking-[-0.04em]" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
+                      {displayValue}
                     </h3>
                   </div>
-
                   <div className="w-11 h-11 rounded-2xl bg-[#F4EFE8] flex items-center justify-center">
-                    <Icon
-                      size={20}
-                      strokeWidth={1.8}
-                      className="text-[#6F6258]"
-                    />
+                    <Icon size={20} strokeWidth={1.8} className="text-[#6F6258]" />
                   </div>
                 </div>
               </div>
@@ -160,19 +188,14 @@ function StaffHub() {
                     : 'bg-[#F8F5F1] border-[#ECE4D9] opacity-80'
                 }`}
               >
-                
                 <div>
                   {/* Icon */}
                   <div className="w-12 h-12 rounded-2xl bg-[#F3EEE7] flex items-center justify-center mb-6">
-                    <Icon
-                      size={22}
-                      strokeWidth={1.8}
-                      className="text-[#6F6258]"
-                    />
+                    <Icon size={22} strokeWidth={1.8} className="text-[#6F6258]" />
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-serif text-[22px] text-[#2D2926] tracking-[-0.02em] mb-3">
+                  <h3 className="font-serif text-[22px] text-[#2D2926] tracking-[-0.02em] mb-3" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
                     {module.title}
                   </h3>
 
@@ -208,7 +231,6 @@ function StaffHub() {
         {/* Footer */}
         <div className="pt-12">
           <div className="w-10 h-px bg-[#D8CCC0] mx-auto mb-4" />
-
           <p className="text-center text-[11px] tracking-wide text-[#B0A49A]">
             Gereja Baptis Tawau • Internal Staff System
           </p>
