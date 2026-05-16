@@ -1,5 +1,6 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
@@ -8,24 +9,69 @@ import MemberManager from './pages/MemberManager'
 import ContentManager from './pages/ContentManager'
 import AdminTools from './pages/AdminTools'
 
+// Protected Route wrapper component - MUST be inside AuthProvider
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
+      </div>
+    )
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+  
+  return children
+}
+
+// This component MUST be inside AuthProvider to use useAuth
+function AppRoutes() {
+  const { user, loading } = useAuth()
+
+  return (
+    <Routes>
+      {/* Public Website */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* Auth */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Staff Portal (Protected) */}
+      <Route path="/staff" element={
+        <ProtectedRoute>
+          <StaffHub />
+        </ProtectedRoute>
+      } />
+      <Route path="/staff/members" element={
+        <ProtectedRoute>
+          <MemberManager />
+        </ProtectedRoute>
+      } />
+      <Route path="/staff/content" element={
+        <ProtectedRoute>
+          <ContentManager />
+        </ProtectedRoute>
+      } />
+      <Route path="/staff/admin" element={
+        <ProtectedRoute>
+          <AdminTools />
+        </ProtectedRoute>
+      } />
+    </Routes>
+  )
+}
+
+// Main App - AuthProvider wraps everything that uses useAuth
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen">
-        <Routes>
-          {/* Public Website */}
-          <Route path="/" element={<LandingPage />} />
-
-          {/* Auth */}
-          <Route path="/login" element={<Login />} />
-
-          {/* Staff Portal (protected routes - auth coming later) */}
-          <Route path="/staff" element={<StaffHub />} />
-          <Route path="/staff/members" element={<MemberManager />} />
-          <Route path="/staff/content" element={<ContentManager />} />
-          <Route path="/staff/admin" element={<AdminTools />} />
-        </Routes>
-      </div>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

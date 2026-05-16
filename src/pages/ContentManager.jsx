@@ -14,9 +14,11 @@ import {
   Trash2,
   ChevronRight
 } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 function ContentManager() {
   const navigate = useNavigate()
+  const { signOut } = useAuth()  // ✅ Called inside component
 
   // UI State
   const [activeTab, setActiveTab] = useState('verse')
@@ -248,7 +250,8 @@ function ContentManager() {
     }
   }, [selectedMonth, selectedYear, selectedWeek, isCalendarModalOpen])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     navigate('/login')
   }
 

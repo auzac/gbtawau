@@ -1,5 +1,7 @@
+// src/pages/MemberManager.jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -87,9 +89,11 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
-export default function AdminDashboard() {
+// ─── Main Component ───────────────────────────────────────────────────────────
+function MemberManager() {
   const navigate = useNavigate()
+  const { signOut } = useAuth()
+
   const [members, setMembers] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [ageFilter, setAgeFilter] = useState('all')
@@ -100,6 +104,11 @@ export default function AdminDashboard() {
   const [importErrors, setImportErrors] = useState([])
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/login')
+  }
 
   // ── Persistence
   useEffect(() => {
@@ -183,11 +192,6 @@ export default function AdminDashboard() {
     if (window.confirm('Remove this member from the directory?')) {
       setMembers(p => p.filter(m => m.id !== id))
     }
-  }
-
-  // ── Logout handler (FIX ADDED HERE)
-  const handleLogout = () => {
-    navigate('/login')
   }
 
   // ── CSV Export
@@ -619,43 +623,43 @@ export default function AdminDashboard() {
               )}
 
               {importPreview.length > 0 && (
-  <div>
-    <p className="text-sm font-medium text-[#2D2926] mb-2">{importPreview.length} members ready to import</p>
-    <div className="max-h-40 overflow-y-auto border border-[#EAE1D4] rounded-xl text-xs">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-[#F5EFE6]">
-            <th className="p-2 text-left text-[#5B534D]">Name</th>
-            <th className="p-2 text-left text-[#5B534D]">Sex</th>
-            <th className="p-2 text-left text-[#5B534D]">DOB</th>
-          </tr>
-        </thead>
-        <tbody>
-          {importPreview.slice(0, 8).map((m, i) => (
-            <tr key={i} className="border-t border-[#EAE1D4]">
-              <td className="p-2">{m.name}</td>
-              <td className="p-2">{m.sex}</td>
-              <td className="p-2">{toDisplay(m.dob)}</td>
-            </tr>
-          ))}
-          {importPreview.length > 8 && (
-            <tr className="border-t border-[#EAE1D4]">
-              <td colSpan="3" className="p-2 text-[#9A8B80] text-center">
-                …and {importPreview.length - 8} more
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-    <button
-      onClick={confirmImport}
-      className="w-full mt-3 bg-[#2D2926] text-white py-2.5 rounded-full text-sm font-medium hover:bg-[#4A3F38] transition"
-    >
-      Import {importPreview.length} Members
-    </button>
-  </div>
-)}
+                <div>
+                  <p className="text-sm font-medium text-[#2D2926] mb-2">{importPreview.length} members ready to import</p>
+                  <div className="max-h-40 overflow-y-auto border border-[#EAE1D4] rounded-xl text-xs">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-[#F5EFE6]">
+                          <th className="p-2 text-left text-[#5B534D]">Name</th>
+                          <th className="p-2 text-left text-[#5B534D]">Sex</th>
+                          <th className="p-2 text-left text-[#5B534D]">DOB</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importPreview.slice(0, 8).map((m, i) => (
+                          <tr key={i} className="border-t border-[#EAE1D4]">
+                            <td className="p-2">{m.name}</td>
+                            <td className="p-2">{m.sex}</td>
+                            <td className="p-2">{toDisplay(m.dob)}</td>
+                          </tr>
+                        ))}
+                        {importPreview.length > 8 && (
+                          <tr className="border-t border-[#EAE1D4]">
+                            <td colSpan="3" className="p-2 text-[#9A8B80] text-center">
+                              …and {importPreview.length - 8} more
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    onClick={confirmImport}
+                    className="w-full mt-3 bg-[#2D2926] text-white py-2.5 rounded-full text-sm font-medium hover:bg-[#4A3F38] transition"
+                  >
+                    Import {importPreview.length} Members
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -663,3 +667,6 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+export default MemberManager

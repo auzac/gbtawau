@@ -1,5 +1,4 @@
 // src/pages/StaffHub.jsx
-
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -11,10 +10,14 @@ import {
   UserRound
 } from 'lucide-react'
 
+import { useAuth } from '../contexts/AuthContext'
+
 function StaffHub() {
   const navigate = useNavigate()
+  const { signOut } = useAuth()  // ✅ MOVED INSIDE the component
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     navigate('/login')
   }
 

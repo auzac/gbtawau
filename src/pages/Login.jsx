@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, ArrowLeft } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -13,17 +14,19 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-
-    if (!email || !password) {
-      setError('Please enter both email and password')
-      return
-    }
-
     setIsLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-    navigate('/staff')
+    if (signInError) {
+      setError(signInError.message)
+      setIsLoading(false)
+    } else {
+      navigate('/staff')
+    }
   }
 
   return (
@@ -61,7 +64,7 @@ function Login() {
           </h1>
 
           <p className="text-sm text-[#9C8E84] mt-2">
-            Grace Baptist Tawau
+            Gereja Baptis Tawau
           </p>
         </div>
 
@@ -116,7 +119,7 @@ function Login() {
 
         {/* Footer */}
         <p className="text-center text-[11px] text-[#B6AAA2] mt-6">
-          Demo access • Any email and password
+          Sign in with your staff email and password
         </p>
       </div>
 
