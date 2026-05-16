@@ -110,18 +110,32 @@ export default function LandingPage() {
   }
 
   const loadCarouselItems = async () => {
+  try {
     const { data, error } = await supabase
       .from('carousel_items')
       .select('*')
       .eq('is_active', true)
       .order('display_order', { ascending: true })
-    if (!error && data && data.length > 0) {
-      setCarouselItems(data)
-      setCurrentSlide(0)
-    } else {
-      setCarouselItems([])
+      .order('created_at', { ascending: true });
+    
+    if (error && error.code === '42P01') {
+      // Table doesn't exist yet – silently handle
+      console.log('Carousel table not found yet, skipping.');
+      setCarouselItems([]);
+      return;
     }
+    
+    if (!error && data && data.length > 0) {
+      setCarouselItems(data);
+      setCurrentSlide(0);
+    } else {
+      setCarouselItems([]);
+    }
+  } catch (error) {
+    console.error('Error loading carousel:', error);
+    setCarouselItems([]);
   }
+};
 
   const loadRosters = async () => {
   const { data, error } = await supabase
@@ -161,34 +175,34 @@ export default function LandingPage() {
 }
 
 const getRosterForWeek = (weekNumber) => {
-  if (!selectedMonth) return null
-  const [year, month] = selectedMonth.split('-').map(Number)
+  if (!selectedMonth) return null;
+  const [year, month] = selectedMonth.split('-').map(Number);
   
+  // First day of the month
+  const firstDayOfMonth = new Date(year, month - 1, 1);
   // Find the first Monday of the month
-  const firstDayOfMonth = new Date(year, month - 1, 1)
-  const firstMonday = new Date(firstDayOfMonth)
-  const dayOfWeek = firstDayOfMonth.getDay() // 0 = Sunday, 1 = Monday, ...
-  // Days until next Monday (if today is Sunday, next Monday is 1 day later)
-  const daysToMonday = (dayOfWeek === 0 ? 1 : 8 - dayOfWeek) % 7
-  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday)
+  const firstMonday = new Date(firstDayOfMonth);
+  const dayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, ...
+  const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
+  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday);
   
-  // Calculate target Monday for the selected week (week 1 = first Monday)
-  const targetMonday = new Date(firstMonday)
-  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7)
+  // Calculate the target Monday for the selected week
+  const targetMonday = new Date(firstMonday);
+  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
   
-  // Format as YYYY-MM-DD (date only)
-  const targetDateStr = targetMonday.toISOString().split('T')[0]
+  // Format as YYYY-MM-DD
+  const targetDateStr = targetMonday.toISOString().split('T')[0];
   
-  // Find a roster with matching week_start (use first match if duplicates)
+  // Find the matching roster
   const matched = rosters.find(r => {
-    if (!r.week_start) return false
-    const rosterDate = new Date(r.week_start)
-    if (isNaN(rosterDate.getTime())) return false
-    return rosterDate.toISOString().split('T')[0] === targetDateStr
-  })
+    if (!r.week_start) return false;
+    const rosterDate = new Date(r.week_start);
+    if (isNaN(rosterDate.getTime())) return false;
+    return rosterDate.toISOString().split('T')[0] === targetDateStr;
+  });
   
-  return matched || null
-}
+  return matched || null;
+};
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
 
