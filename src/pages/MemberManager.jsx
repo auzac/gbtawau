@@ -284,7 +284,7 @@ function ModalShell({ title, onClose, isMobile, children }) {
   )
 }
 
-// ─── Shared button styles (defined after C) ───────────────────────────────────
+// ─── Shared button styles ───────────────────────────────────────────────────
 const btnBase = {
   display:'inline-flex', alignItems:'center', justifyContent:'center',
   gap:'7px', borderRadius:'99px', fontFamily:"'DM Sans', system-ui, sans-serif",
@@ -714,7 +714,7 @@ export default function MemberManager() {
               </div>
 
             ) : isMobile ? (
-              /* ── Mobile: card rows */
+              /* ── Mobile: card rows (unchanged) */
               <div>
                 {filteredMembers.map((member, idx) => {
                   const age = calcAge(member.dob)
@@ -764,24 +764,20 @@ export default function MemberManager() {
               </div>
 
             ) : (
-              /* ── Desktop: table with wider layout */
+              /* ── Desktop: simplified table (Name, Sex, Address, Status, Actions) */
               <div style={{ overflowX:'auto' }}>
-                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px', minWidth:'900px' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px' }}>
                   <thead>
                     <tr style={{ background:C.surfaceAlt }}>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'22%' }}>Name</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'8%' }}>Sex</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'22%' }}>Address</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>DOB</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'10%' }}>Age</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Status</th>
-                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Marital</th>
-                      <th style={{ padding:'12px 16px', textAlign:'right', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'12%' }}>Actions</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'30%' }}>Name</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'10%' }}>Sex</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'35%' }}>Address</th>
+                      <th style={{ padding:'12px 16px', textAlign:'left', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'15%' }}>Status</th>
+                      <th style={{ padding:'12px 16px', textAlign:'right', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:C.textMid, fontFamily:"'DM Sans', system-ui, sans-serif", width:'10%' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMembers.map(member => {
-                      const age = calcAge(member.dob)
                       const isDeceased = member.is_deceased
                       return (
                         <tr
@@ -823,14 +819,6 @@ export default function MemberManager() {
                           <td style={{ padding:'12px 16px', color:C.textMid, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:'13px' }}>
                             {member.address}
                           </td>
-                          {/* DOB */}
-                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap', fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:'13px' }}>
-                            <span style={{ color:C.textMid }}>{toDisplay(member.dob)}</span>
-                          </td>
-                          {/* Age */}
-                          <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
-                            {age!==null&&!isDeceased && <Badge variant={ageVariant(age)}>{age} yrs</Badge>}
-                          </td>
                           {/* Status */}
                           <td style={{ padding:'12px 16px' }}>
                             {isDeceased
@@ -839,10 +827,6 @@ export default function MemberManager() {
                                 ? <Badge variant="baptised"><UserCheck size={10} style={{ marginRight:'2px' }} />Baptised</Badge>
                                 : <span style={{ color:C.textMuted, fontSize:'12px', fontFamily:"'DM Sans', system-ui, sans-serif" }}>—</span>
                             }
-                          </td>
-                          {/* Marital */}
-                          <td style={{ padding:'12px 16px' }}>
-                            {!isDeceased && <Badge variant={maritalVariant(member.marital_status)}>{member.marital_status||'Single'}</Badge>}
                           </td>
                           {/* Actions */}
                           <td style={{ padding:'12px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
@@ -866,7 +850,7 @@ export default function MemberManager() {
         </div>
       </div>
 
-      {/* ── Add / Edit Modal */}
+      {/* ── Add / Edit Modal (unchanged) */}
       {isFormOpen && (
         <ModalShell title={editingId ? 'Edit Member' : 'New Member'} onClose={closeForm} isMobile={isMobile}>
           <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
@@ -953,7 +937,7 @@ export default function MemberManager() {
         </ModalShell>
       )}
 
-      {/* ── Bulk Import Modal */}
+      {/* ── Bulk Import Modal (unchanged) */}
       {isBulkImportOpen && (
         <ModalShell title="Bulk Import" onClose={closeImport} isMobile={isMobile}>
           <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
