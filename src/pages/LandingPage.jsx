@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, Calendar, User, MapPinned, ArrowLeft } from 'lucide-react'
+import { 
+  ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, 
+  Calendar, User, MapPinned, ArrowLeft 
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
 
@@ -33,7 +36,7 @@ export default function LandingPage() {
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState(null) // null = list view, object = detail view
+  const [selectedEvent, setSelectedEvent] = useState(null)
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
@@ -52,7 +55,7 @@ export default function LandingPage() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  // Autoplay carousel
+  // Autoplay carousel (only if items exist)
   useEffect(() => {
     if (!autoplay || carouselItems.length === 0) return
     const interval = setInterval(() => {
@@ -107,6 +110,8 @@ export default function LandingPage() {
 
     if (!error && data) {
       setEvents(data)
+    } else {
+      setEvents([])
     }
   }
 
@@ -118,9 +123,11 @@ export default function LandingPage() {
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: true })
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       setCarouselItems(data)
       setCurrentSlide(0)
+    } else {
+      setCarouselItems([])
     }
   }
 
@@ -151,12 +158,14 @@ export default function LandingPage() {
   }
 
   const goToPrevSlide = () => {
+    if (carouselItems.length === 0) return
     setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
     setAutoplay(false)
     setTimeout(() => setAutoplay(true), 10000)
   }
 
   const goToNextSlide = () => {
+    if (carouselItems.length === 0) return
     setCurrentSlide((prev) => (prev + 1) % carouselItems.length)
     setAutoplay(false)
     setTimeout(() => setAutoplay(true), 10000)
@@ -169,24 +178,20 @@ export default function LandingPage() {
     }
   }
 
-  // Open modal with event list
   const openEventsModal = () => {
     setSelectedEvent(null)
     setIsModalOpen(true)
   }
 
-  // Close modal
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedEvent(null)
   }
 
-  // Show event details
   const showEventDetails = (event) => {
     setSelectedEvent(event)
   }
 
-  // Go back to list view
   const backToList = () => {
     setSelectedEvent(null)
   }
@@ -206,11 +211,13 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-      {/* NAVBAR (unchanged) */}
+      {/* ========== NAVBAR ========== */}
       <nav
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5
-          ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}
+          ${scrolled 
+            ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' 
+            : 'bg-transparent border-b border-transparent'}
         `}
       >
         <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
@@ -252,7 +259,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU */}
+      {/* ========== FULLSCREEN MENU ========== */}
       <div
         className={`
           fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500
@@ -290,23 +297,20 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {/* HERO SECTION */}
+      {/* ========== HERO SECTION ========== */}
       <section
         id="home"
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
       >
-        {/* Ambient Orbs */}
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[12vh] bg-gradient-to-b from-transparent to-[#b49b7d]/40" />
 
         <div className="relative z-10 w-full max-w-2xl">
-          {/* Logo */}
           <div className="flex justify-center mb-8">
             <img src="/logo.webp" alt="Gereja Baptis Tawau" loading="eager" className="w-[clamp(140px,38vw,200px)] object-contain opacity-95" />
           </div>
 
-          {/* Verse */}
           <blockquote className="mb-10">
             <p className="italic text-[clamp(1.3rem,4vw,2rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-4 font-['Lora',serif]">
               "{verse.text}"
@@ -331,9 +335,8 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* Quick Action Cards */}
+          {/* Quick Actions */}
           <div className="flex flex-wrap justify-center gap-3">
-            {/* EVENTS button - opens modal */}
             <button
               onClick={openEventsModal}
               className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
@@ -344,7 +347,6 @@ export default function LandingPage() {
               </span>
             </button>
 
-            {/* CONTACT button (scroll to footer) */}
             <button
               onClick={scrollToFooter}
               className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
@@ -357,15 +359,14 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll Cue */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-35 animate-bob flex flex-col items-center gap-2">
           <div className="w-px h-9 bg-gradient-to-b from-transparent to-[#8A7A6E]" />
           <div className="w-1 h-1 rounded-full bg-[#8A7A6E]" />
         </div>
       </section>
 
-      {/* CAROUSEL SECTION */}
-      {carouselItems.length > 0 && (
+      {/* ========== CAROUSEL SECTION (only if items exist and current slide is valid) ========== */}
+      {carouselItems.length > 0 && carouselItems[currentSlide] && (
         <section className="px-5 py-12 md:py-16 bg-white/40">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-center text-[clamp(1.3rem,3vw,1.8rem)] font-['Lora',serif] tracking-[-0.01em] text-[#2D2926] mb-8">
@@ -379,7 +380,7 @@ export default function LandingPage() {
               <div className="relative aspect-video">
                 <img
                   src={carouselItems[currentSlide].image_url}
-                  alt={carouselItems[currentSlide][`title_${locale}`]}
+                  alt={carouselItems[currentSlide][`title_${locale}`] || ''}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 text-white text-left">
@@ -443,7 +444,7 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* ABOUT SECTION */}
+      {/* ========== ABOUT SECTION ========== */}
       <section id="about" className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">
@@ -463,7 +464,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ========== FOOTER ========== */}
       <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
         <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">
           {t('footer_church')}
@@ -488,7 +489,7 @@ export default function LandingPage() {
         </p>
       </footer>
 
-      {/* EVENTS MODAL */}
+      {/* ========== EVENTS MODAL ========== */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -509,60 +510,37 @@ export default function LandingPage() {
                 events.length === 0 ? (
                   <p className="text-center text-[#8A7A6E] py-10">{t('no_events')}</p>
                 ) : (
-                  <div className="space-y-4">
-  <h3 className="text-2xl font-['Lora',serif] text-[#2D2926]">
-    {locale === 'bm' && selectedEvent.title_bm ? selectedEvent.title_bm : selectedEvent.title_en}
-  </h3>
-
-  <div className="space-y-3 text-[#2D2926]">
-    {/* Date */}
-    <div className="flex items-center gap-3">
-      <Calendar size={18} className="text-[#B09882]" />
-      <span>
-        {new Date(selectedEvent.date).toLocaleDateString(locale === 'bm' ? 'ms-MY' : 'en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </span>
-    </div>
-
-    {/* Time (if exists) */}
-    {selectedEvent.time && (
-      <div className="flex items-center gap-3">
-        <Clock size={18} className="text-[#B09882]" />
-        <span>{formatTimeForDisplay(selectedEvent.time)}</span>
-      </div>
-    )}
-
-    {/* Location (if exists) */}
-    {selectedEvent.location && (
-      <div className="flex items-center gap-3">
-        <MapPinned size={18} className="text-[#B09882]" />
-        <span>{selectedEvent.location}</span>
-      </div>
-    )}
-
-    {/* PIC (fallback if missing) */}
-    <div className="flex items-center gap-3">
-      <User size={18} className="text-[#B09882]" />
-      <span>{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</span>
-    </div>
-
-    {/* Description (if any) */}
-    {(selectedEvent.description_en || selectedEvent.description_bm) && (
-      <div className="pt-2 border-t border-[#d9c9b7]/30 mt-2">
-        <p className="text-[#5A4E46] text-sm leading-relaxed">
-          {locale === 'bm' && selectedEvent.description_bm ? selectedEvent.description_bm : selectedEvent.description_en}
-        </p>
-      </div>
-    )}
-  </div>
-</div>
+                  <div className="space-y-3">
+                    {events.map((event) => {
+                      if (!event) return null
+                      const { day, month, dayName } = formatEventDate(event.date)
+                      const title = (locale === 'bm' && event.title_bm) 
+                        ? event.title_bm 
+                        : (event.title_en || 'Untitled')
+                      return (
+                        <button
+                          key={event.id}
+                          onClick={() => showEventDetails(event)}
+                          className="w-full text-left bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-4 flex items-center gap-4 transition hover:shadow-md hover:-translate-y-0.5"
+                        >
+                          <div className="min-w-[60px] text-center">
+                            <div className="text-2xl font-['Lora',serif] font-medium text-[#2D2926]">{day}</div>
+                            <div className="uppercase text-[10px] text-[#B09882] font-['DM_Sans',sans-serif]">{month}</div>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-['Lora',serif] font-medium text-[#2D2926]">{title}</h3>
+                            <p className="text-xs text-[#A08070] mt-1">
+                              {dayName} · {formatTimeForDisplay(event.time)}
+                            </p>
+                          </div>
+                          <ArrowLeft size={18} className="text-[#B09882] rotate-180" />
+                        </button>
+                      )
+                    })}
+                  </div>
                 )
               ) : (
-                // Detail view
+                // Detail view (icon-only, no redundant labels)
                 <div>
                   <button
                     onClick={backToList}
@@ -571,62 +549,49 @@ export default function LandingPage() {
                     <ArrowLeft size={16} />
                     {t('events_modal_back')}
                   </button>
-
                   <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5 space-y-4">
                     <h3 className="text-2xl font-['Lora',serif] text-[#2D2926]">
-                      {locale === 'bm' && selectedEvent.title_bm ? selectedEvent.title_bm : selectedEvent.title_en}
+                      {locale === 'bm' && selectedEvent.title_bm 
+                        ? selectedEvent.title_bm 
+                        : (selectedEvent.title_en || 'Untitled')}
                     </h3>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Calendar size={18} className="text-[#B09882] mt-0.5" />
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_date')}</p>
-                          <p className="text-[#2D2926]">
-                            {new Date(selectedEvent.date).toLocaleDateString(locale === 'bm' ? 'ms-MY' : 'en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                        </div>
+                    <div className="space-y-3 text-[#2D2926]">
+                      {/* Date */}
+                      <div className="flex items-center gap-3">
+                        <Calendar size={18} className="text-[#B09882]" />
+                        <span>
+                          {new Date(selectedEvent.date).toLocaleDateString(
+                            locale === 'bm' ? 'ms-MY' : 'en-US', 
+                            { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+                          )}
+                        </span>
                       </div>
-
+                      {/* Time */}
                       {selectedEvent.time && (
-                        <div className="flex items-start gap-3">
-                          <Clock size={18} className="text-[#B09882] mt-0.5" />
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_time')}</p>
-                            <p className="text-[#2D2926]">{formatTimeForDisplay(selectedEvent.time)}</p>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <Clock size={18} className="text-[#B09882]" />
+                          <span>{formatTimeForDisplay(selectedEvent.time)}</span>
                         </div>
                       )}
-
+                      {/* Location */}
                       {selectedEvent.location && (
-                        <div className="flex items-start gap-3">
-                          <MapPinned size={18} className="text-[#B09882] mt-0.5" />
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_location')}</p>
-                            <p className="text-[#2D2926]">{selectedEvent.location}</p>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <MapPinned size={18} className="text-[#B09882]" />
+                          <span>{selectedEvent.location}</span>
                         </div>
                       )}
-
-                      {/* PIC field – adjust column name as needed */}
-                      <div className="flex items-start gap-3">
-                        <User size={18} className="text-[#B09882] mt-0.5" />
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('event_pic')}</p>
-                          <p className="text-[#2D2926]">{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</p>
-                        </div>
+                      {/* PIC */}
+                      <div className="flex items-center gap-3">
+                        <User size={18} className="text-[#B09882]" />
+                        <span>{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</span>
                       </div>
-
+                      {/* Description */}
                       {(selectedEvent.description_en || selectedEvent.description_bm) && (
-                        <div className="pt-2">
-                          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif] mb-1">{t('event_description')}</p>
+                        <div className="pt-2 border-t border-[#d9c9b7]/30 mt-2">
                           <p className="text-[#5A4E46] text-sm leading-relaxed">
-                            {locale === 'bm' && selectedEvent.description_bm ? selectedEvent.description_bm : selectedEvent.description_en}
+                            {locale === 'bm' && selectedEvent.description_bm 
+                              ? selectedEvent.description_bm 
+                              : selectedEvent.description_en}
                           </p>
                         </div>
                       )}
@@ -636,7 +601,7 @@ export default function LandingPage() {
               )}
             </div>
 
-            {/* Modal Footer (Close button) */}
+            {/* Modal Footer */}
             <div className="p-5 border-t border-[#d9c9b7]/40 flex justify-end">
               <button
                 onClick={closeModal}
