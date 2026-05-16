@@ -35,14 +35,14 @@ export default function LandingPage() {
 
   // Roster modal
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false)
-  const [rosters, setRosters] = useState([])               // raw roster data from DB
-  const [availableMonths, setAvailableMonths] = useState([]) // array of {value: "2025-01", label: "January 2025"}
+  const [rosters, setRosters] = useState([])
+  const [rosterMap, setRosterMap] = useState({})        // key: "2026-06-1" => roster object
+  const [availableMonths, setAvailableMonths] = useState([])
   const [selectedMonth, setSelectedMonth] = useState('')
-  const [selectedWeek, setSelectedWeek] = useState(1)      // 1..4
+  const [selectedWeek, setSelectedWeek] = useState(1)
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
-  // Load all data
   useEffect(() => {
     loadContent()
   }, [])
@@ -58,7 +58,6 @@ export default function LandingPage() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  // Carousel autoplay
   useEffect(() => {
     if (!autoplay || carouselItems.length === 0) return
     const interval = setInterval(() => {
@@ -67,7 +66,6 @@ export default function LandingPage() {
     return () => clearInterval(interval)
   }, [autoplay, carouselItems.length])
 
-  // Block body scroll when any modal is open
   useEffect(() => {
     if (isEventsModalOpen || isRosterModalOpen) {
       document.body.style.overflow = 'hidden'
@@ -77,7 +75,6 @@ export default function LandingPage() {
     return () => { document.body.style.overflow = '' }
   }, [isEventsModalOpen, isRosterModalOpen])
 
-  // Data fetching
   const loadContent = async () => {
     setLoading(true)
     await Promise.all([
@@ -110,100 +107,94 @@ export default function LandingPage() {
   }
 
   const loadCarouselItems = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('carousel_items')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: true });
-    
-    if (error && error.code === '42P01') {
-      // Table doesn't exist yet – silently handle
-      console.log('Carousel table not found yet, skipping.');
-      setCarouselItems([]);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from('carousel_items')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true })
+      if (error && error.code === '42P01') {
+        console.log('Carousel table not found yet, skipping.')
+        setCarouselItems([])
+        return
+      }
+      if (!error && data && data.length > 0) {
+        setCarouselItems(data)
+        setCurrentSlide(0)
+      } else {
+        setCarouselItems([])
+      }
+    } catch (error) {
+      console.error('Error loading carousel:', error)
+      setCarouselItems([])
     }
-    
-    if (!error && data && data.length > 0) {
-      setCarouselItems(data);
-      setCurrentSlide(0);
-    } else {
-      setCarouselItems([]);
-    }
-  } catch (error) {
-    console.error('Error loading carousel:', error);
-    setCarouselItems([]);
   }
-};
 
   const loadRosters = async () => {
-  const { data, error } = await supabase
-    .from('roster')
-    .select('*')
-    .order('week_start', { ascending: true })
+    const { data, error } = await supabase
+      .from('roster')
+      .select('*')
+      .order('week_start', { ascending: true })
 
-  console.log('Raw roster data:', data)
+    console.log('Raw roster data:', data)
 
-  if (!error && data) {
-    setRosters(data)
-    const monthsSet = new Set()
-    data.forEach(roster => {
-      if (roster.week_start) {
-        const date = new Date(roster.week_start)
-        if (!isNaN(date.getTime())) {
-          const year = date.getFullYear()
-          const month = date.getMonth()
-          const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`
-          const monthName = date.toLocaleString(locale === 'bm' ? 'ms-MY' : 'en-US', { month: 'long', year: 'numeric' })
-          monthsSet.add(JSON.stringify({ value: monthStr, label: monthName }))
+    if (!error && data) {
+      setRosters(data)
+      const monthsSet = new Set()
+      const map = {}
+
+      data.forEach(roster => {
+        if (!roster.week_start) return
+        const [year, month, day] = roster.week_start.split('-').map(Number)
+        const monthStr = `${year}-${String(month).padStart(2, '0')}`
+
+        // Determine week number (1-4) based on first Monday of the month
+        const firstDayOfMonth = new Date(Date.UTC(year, month-1, 1))
+        const firstMondayUTC = new Date(Date.UTC(year, month-1, 1))
+        const firstDayOfWeek = firstDayOfMonth.getUTCDay()
+        const daysToMonday = firstDayOfWeek === 0 ? 1 : (8 - firstDayOfWeek) % 7
+        firstMondayUTC.setUTCDate(1 + daysToMonday)
+
+        const rosterDateUTC = new Date(Date.UTC(year, month-1, day))
+        const diffDays = Math.floor((rosterDateUTC - firstMondayUTC) / (1000 * 60 * 60 * 24))
+        const weekNumber = Math.floor(diffDays / 7) + 1
+        if (weekNumber >= 1 && weekNumber <= 4) {
+          const key = `${monthStr}-${weekNumber}`
+          map[key] = roster
         }
-      }
-    })
-    const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
-    monthsArray.sort((a,b) => a.value.localeCompare(b.value))
-    console.log('Available months:', monthsArray)
-    setAvailableMonths(monthsArray)
-    if (monthsArray.length > 0) {
-      setSelectedMonth(monthsArray[0].value)
-    }
-  } else {
-    console.error('Error loading rosters:', error)
-  }
-}
 
-const getRosterForWeek = (weekNumber) => {
-  if (!selectedMonth) return null
-  const [year, month] = selectedMonth.split('-').map(Number)
-  
-  // Find first Monday of the month
-  const firstDayOfMonth = new Date(year, month - 1, 1)
-  const firstMonday = new Date(firstDayOfMonth)
-  const dayOfWeek = firstDayOfMonth.getDay() // 0=Sun, 1=Mon...
-  const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7
-  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday)
-  
-  const targetMonday = new Date(firstMonday)
-  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7)
-  const targetDateStr = targetMonday.toISOString().split('T')[0]
-  
-  console.log(`Looking for week ${weekNumber}, target date: ${targetDateStr}`)
-  
-  const matched = rosters.find(r => {
-    if (!r.week_start) return false
-    const rosterDate = new Date(r.week_start)
-    if (isNaN(rosterDate.getTime())) return false
-    const rosterDateStr = rosterDate.toISOString().split('T')[0]
-    return rosterDateStr === targetDateStr
-  })
-  
-  console.log(`Match found:`, matched)
-  return matched || null
-};
+        const monthName = new Date(Date.UTC(year, month-1, 1)).toLocaleString(
+          locale === 'bm' ? 'ms-MY' : 'en-US',
+          { month: 'long', year: 'numeric' }
+        )
+        monthsSet.add(JSON.stringify({ value: monthStr, label: monthName }))
+      })
+
+      const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
+      monthsArray.sort((a,b) => a.value.localeCompare(b.value))
+      console.log('Available months:', monthsArray)
+      console.log('Roster map:', map)
+
+      setAvailableMonths(monthsArray)
+      setRosterMap(map)
+      if (monthsArray.length > 0) {
+        setSelectedMonth(monthsArray[0].value)
+      }
+    } else {
+      console.error('Error loading rosters:', error)
+    }
+  }
+
+  const getRosterForWeek = (weekNumber) => {
+    if (!selectedMonth) return null
+    const key = `${selectedMonth}-${weekNumber}`
+    return rosterMap[key] || null
+  }
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
 
-  // Handlers
+  // Handlers (unchanged)
   const goToPrevSlide = () => {
     if (carouselItems.length === 0) return
     setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
@@ -273,7 +264,7 @@ const getRosterForWeek = (weekNumber) => {
         rel="stylesheet"
       />
 
-      {/* ========== NAVBAR (unchanged except nav links) ========== */}
+      {/* NAVBAR (unchanged, same as before) */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
         <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -298,7 +289,7 @@ const getRosterForWeek = (weekNumber) => {
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU */}
+      {/* FULLSCREEN MENU (same as before) */}
       <div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-center">
           {NAV_LINKS.map((item, i) => (
@@ -318,7 +309,7 @@ const getRosterForWeek = (weekNumber) => {
         <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
       </div>
 
-      {/* ========== HERO SECTION ========== */}
+      {/* HERO SECTION (unchanged) */}
       <section id="home" className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]">
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
@@ -354,7 +345,7 @@ const getRosterForWeek = (weekNumber) => {
         </div>
       </section>
 
-      {/* ========== CAROUSEL ========== */}
+      {/* CAROUSEL SECTION (unchanged) */}
       {carouselItems.length > 0 && carouselItems[currentSlide] && (
         <section className="px-5 py-12 md:py-16 bg-white/40">
           <div className="max-w-4xl mx-auto">
@@ -384,7 +375,7 @@ const getRosterForWeek = (weekNumber) => {
         </section>
       )}
 
-      {/* ========== ABOUT SECTION ========== */}
+      {/* ABOUT SECTION (unchanged) */}
       <section id="about" className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">{t('nav_about')}</p>
@@ -394,7 +385,7 @@ const getRosterForWeek = (weekNumber) => {
         </div>
       </section>
 
-      {/* ========== FOOTER ========== */}
+      {/* FOOTER (unchanged) */}
       <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
         <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">{t('footer_church')}</p>
         <div className="flex flex-col items-center gap-2 text-[#6B5E55] text-sm font-['DM_Sans',sans-serif]">
@@ -406,7 +397,7 @@ const getRosterForWeek = (weekNumber) => {
         <p className="text-[#7A6A5E] text-sm italic font-['Lora',serif]">{t('footer_tagline')}</p>
       </footer>
 
-      {/* ========== EVENTS MODAL (unchanged) ========== */}
+      {/* EVENTS MODAL (unchanged) */}
       {isEventsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -454,7 +445,7 @@ const getRosterForWeek = (weekNumber) => {
         </div>
       )}
 
-      {/* ========== ROSTER MODAL ========== */}
+      {/* ROSTER MODAL (updated to use rosterMap) */}
       {isRosterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -484,7 +475,7 @@ const getRosterForWeek = (weekNumber) => {
                 </div>
               </div>
 
-              {/* Week tabs (1-4) */}
+              {/* Week tabs */}
               <div className="mb-6">
                 <label className="block text-xs uppercase tracking-wide text-[#B09882] mb-2 font-['DM_Sans',sans-serif]">{t('roster_week')}</label>
                 <div className="flex gap-2">
@@ -507,50 +498,32 @@ const getRosterForWeek = (weekNumber) => {
               {/* Roster details */}
               <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5">
                 {rosterForSelectedWeek ? (
-  <>
-    {/* Debug info */}
-    <div className="text-xs text-gray-400 mb-2 p-2 bg-gray-100 rounded">
-      Debug: selectedMonth={selectedMonth}, week={selectedWeek}<br />
-      Target date: {selectedMonth && (() => {
-        const [year, month] = selectedMonth.split('-').map(Number);
-        const firstDay = new Date(year, month-1, 1);
-        const firstMon = new Date(firstDay);
-        const dow = firstDay.getDay();
-        const daysToMon = dow === 0 ? 1 : (8-dow)%7;
-        firstMon.setDate(firstDay.getDate() + daysToMon);
-        const target = new Date(firstMon);
-        target.setDate(firstMon.getDate() + (selectedWeek-1)*7);
-        return target.toISOString().split('T')[0];
-      })()}
-    </div>
-    {/* Roster details */}
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <User size={18} className="text-[#B09882]" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_leader')}</p>
-          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.leader || '—'}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <Users size={18} className="text-[#B09882]" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_pianist')}</p>
-          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.pianist || '—'}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <User size={18} className="text-[#B09882]" />
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_reader')}</p>
-          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.reader || '—'}</p>
-        </div>
-      </div>
-    </div>
-  </>
-) : (
-  <p className="text-center text-[#8A7A6E] py-6">{t('roster_no_data')}</p>
-)}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <User size={18} className="text-[#B09882]" />
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_leader')}</p>
+                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.leader || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Users size={18} className="text-[#B09882]" />
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_pianist')}</p>
+                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.pianist || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <User size={18} className="text-[#B09882]" />
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_reader')}</p>
+                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.reader || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-[#8A7A6E] py-6">{t('roster_no_data')}</p>
+                )}
               </div>
             </div>
 
