@@ -3,13 +3,15 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { X, Phone, Calendar, MapPin, Heart, Cross, AlertCircle } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
 const SEX_OPTIONS = ['Male', 'Female']
 const DEFAULT_FORM = {
   name: '', sex: 'Male', address: '', dob: '',
-  registeredSince: '', baptismDate: '', maritalStatus: 'Single'
+  registeredSince: '', baptismDate: '', maritalStatus: 'Single',
+  contactNumber: '', isDeceased: false, dateOfDeath: ''
 }
 const AGE_GROUPS = [
   { key: 'all',    label: 'All',    min: 0,   max: Infinity },
@@ -90,6 +92,111 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
+// ─── Member Profile Modal ─────────────────────────────────────────────────────
+function MemberProfileModal({ member, onClose }) {
+  const age = calcAge(member.dob)
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header with close button */}
+        <div className="sticky top-0 bg-white border-b border-[#EAE1D4] px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {member.is_deceased ? (
+              <Cross size={18} className="text-[#9A8B80]" />
+            ) : (
+              <Heart size={18} className="text-[#C4A88B]" />
+            )}
+            <h2 className="text-xl font-serif text-[#2D2926]">{member.name}</h2>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F5EFE6] transition">
+            <X size={20} className="text-[#8A7A6E]" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-5">
+          {/* Deceased badge */}
+          {member.is_deceased && (
+            <div className="bg-gray-100 rounded-xl p-3 flex items-center gap-2 text-gray-600">
+              <AlertCircle size={16} />
+              <span className="text-sm">Home with the Lord</span>
+              {member.date_of_death && (
+                <span className="text-sm font-medium">• {toDisplay(member.date_of_death)}</span>
+              )}
+            </div>
+          )}
+
+          {/* Basic Info Grid */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#F5EFE6] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Calendar size={14} className="text-[#8A7A6E]" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-[#9A8B80]">Date of Birth</p>
+                <p className="text-[#2D2926] font-medium">{toDisplay(member.dob)}</p>
+                {age !== null && <p className="text-xs text-[#8A7A6E]">Age: {age}</p>}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#F5EFE6] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-[#8A7A6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-[#9A8B80]">Address</p>
+                <p className="text-[#2D2926]">{member.address}</p>
+              </div>
+            </div>
+
+            {member.contact_number && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#F5EFE6] flex items-center justify-center flex-shrink-0">
+                  <Phone size={14} className="text-[#8A7A6E]" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-[#9A8B80]">Contact</p>
+                  <p className="text-[#2D2926]">{member.contact_number}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#F5EFE6] flex items-center justify-center flex-shrink-0">
+                <svg className="w-3.5 h-3.5 text-[#8A7A6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-[#9A8B80]">Gender & Status</p>
+                <p className="text-[#2D2926]">{member.sex} • {member.marital_status || 'Single'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Church Life Section */}
+          <div className="border-t border-[#EAE1D4] pt-4">
+            <p className="text-xs uppercase tracking-wider text-[#9A8B80] mb-3">Church Life</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[11px] text-[#9A8B80]">Registered Since</p>
+                <p className="text-sm text-[#2D2926] font-medium">{toDisplay(member.registered_since) || '—'}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-[#9A8B80]">Baptism Date</p>
+                <p className="text-sm text-[#2D2926] font-medium">{toDisplay(member.baptism_date) || '—'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 function MemberManager() {
   const navigate = useNavigate()
@@ -105,6 +212,7 @@ function MemberManager() {
   const [importPreview, setImportPreview] = useState([])
   const [importErrors, setImportErrors] = useState([])
   const [savedMessage, setSavedMessage] = useState(null)
+  const [selectedMember, setSelectedMember] = useState(null)
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
 
@@ -148,7 +256,8 @@ function MemberManager() {
     const youth = members.filter(m => { const a = calcAge(m.dob); return a !== null && a >= 13 && a <= 25 }).length
     const adults = members.filter(m => { const a = calcAge(m.dob); return a !== null && a >= 26 }).length
     const baptised = members.filter(m => m.baptism_date).length
-    return { total, male, female, children, youth, adults, baptised }
+    const deceased = members.filter(m => m.is_deceased).length
+    return { total, male, female, children, youth, adults, baptised, deceased }
   }, [members])
 
   // ── Filtered members
@@ -158,7 +267,8 @@ function MemberManager() {
       const q = searchTerm.toLowerCase()
       list = list.filter(m =>
         m.name.toLowerCase().includes(q) ||
-        m.address.toLowerCase().includes(q)
+        m.address.toLowerCase().includes(q) ||
+        (m.contact_number && m.contact_number.includes(q))
       )
     }
     if (ageFilter !== 'all') {
@@ -175,27 +285,34 @@ function MemberManager() {
   const openAdd = () => { setFormData(DEFAULT_FORM); setEditingId(null); setIsFormOpen(true) }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(p => ({ ...p, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setFormData(p => ({ 
+      ...p, 
+      [name]: type === 'checkbox' ? checked : value 
+    }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    const payload = {
+      name: formData.name,
+      sex: formData.sex,
+      address: formData.address,
+      dob: formData.dob,
+      registered_since: formData.registeredSince || null,
+      baptism_date: formData.baptismDate || null,
+      marital_status: formData.maritalStatus,
+      contact_number: formData.contactNumber || null,
+      is_deceased: formData.isDeceased,
+      date_of_death: formData.dateOfDeath || null,
+      updated_at: new Date()
+    }
+
     if (editingId !== null) {
-      // Update existing member
       const { error } = await supabase
         .from('members')
-        .update({
-          name: formData.name,
-          sex: formData.sex,
-          address: formData.address,
-          dob: formData.dob,
-          registered_since: formData.registeredSince || null,
-          baptism_date: formData.baptismDate || null,
-          marital_status: formData.maritalStatus,
-          updated_at: new Date()
-        })
+        .update(payload)
         .eq('id', editingId)
 
       if (error) {
@@ -205,18 +322,9 @@ function MemberManager() {
         loadMembers()
       }
     } else {
-      // Add new member
       const { error } = await supabase
         .from('members')
-        .insert({
-          name: formData.name,
-          sex: formData.sex,
-          address: formData.address,
-          dob: formData.dob,
-          registered_since: formData.registeredSince || null,
-          baptism_date: formData.baptismDate || null,
-          marital_status: formData.maritalStatus
-        })
+        .insert(payload)
 
       if (error) {
         showSaved('Error adding member', true)
@@ -239,7 +347,10 @@ function MemberManager() {
       dob: member.dob || '',
       registeredSince: member.registered_since || '',
       baptismDate: member.baptism_date || '',
-      maritalStatus: member.marital_status || 'Single'
+      maritalStatus: member.marital_status || 'Single',
+      contactNumber: member.contact_number || '',
+      isDeceased: member.is_deceased || false,
+      dateOfDeath: member.date_of_death || ''
     })
     setEditingId(member.id)
     setIsFormOpen(true)
@@ -261,13 +372,13 @@ function MemberManager() {
     }
   }
 
-  // ── CSV Export
+  // ── CSV Export (updated with new fields)
   const handleExportCSV = () => {
-    const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
+    const headers = ['Name', 'Sex', 'Address', 'Contact Number', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status', 'Deceased', 'Date of Death']
     const rows = filteredMembers.map(m => [
-      `"${m.name}"`, m.sex || 'Male', `"${m.address}"`,
+      `"${m.name}"`, m.sex || 'Male', `"${m.address}"`, m.contact_number || '',
       toCSV(m.dob), toCSV(m.registered_since), toCSV(m.baptism_date),
-      m.marital_status || 'Single'
+      m.marital_status || 'Single', m.is_deceased ? 'Yes' : 'No', toCSV(m.date_of_death) || ''
     ])
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -282,10 +393,10 @@ function MemberManager() {
 
   // ── Template download
   const downloadTemplate = () => {
-    const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
+    const headers = ['Name', 'Sex', 'Address', 'Contact Number', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status', 'Deceased', 'Date of Death']
     const rows = [
-      ['"John Tan"', 'Male', '"Taman Indah, Tawau"', '15/05/1990', '10/01/2023', '20/06/2023', 'Married'],
-      ['"Mary Wong"', 'Female', '"Jalan Kuhara, Tawau"', '22/08/1985', '05/11/2022', '', 'Single']
+      ['"John Tan"', 'Male', '"Taman Indah, Tawau"', '012-3456789', '15/05/1990', '10/01/2023', '20/06/2023', 'Married', 'No', ''],
+      ['"Mary Wong"', 'Female', '"Jalan Kuhara, Tawau"', '019-8765432', '22/08/1985', '05/11/2022', '', 'Single', 'No', '']
     ]
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -294,10 +405,9 @@ function MemberManager() {
     link.href = url
     link.download = 'church_members_template.csv'
     link.click()
-    URL.revokeObjectURL(url)
   }
 
-  // ── Bulk import
+  // ── Bulk import (updated with new fields)
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -325,20 +435,27 @@ function MemberManager() {
           else { field += char }
         }
         row.push(field.replace(/^"|"$/g, '').trim())
-        if (row.length < 7) { errors.push(`Row ${i}: expected 7 columns, got ${row.length}`); continue }
-        const [name, sex, address, dob, registeredSince, baptismDate, maritalStatus] = row
+        
+        const name = row[0], sex = row[1], address = row[2], contactNumber = row[3] || ''
+        const dob = row[4], registeredSince = row[5], baptismDate = row[6], maritalStatus = row[7]
+        const isDeceased = row[8]?.toLowerCase() === 'yes', dateOfDeath = row[9] || ''
+        
         if (!name || !address || !dob) { errors.push(`Row ${i}: Name, Address, and DOB are required`); continue }
         if (sex && !SEX_OPTIONS.includes(sex)) { errors.push(`Row ${i}: Sex must be Male or Female`); continue }
         if (!isValidDate(dob)) { errors.push(`Row ${i}: Invalid DOB format (DD/MM/YYYY)`); continue }
         if (registeredSince && !isValidDate(registeredSince)) { errors.push(`Row ${i}: Invalid Registered Since format`); continue }
         if (baptismDate && !isValidDate(baptismDate)) { errors.push(`Row ${i}: Invalid Baptism Date format`); continue }
         if (maritalStatus && !MARITAL_OPTIONS.includes(maritalStatus)) { errors.push(`Row ${i}: Invalid Marital Status`); continue }
+        if (dateOfDeath && !isValidDate(dateOfDeath)) { errors.push(`Row ${i}: Invalid Date of Death format`); continue }
+        
         parsed.push({
-          name, sex: sex || 'Male', address,
+          name, sex: sex || 'Male', address, contact_number: contactNumber,
           dob: toStorage(dob),
           registered_since: registeredSince ? toStorage(registeredSince) : null,
           baptism_date: baptismDate ? toStorage(baptismDate) : null,
-          marital_status: maritalStatus || 'Single'
+          marital_status: maritalStatus || 'Single',
+          is_deceased: isDeceased,
+          date_of_death: dateOfDeath ? toStorage(dateOfDeath) : null
         })
       }
       if (errors.length > 0) { setImportErrors(errors); setImportPreview([]) }
@@ -397,6 +514,11 @@ function MemberManager() {
         </div>
       )}
 
+      {/* Member Profile Modal */}
+      {selectedMember && (
+        <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />
+      )}
+
       {/* ── Header */}
       <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
@@ -431,10 +553,11 @@ function MemberManager() {
             <StatCard label="Male" value={stats.male} sub={stats.total ? `${Math.round((stats.male / stats.total) * 100)}%` : '—'} />
             <StatCard label="Female" value={stats.female} sub={stats.total ? `${Math.round((stats.female / stats.total) * 100)}%` : '—'} />
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-3">
+          <div className="grid grid-cols-4 gap-3 mt-3">
             <StatCard label="Children (0–12)" value={stats.children} />
             <StatCard label="Youth (13–25)" value={stats.youth} />
             <StatCard label="Adults (26+)" value={stats.adults} />
+            <StatCard label="Deceased" value={stats.deceased} />
           </div>
         </div>
 
@@ -479,7 +602,7 @@ function MemberManager() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search by name or address…"
+                  placeholder="Search by name, address, or phone…"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="w-full sm:w-64 pl-8 pr-3 py-1.5 border border-[#EAE1D4] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C4A88B] transition"
@@ -553,9 +676,17 @@ function MemberManager() {
                 <tbody>
                   {filteredMembers.map(member => {
                     const age = calcAge(member.dob)
+                    const isDeceased = member.is_deceased
                     return (
-                      <tr key={member.id} className="border-t border-[#EAE1D4] hover:bg-[#FAF8F5] transition-colors">
-                        <td className="px-4 py-3 font-medium text-[#2D2926]">{member.name}</td>
+                      <tr key={member.id} className={`border-t border-[#EAE1D4] hover:bg-[#FAF8F5] transition-colors ${isDeceased ? 'opacity-60' : ''}`}>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => setSelectedMember(member)}
+                            className={`font-medium text-left hover:underline transition ${isDeceased ? 'text-[#9A8B80] line-through' : 'text-[#2D2926]'}`}
+                          >
+                            {member.name}
+                          </button>
+                        </td>
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             member.sex === 'Male'
@@ -568,7 +699,7 @@ function MemberManager() {
                         <td className="px-4 py-3 text-[#7A6A5E] hidden md:table-cell max-w-[180px] truncate">{member.address}</td>
                         <td className="px-4 py-3 text-[#7A6A5E] hidden lg:table-cell">{toDisplay(member.dob)}</td>
                         <td className="px-4 py-3 hidden lg:table-cell">
-                          {age !== null ? (
+                          {age !== null && !isDeceased ? (
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               age <= 12 ? 'bg-amber-50 text-amber-700' :
                               age <= 25 ? 'bg-teal-50 text-teal-700' :
@@ -576,16 +707,17 @@ function MemberManager() {
                             }`}>
                               {age}
                             </span>
-                          ) : '—'}
+                          ) : isDeceased ? '—' : '—'}
                         </td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            isDeceased ? 'bg-gray-100 text-gray-600' :
                             member.marital_status === 'Married' ? 'bg-green-50 text-green-700' :
                             member.marital_status === 'Widowed' ? 'bg-gray-100 text-gray-600' :
                             member.marital_status === 'Divorced' ? 'bg-red-50 text-red-700' :
                             'bg-blue-50 text-blue-700'
                           }`}>
-                            {member.marital_status || 'Single'}
+                            {isDeceased ? 'Deceased' : (member.marital_status || 'Single')}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
@@ -648,6 +780,16 @@ function MemberManager() {
               </div>
 
               <div>
+                <label className="block text-[11px] uppercase tracking-wide text-[#9A8B80] mb-1">Contact Number</label>
+                <input
+                  type="text" name="contactNumber" value={formData.contactNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 012-3456789"
+                  className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4A88B] transition"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] uppercase tracking-wide text-[#9A8B80] mb-1">Date of Birth * <span className="normal-case text-[#B0A49A]">(DD/MM/YYYY)</span></label>
                 <DateInput value={formData.dob} onChange={v => setFormData(p => ({ ...p, dob: v }))} placeholder="15/05/1990" required />
               </div>
@@ -671,6 +813,27 @@ function MemberManager() {
                 >
                   {MARITAL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
+              </div>
+
+              {/* Deceased Section */}
+              <div className="border-t border-[#EAE1D4] pt-3 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isDeceased"
+                    checked={formData.isDeceased}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 rounded border-[#EAE1D4] text-[#2D2926] focus:ring-[#C4A88B]"
+                  />
+                  <span className="text-sm text-[#5B534D]">Mark as Deceased</span>
+                </label>
+                
+                {formData.isDeceased && (
+                  <div className="mt-3">
+                    <label className="block text-[11px] uppercase tracking-wide text-[#9A8B80] mb-1">Date of Death <span className="normal-case text-[#B0A49A]">(DD/MM/YYYY)</span></label>
+                    <DateInput value={formData.dateOfDeath} onChange={v => setFormData(p => ({ ...p, dateOfDeath: v }))} placeholder="15/05/2024" />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-2">
