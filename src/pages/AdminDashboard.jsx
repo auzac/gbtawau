@@ -22,6 +22,39 @@ function AdminDashboard() {
     maritalStatus: 'Single'
   })
 
+  // Helper: Convert YYYY-MM-DD to DD/MM/YYYY for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '—'
+    const [year, month, day] = dateString.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Helper: Convert DD/MM/YYYY to YYYY-MM-DD for storage
+  const convertToStorageFormat = (dateString) => {
+    if (!dateString) return ''
+    const [day, month, year] = dateString.split('/')
+    return `${year}-${month}-${day}`
+  }
+
+  // Helper: Convert YYYY-MM-DD to DD/MM/YYYY for CSV
+  const formatDateForCSV = (dateString) => {
+    if (!dateString) return ''
+    const [year, month, day] = dateString.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Helper: Validate DD/MM/YYYY format
+  const isValidDate = (dateString) => {
+    if (!dateString) return false
+    const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/
+    if (!regex.test(dateString)) return false
+    const [_, day, month, year] = dateString.match(regex)
+    const date = new Date(year, month - 1, day)
+    return date.getFullYear() === parseInt(year) && 
+           date.getMonth() === parseInt(month) - 1 && 
+           date.getDate() === parseInt(day)
+  }
+
   // Load members from localStorage on mount
   useEffect(() => {
     const storedMembers = localStorage.getItem('churchMembers')
@@ -94,16 +127,16 @@ function AdminDashboard() {
     }
   }
 
-  // Export to CSV
+  // Export to CSV (dates in DD/MM/YYYY)
   const handleExportCSV = () => {
     const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
     const rows = filteredMembers.map(member => [
       `"${member.name}"`,
       member.sex || 'Male',
       `"${member.address}"`,
-      member.dob,
-      member.registeredSince || '',
-      member.baptismDate || '',
+      formatDateForCSV(member.dob),
+      formatDateForCSV(member.registeredSince),
+      formatDateForCSV(member.baptismDate),
       member.maritalStatus || 'Single'
     ])
 
@@ -118,24 +151,24 @@ function AdminDashboard() {
     URL.revokeObjectURL(url)
   }
 
-  // Download CSV Template for bulk import
+  // Download CSV Template (dates in DD/MM/YYYY)
   const downloadTemplate = () => {
     const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
     const exampleRow = [
       '"John Tan"',
       'Male',
       '"Taman Indah, Tawau"',
-      '1990-05-15',
-      '2023-01-10',
-      '2023-06-20',
+      '15/05/1990',
+      '10/01/2023',
+      '20/06/2023',
       'Married'
     ]
     const exampleRow2 = [
       '"Mary Wong"',
       'Female',
       '"Jalan Kuhara, Tawau"',
-      '1985-08-22',
-      '2022-11-05',
+      '22/08/1985',
+      '05/11/2022',
       '',
       'Single'
     ]
@@ -151,7 +184,7 @@ function AdminDashboard() {
     URL.revokeObjectURL(url)
   }
 
-  // Parse and validate CSV for bulk import
+  // Parse and validate CSV for bulk import (expects DD/MM/YYYY)
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -214,9 +247,19 @@ function AdminDashboard() {
           continue
         }
         
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-        if (dob && !dateRegex.test(dob)) {
-          errors.push(`Row ${i}: Invalid Date of Birth format (use YYYY-MM-DD)`)
+        // Validate date format DD/MM/YYYY
+        if (!isValidDate(dob)) {
+          errors.push(`Row ${i}: Invalid Date of Birth format (use DD/MM/YYYY, e.g., 15/05/1990)`)
+          continue
+        }
+        
+        if (registeredSince && !isValidDate(registeredSince)) {
+          errors.push(`Row ${i}: Invalid Registered Since format (use DD/MM/YYYY or leave empty)`)
+          continue
+        }
+        
+        if (baptismDate && !isValidDate(baptismDate)) {
+          errors.push(`Row ${i}: Invalid Baptism Date format (use DD/MM/YYYY or leave empty)`)
           continue
         }
         
@@ -226,13 +269,14 @@ function AdminDashboard() {
           continue
         }
         
+        // Convert dates from DD/MM/YYYY to YYYY-MM-DD for storage
         parsedMembers.push({
           name,
           sex: sex || 'Male',
           address,
-          dob,
-          registeredSince: registeredSince || '',
-          baptismDate: baptismDate || '',
+          dob: convertToStorageFormat(dob),
+          registeredSince: registeredSince ? convertToStorageFormat(registeredSince) : '',
+          baptismDate: baptismDate ? convertToStorageFormat(baptismDate) : '',
           maritalStatus: maritalStatus || 'Single',
           id: null
         })
@@ -265,11 +309,6 @@ function AdminDashboard() {
 
   const handleLogout = () => {
     navigate('/login')
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '—'
-    return dateString
   }
 
   return (
@@ -410,9 +449,9 @@ function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-[#7A6A5E] break-words">{member.address}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.dob)}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.registeredSince)}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.baptismDate)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDateForDisplay(member.dob)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDateForDisplay(member.registeredSince)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDateForDisplay(member.baptismDate)}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                         member.maritalStatus === 'Married' 
@@ -469,19 +508,64 @@ function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Date of Birth *</label>
-                  <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} required className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" />
+                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Date of Birth * (DD/MM/YYYY)</label>
+                  <input 
+                    type="text" 
+                    name="dob" 
+                    value={formData.dob ? formatDateForDisplay(formData.dob) : ''} 
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (isValidDate(value)) {
+                        setFormData(prev => ({ ...prev, dob: convertToStorageFormat(value) }))
+                      } else {
+                        // Allow typing but only store when valid
+                        setFormData(prev => ({ ...prev, dob: '' }))
+                      }
+                    }}
+                    required 
+                    className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" 
+                    placeholder="15/05/1990"
+                  />
+                  <p className="text-xs text-[#8A7A6E] mt-1">Format: DD/MM/YYYY (e.g., 15/05/1990)</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Registered Since</label>
-                  <input type="date" name="registeredSince" value={formData.registeredSince} onChange={handleInputChange} className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" />
-                  <p className="text-xs text-[#8A7A6E] mt-1">Date they joined the church</p>
+                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Registered Since (DD/MM/YYYY)</label>
+                  <input 
+                    type="text" 
+                    name="registeredSince" 
+                    value={formData.registeredSince ? formatDateForDisplay(formData.registeredSince) : ''} 
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '') {
+                        setFormData(prev => ({ ...prev, registeredSince: '' }))
+                      } else if (isValidDate(value)) {
+                        setFormData(prev => ({ ...prev, registeredSince: convertToStorageFormat(value) }))
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" 
+                    placeholder="10/01/2023"
+                  />
+                  <p className="text-xs text-[#8A7A6E] mt-1">Date they joined the church (DD/MM/YYYY)</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Baptism Date</label>
-                  <input type="date" name="baptismDate" value={formData.baptismDate} onChange={handleInputChange} className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" />
+                  <label className="block text-sm font-medium text-[#5B534D] mb-1">Baptism Date (DD/MM/YYYY)</label>
+                  <input 
+                    type="text" 
+                    name="baptismDate" 
+                    value={formData.baptismDate ? formatDateForDisplay(formData.baptismDate) : ''} 
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '') {
+                        setFormData(prev => ({ ...prev, baptismDate: '' }))
+                      } else if (isValidDate(value)) {
+                        setFormData(prev => ({ ...prev, baptismDate: convertToStorageFormat(value) }))
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C4A88B]" 
+                    placeholder="20/06/2023"
+                  />
                 </div>
 
                 <div>
@@ -514,7 +598,7 @@ function AdminDashboard() {
 
               <div className="mb-6 p-4 bg-[#F5EFE6] rounded-xl">
                 <h3 className="font-medium text-[#2D2926] mb-2">1. Download Template</h3>
-                <p className="text-sm text-[#7A6A5E] mb-3">Use this CSV template to prepare your member list</p>
+                <p className="text-sm text-[#7A6A5E] mb-3">Use this CSV template to prepare your member list (dates in DD/MM/YYYY format)</p>
                 <button onClick={downloadTemplate} className="bg-[#2D2926] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#4A3F38] transition">📥 Download Template CSV</button>
               </div>
 
@@ -540,7 +624,13 @@ function AdminDashboard() {
                   <div className="max-h-64 overflow-y-auto border border-[#EAE1D4] rounded-xl">
                     <table className="w-full text-sm">
                       <thead className="bg-[#F5EFE6] sticky top-0">
-                        <tr><th className="px-3 py-2 text-left">Name</th><th className="px-3 py-2 text-left">Sex</th><th className="px-3 py-2 text-left">Address</th><th className="px-3 py-2 text-left">DOB</th><th className="px-3 py-2 text-left">Status</th></tr>
+                        <tr>
+                          <th className="px-3 py-2 text-left">Name</th>
+                          <th className="px-3 py-2 text-left">Sex</th>
+                          <th className="px-3 py-2 text-left">Address</th>
+                          <th className="px-3 py-2 text-left">DOB</th>
+                          <th className="px-3 py-2 text-left">Status</th>
+                        </tr>
                       </thead>
                       <tbody>
                         {importPreview.slice(0, 10).map((member, i) => (
@@ -548,7 +638,7 @@ function AdminDashboard() {
                             <td className="px-3 py-2">{member.name}</td>
                             <td className="px-3 py-2">{member.sex}</td>
                             <td className="px-3 py-2 text-[#7A6A5E] break-words max-w-[200px]">{member.address.substring(0, 40)}</td>
-                            <td className="px-3 py-2">{member.dob}</td>
+                            <td className="px-3 py-2">{formatDateForDisplay(member.dob)}</td>
                             <td className="px-3 py-2">{member.maritalStatus}</td>
                           </tr>
                         ))}
