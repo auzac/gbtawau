@@ -1,13 +1,21 @@
 // src/pages/StaffHub.jsx
+
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  Users,
+  FileText,
+  ClipboardList,
+  LogOut,
+  ChevronRight,
+  CalendarDays,
+  Bell,
+} from 'lucide-react'
 
 function StaffHub() {
   const navigate = useNavigate()
 
   const handleLogout = () => {
-    // For now, just redirect to login
-    // Later: Supabase sign out
     navigate('/login')
   }
 
@@ -15,121 +23,266 @@ function StaffHub() {
     {
       id: 'members',
       title: 'Members',
-      icon: '👥',
-      description: 'Manage member directory — add, edit, and remove member profiles.',
-      action: 'Go to Members',
+      icon: Users,
+      description:
+        'Manage church member records, profiles, and directory information.',
+      action: 'Open Module',
       path: '/staff/members',
-      color: 'from-blue-50 to-indigo-50',
-      iconBg: 'bg-blue-100',
-      status: 'active'
+      featured: true,
+      status: 'active',
     },
     {
       id: 'content',
       title: 'Content',
-      icon: '✏️',
-      description: 'Update weekly verse, upcoming events, and worship roster.',
-      action: 'Go to Content',
+      icon: FileText,
+      description:
+        'Update weekly verses, announcements, worship rosters, and events.',
+      action: 'Manage Content',
       path: '/staff/content',
-      color: 'from-amber-50 to-yellow-50',
-      iconBg: 'bg-amber-100',
-      status: 'active'
+      featured: false,
+      status: 'active',
     },
     {
       id: 'admin',
       title: 'Administrative',
-      icon: '📋',
-      description: 'Generate letters, process requests, and manage reports.',
+      icon: ClipboardList,
+      description:
+        'Letters, reporting tools, request processing, and administration.',
       action: 'Coming Soon',
       path: null,
-      color: 'from-gray-50 to-stone-50',
-      iconBg: 'bg-gray-100',
-      status: 'coming'
-    }
+      featured: false,
+      status: 'coming',
+    },
+  ]
+
+  const stats = [
+    {
+      label: 'Members',
+      value: '248',
+      icon: Users,
+    },
+    {
+      label: 'Upcoming Events',
+      value: '6',
+      icon: CalendarDays,
+    },
+    {
+      label: 'Pending Requests',
+      value: '3',
+      icon: Bell,
+    },
   ]
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#2D2926]">
       {/* Header */}
-      <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">✝</span>
-              <div>
-                <h1 className="text-base font-serif font-light text-[#2D2926]">Gereja Baptis Tawau</h1>
-                <p className="text-[9px] text-[#8A7A6E] tracking-wide">Staff Portal</p>
-              </div>
+      <header className="sticky top-0 z-20 border-b border-[#E7DED2]/70 bg-white/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          
+          {/* Branding */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E7DED2] bg-white">
+              <span className="font-serif text-lg">✝</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-[#8A7A6E] hover:text-[#2D2926] text-xs transition"
-            >
-              Logout
-            </button>
+
+            <div>
+              <h1 className="font-serif text-[17px] font-light tracking-tight text-[#2D2926]">
+                Gereja Baptis Tawau
+              </h1>
+
+              <p className="mt-0.5 text-[10px] uppercase tracking-[0.24em] text-[#9B8B7B]">
+                Staff Portal
+              </p>
+            </div>
           </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-full border border-[#E7DED2] bg-white px-4 py-2 text-sm text-[#6F6258] transition hover:bg-[#F5F1EC] hover:text-[#2D2926]"
+          >
+            <LogOut size={15} strokeWidth={1.8} />
+            Logout
+          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-        
+      {/* Main */}
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+
         {/* Welcome */}
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-serif font-light text-[#2D2926]">
-            Welcome, Staff
-          </h2>
-          <p className="text-[#8A7A6E] text-sm mt-1">
-            Select a module to begin
-          </p>
-          <div className="w-12 h-px bg-[#CDBCAC] mx-auto mt-4" />
-        </div>
+        <section className="mb-10">
+          <div className="text-center">
+            <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-[#B09B87]">
+              Internal Dashboard
+            </p>
 
-        {/* 3-Column Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {modules.map((module) => (
-            <div
-              key={module.id}
-              className={`bg-gradient-to-br ${module.color} rounded-2xl border border-[#EAE1D4] p-6 transition-all duration-200 ${
-                module.status === 'active' ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'
-              }`}
-            >
-              {/* Icon */}
-              <div className={`w-14 h-14 rounded-xl ${module.iconBg} flex items-center justify-center text-3xl mb-4`}>
-                {module.icon}
+            <h2 className="font-serif text-3xl font-light tracking-tight sm:text-4xl">
+              Welcome, Staff
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#7A6E66]">
+              Manage church operations, member information, and weekly ministry content from one central place.
+            </p>
+
+            <div className="mx-auto mt-5 h-px w-12 bg-[#D8CBBE]" />
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="mb-8 grid gap-4 md:grid-cols-3">
+          {stats.map((stat) => {
+            const Icon = stat.icon
+
+            return (
+              <div
+                key={stat.label}
+                className="rounded-3xl border border-[#E7DED2]/70 bg-white/70 p-5 backdrop-blur-sm"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#A39282]">
+                      {stat.label}
+                    </p>
+
+                    <h3 className="mt-2 font-serif text-3xl font-light">
+                      {stat.value}
+                    </h3>
+                  </div>
+
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F3EEE8]">
+                    <Icon
+                      size={20}
+                      strokeWidth={1.8}
+                      className="text-[#6D6055]"
+                    />
+                  </div>
+                </div>
               </div>
-              
-              {/* Title & Description */}
-              <h3 className="text-lg font-serif font-medium text-[#2D2926] mb-2">
-                {module.title}
-              </h3>
-              <p className="text-[#7A6A5E] text-sm leading-relaxed mb-5">
-                {module.description}
-              </p>
-              
-              {/* Action Button */}
-              {module.status === 'active' ? (
-                <button
-                  onClick={() => navigate(module.path)}
-                  className="w-full bg-white/80 border border-[#EAE1D4] text-[#2D2926] py-2 rounded-full text-sm hover:bg-white transition"
-                >
-                  {module.action} →
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-2 rounded-full text-sm cursor-not-allowed"
-                >
-                  {module.action}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
+            )
+          })}
+        </section>
 
-        {/* Footer Note */}
-        <p className="text-center text-[10px] text-[#B0A49A] mt-10 tracking-wide">
-          Data is stored locally for preview • Supabase integration coming soon
-        </p>
+        {/* Module Layout */}
+        <section className="grid gap-6 lg:grid-cols-3">
+
+          {/* Featured Module */}
+          <div className="lg:col-span-2">
+            {modules
+              .filter((module) => module.featured)
+              .map((module) => {
+                const Icon = module.icon
+
+                return (
+                  <div
+                    key={module.id}
+                    className="group rounded-[32px] border border-[#E7DED2]/70 bg-white/70 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    <div className="flex flex-col justify-between gap-10 sm:flex-row sm:items-end">
+
+                      {/* Left */}
+                      <div className="max-w-lg">
+                        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3EEE8]">
+                          <Icon
+                            size={26}
+                            strokeWidth={1.7}
+                            className="text-[#4E433B]"
+                          />
+                        </div>
+
+                        <p className="mb-2 text-[10px] uppercase tracking-[0.25em] text-[#B09B87]">
+                          Primary Module
+                        </p>
+
+                        <h3 className="font-serif text-3xl font-light tracking-tight">
+                          {module.title}
+                        </h3>
+
+                        <p className="mt-4 text-sm leading-relaxed text-[#786C63]">
+                          {module.description}
+                        </p>
+                      </div>
+
+                      {/* Button */}
+                      <button
+                        onClick={() => navigate(module.path)}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#2D2926] px-6 py-3 text-sm text-white transition hover:bg-[#4A3F38]"
+                      >
+                        {module.action}
+
+                        <ChevronRight size={16} strokeWidth={1.8} />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+
+          {/* Secondary Modules */}
+          <div className="space-y-6">
+            {modules
+              .filter((module) => !module.featured)
+              .map((module) => {
+                const Icon = module.icon
+
+                return (
+                  <div
+                    key={module.id}
+                    className={`rounded-[28px] border border-[#E7DED2]/70 bg-white/70 p-6 backdrop-blur-sm transition-all duration-300 ${
+                      module.status === 'active'
+                        ? 'hover:-translate-y-1 hover:shadow-lg'
+                        : 'opacity-70'
+                    }`}
+                  >
+                    {/* Icon */}
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F3EEE8]">
+                      <Icon
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#5E5147]"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="font-serif text-xl font-light tracking-tight">
+                      {module.title}
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-relaxed text-[#7A6E66]">
+                      {module.description}
+                    </p>
+
+                    {/* Action */}
+                    {module.status === 'active' ? (
+                      <button
+                        onClick={() => navigate(module.path)}
+                        className="mt-6 inline-flex items-center gap-2 text-sm text-[#5F5349] transition hover:text-[#2D2926]"
+                      >
+                        {module.action}
+
+                        <ChevronRight size={15} strokeWidth={1.8} />
+                      </button>
+                    ) : (
+                      <div className="mt-6 inline-flex rounded-full border border-[#E7DED2] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[#B1A396]">
+                        Coming Soon
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-14 border-t border-[#E7DED2]/70 pt-6 text-center">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[#B0A49A]">
+            Gereja Baptis Tawau Internal System
+          </p>
+
+          <p className="mt-2 text-xs text-[#B0A49A]">
+            Local preview environment • Supabase integration planned
+          </p>
+        </footer>
       </main>
     </div>
   )
