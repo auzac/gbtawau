@@ -542,4 +542,8 @@ export default function LandingPage() {
           50% { transform: translateX(-50%) translateY(6px); }
         }
         * { box-sizing: border-box; }
-        html { scroll-behavior
+        html { scroll-behavior  : smooth; }
+      `}</style>
+    </div>
+  )
+}
