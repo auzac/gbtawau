@@ -7,14 +7,15 @@ import {
   BookOpen,
   CalendarDays,
   Music,
-  History,
   Save,
   Plus,
   Pencil,
   Trash2,
   ChevronRight,
   Search,
-  X
+  X,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -27,14 +28,16 @@ function ContentManager() {
   const [activeTab, setActiveTab] = useState('verse')
   const [savedMessage, setSavedMessage] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isVerseLibraryOpen, setIsVerseLibraryOpen] = useState(false)
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false)
   
   // Verse Library State
   const [verseLibrary, setVerseLibrary] = useState([])
   const [verseSearchTerm, setVerseSearchTerm] = useState('')
+  const [showAddVerseForm, setShowAddVerseForm] = useState(false)
+  const [selectedVerseId, setSelectedVerseId] = useState(null)
   const [newVerseForm, setNewVerseForm] = useState({ reference: '', text: '', theme: '' })
   const [activeVerse, setActiveVerseState] = useState({
+    id: null,
     reference: 'Matthew 11:28',
     text: 'Come to me, all you who are weary and burdened, and I will give you rest.',
     theme: 'Rest and Peace'
@@ -69,12 +72,10 @@ function ContentManager() {
     return `${hour12}:${minute} ${period}`
   }
 
-  // Helper: Format time for input (12-hour to 24-hour if needed, but input uses 24-hour)
+  // Helper: Format time for input
   const formatTimeForInput = (timeStr) => {
     if (!timeStr) return ''
-    // If already in 24-hour format (e.g., "14:30"), return as is
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr
-    // If in 12-hour format (e.g., "2:30 PM"), convert to 24-hour
     const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
     if (match) {
       let hour = parseInt(match[1])
@@ -107,7 +108,6 @@ function ContentManager() {
     const { data, error } = await supabase
       .from('verse_library')
       .select('*')
-      .order('used_count', { ascending: false })
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -124,6 +124,7 @@ function ContentManager() {
 
     if (!error && data) {
       setActiveVerseState({
+        id: data.id,
         reference: data.reference,
         text: data.text,
         theme: data.theme || ''
@@ -168,15 +169,15 @@ function ContentManager() {
     }
   }
 
-  const showSaved = (message) => {
-    setSavedMessage(message)
+  const showSaved = (message, isError = false) => {
+    setSavedMessage({ text: message, isError })
     setTimeout(() => setSavedMessage(null), 2200)
   }
 
   // ─── Verse Library Functions ────────────────────────────────────────────────
   const saveNewVerseToLibrary = async () => {
     if (!newVerseForm.reference || !newVerseForm.text) {
-      showSaved('Please fill in reference and verse text')
+      showSaved('Please fill in reference and verse text', true)
       return
     }
 
@@ -188,7 +189,7 @@ function ContentManager() {
       .maybeSingle()
 
     if (existing) {
-      showSaved('Verse with this reference already exists')
+      showSaved('Verse with this reference already exists', true)
       return
     }
 
@@ -204,13 +205,14 @@ function ContentManager() {
     if (!error) {
       showSaved('Verse added to library')
       setNewVerseForm({ reference: '', text: '', theme: '' })
+      setShowAddVerseForm(false)
       loadVerseLibrary()
     } else {
-      showSaved('Error saving verse')
+      showSaved('Error saving verse', true)
     }
   }
 
-  const setActiveVerse = async (verseId) => {
+  const activateVerse = async (verseId) => {
     // Mark all as inactive
     await supabase
       .from('verse_library')
@@ -226,8 +228,15 @@ function ContentManager() {
     if (!error) {
       showSaved('Verse activated for homepage')
       loadActiveVerse()
-      setIsVerseLibraryOpen(false)
+      setSelectedVerseId(null)
+    } else {
+      showSaved('Error activating verse', true)
     }
+  }
+
+  const getSelectedVerse = () => {
+    if (!selectedVerseId) return null
+    return verseLibrary.find(v => v.id === selectedVerseId)
   }
 
   // ─── Event Functions ────────────────────────────────────────────────────────
@@ -250,7 +259,6 @@ function ContentManager() {
 
   const handleSaveEvent = async () => {
     if (editingEvent) {
-      // Update existing event
       const { error } = await supabase
         .from('events')
         .update({
@@ -261,11 +269,8 @@ function ContentManager() {
         })
         .eq('id', editingEvent.id)
 
-      if (!error) {
-        showSaved('Event updated')
-      }
+      if (!error) showSaved('Event updated')
     } else {
-      // Insert new event
       const { error } = await supabase
         .from('events')
         .insert({
@@ -275,9 +280,7 @@ function ContentManager() {
           description_en: eventForm.descriptionEn
         })
 
-      if (!error) {
-        showSaved('Event added')
-      }
+      if (!error) showSaved('Event added')
     }
 
     setIsEventModalOpen(false)
@@ -286,16 +289,10 @@ function ContentManager() {
 
   const handleDeleteEvent = async (id) => {
     if (window.confirm('Delete this event?')) {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', id)
-
+      const { error } = await supabase.from('events').delete().eq('id', id)
       if (!error) {
         showSaved('Event deleted')
         loadEvents()
-      } else {
-        showSaved('Error deleting event')
       }
     }
   }
@@ -314,8 +311,6 @@ function ContentManager() {
     if (!error) {
       setRoster(prev => prev.map(w => w.id === week.id ? week : w))
       showSaved('Roster week updated')
-    } else {
-      showSaved('Error updating roster')
     }
   }
 
@@ -340,8 +335,6 @@ function ContentManager() {
       setIsRosterModalOpen(false)
       showSaved('Roster week updated')
       loadRoster()
-    } else {
-      showSaved('Error updating roster')
     }
   }
 
@@ -381,9 +374,7 @@ function ContentManager() {
   }
 
   useEffect(() => {
-    if (isCalendarModalOpen) {
-      loadCalendarPreview()
-    }
+    if (isCalendarModalOpen) loadCalendarPreview()
   }, [selectedMonth, selectedYear, selectedWeek, isCalendarModalOpen, activeVerse, events, roster])
 
   const handleLogout = async () => {
@@ -396,6 +387,8 @@ function ContentManager() {
     { id: 'events', label: 'Events', icon: CalendarDays },
     { id: 'roster', label: 'Worship Roster', icon: Music }
   ]
+
+  const selectedVerse = getSelectedVerse()
 
   if (isLoading) {
     return (
@@ -443,8 +436,9 @@ function ContentManager() {
       {/* Save Toast */}
       {savedMessage && (
         <div className="fixed top-20 right-4 sm:right-6 z-50">
-          <div className="bg-[#2D2926] text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl text-sm animate-fade-in">
-            {savedMessage}
+          <div className={`flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl text-sm animate-fade-in ${savedMessage.isError ? 'bg-red-600 text-white' : 'bg-[#2D2926] text-white'}`}>
+            {savedMessage.isError ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+            {savedMessage.text}
           </div>
         </div>
       )}
@@ -477,65 +471,151 @@ function ContentManager() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
         
-        {/* Verse Tab */}
+        {/* Verse Tab - Desktop: Side by Side, Mobile: Stacked */}
         {activeTab === 'verse' && (
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-5 sm:gap-6">
-            {/* Editor */}
-            <div className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-                <div>
-                  <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Weekly Scripture</h2>
-                  <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">The verse shown on the homepage</p>
-                </div>
-                <button
-                  onClick={() => {
-                    loadVerseLibrary()
-                    setIsVerseLibraryOpen(true)
-                  }}
-                  className="flex items-center justify-center gap-2 h-9 sm:h-10 px-3 sm:px-4 rounded-xl border border-[#E7E0D7] text-xs sm:text-sm text-[#5E5247] hover:bg-[#F5F1EB] transition"
-                >
-                  <BookOpen size={15} />
-                  Change Verse
-                </button>
-              </div>
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
+            
+            {/* LEFT COLUMN: Verse Library */}
+            <div className="bg-white border border-[#E7E0D7] rounded-2xl p-5 shadow-sm">
+              <h2 className="text-lg font-serif text-[#2D2926] mb-4">Verse Library</h2>
               
-              {/* Current Verse Display */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#5E5247] mb-2">Reference</label>
-                  <div className="w-full h-11 sm:h-12 px-4 rounded-2xl border border-[#E7E0D7] bg-[#FCFBF9] flex items-center text-[#2D2926] text-sm">
-                    {activeVerse.reference}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#5E5247] mb-2">Verse Text</label>
-                  <div className="w-full px-4 py-3 rounded-2xl border border-[#E7E0D7] bg-[#FCFBF9] text-[#2D2926] text-sm leading-relaxed">
-                    {activeVerse.text}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#5E5247] mb-2">Theme</label>
-                  <div className="w-full h-11 sm:h-12 px-4 rounded-2xl border border-[#E7E0D7] bg-[#FCFBF9] flex items-center text-[#2D2926] text-sm">
-                    {activeVerse.theme || '—'}
-                  </div>
-                </div>
+              {/* Search Bar */}
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by reference or text..."
+                  value={verseSearchTerm}
+                  onChange={(e) => setVerseSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 pl-9 rounded-xl border border-[#EAE1D4] text-sm"
+                />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A7A6E]" />
+                {verseSearchTerm && (
+                  <button onClick={() => setVerseSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <X size={16} className="text-[#8A7A6E]" />
+                  </button>
+                )}
               </div>
+
+              {/* Verses List */}
+              <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
+                {verseLibrary.filter(v => 
+                  v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
+                  v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
+                ).length === 0 ? (
+                  <p className="text-center text-[#8A7A6E] py-4 text-sm">No verses found</p>
+                ) : (
+                  verseLibrary.filter(v => 
+                    v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
+                    v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
+                  ).map(verse => (
+                    <div
+                      key={verse.id}
+                      onClick={() => setSelectedVerseId(verse.id)}
+                      className={`border rounded-xl p-3 cursor-pointer transition-all ${
+                        selectedVerseId === verse.id
+                          ? 'border-[#C4A88B] bg-[#F5EFE6] ring-2 ring-[#C4A88B]/30'
+                          : verse.is_active
+                          ? 'border-[#C4A88B] bg-[#FAF8F5]'
+                          : 'border-[#EAE1D4] hover:bg-[#F5F1EB]'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-[#2D2926] text-sm">{verse.reference}</p>
+                          <p className="text-xs text-[#7A6A5E] mt-1 line-clamp-1">{verse.text}</p>
+                          {verse.theme && <p className="text-[10px] text-[#B0A49A] mt-1">{verse.theme}</p>}
+                        </div>
+                        {verse.is_active && (
+                          <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full ml-2 whitespace-nowrap">Active</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add New Verse Inline */}
+              {!showAddVerseForm ? (
+                <button
+                  onClick={() => setShowAddVerseForm(true)}
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed border-[#EAE1D4] text-sm text-[#5E5247] hover:bg-[#F5F1EB] transition"
+                >
+                  <Plus size={14} />
+                  Add New Verse
+                </button>
+              ) : (
+                <div className="border border-[#EAE1D4] rounded-xl p-3 space-y-3 bg-[#FAF8F5]">
+                  <input
+                    type="text"
+                    placeholder="Reference (e.g., Matthew 11:28)"
+                    value={newVerseForm.reference}
+                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, reference: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    autoFocus
+                  />
+                  <textarea
+                    placeholder="Verse text"
+                    rows={2}
+                    value={newVerseForm.text}
+                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, text: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm resize-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Theme (optional)"
+                    value={newVerseForm.theme}
+                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, theme: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={saveNewVerseToLibrary} className="flex-1 bg-[#2D2926] text-white py-2 rounded-lg text-sm hover:bg-[#4A3F38]">
+                      Save
+                    </button>
+                    <button onClick={() => setShowAddVerseForm(false)} className="flex-1 border border-[#EAE1D4] text-[#5E5247] py-2 rounded-lg text-sm hover:bg-white">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Preview */}
-            <div className="bg-[#2D2926] rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 sm:w-48 sm:h-48 bg-white/5 rounded-full blur-3xl" />
-              <div className="relative z-10">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4 sm:mb-6">
-                  <BookOpen size={20} />
+            {/* RIGHT COLUMN: Preview Panels */}
+            <div className="space-y-4">
+              
+              {/* Current Active Verse (Static Preview) */}
+              <div className="bg-[#2D2926] rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle size={16} className="text-[#C4A88B]" />
+                  <span className="text-xs uppercase tracking-wider text-[#C4A88B]">Currently Active</span>
                 </div>
-                <p className="text-[10px] sm:text-sm uppercase tracking-[0.2em] text-white/60 mb-4 sm:mb-6">Weekly Verse</p>
-                <p className="text-lg sm:text-2xl leading-relaxed font-serif">"{activeVerse.text}"</p>
-                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
-                  <p className="text-base sm:text-lg font-medium">{activeVerse.reference}</p>
-                  <p className="text-xs sm:text-sm text-white/60 mt-1">{activeVerse.theme}</p>
+                <p className="text-xl font-serif leading-relaxed">"{activeVerse.text}"</p>
+                <div className="mt-4 pt-3 border-t border-white/10">
+                  <p className="text-sm font-medium">{activeVerse.reference}</p>
+                  <p className="text-xs text-white/60 mt-1">{activeVerse.theme || 'No theme'}</p>
                 </div>
               </div>
+
+              {/* Selected Verse Preview (If any) */}
+              {selectedVerse && (
+                <div className="bg-white border-2 border-[#C4A88B] rounded-2xl p-5 shadow-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle size={16} className="text-[#C4A88B]" />
+                    <span className="text-xs uppercase tracking-wider text-[#5E5247]">Preview — Will Become Active</span>
+                  </div>
+                  <p className="text-xl font-serif text-[#2D2926] leading-relaxed">"{selectedVerse.text}"</p>
+                  <div className="mt-4 pt-3 border-t border-[#EAE1D4]">
+                    <p className="text-sm font-medium text-[#2D2926]">{selectedVerse.reference}</p>
+                    <p className="text-xs text-[#8A7A6E] mt-1">{selectedVerse.theme || 'No theme'}</p>
+                  </div>
+                  <button
+                    onClick={() => activateVerse(selectedVerse.id)}
+                    className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-xl text-sm hover:bg-[#4A3F38] transition flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={14} />
+                    Activate This Verse
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -548,15 +628,13 @@ function ContentManager() {
                 <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Upcoming Events</h2>
                 <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage public-facing church events</p>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <button
-                  onClick={handleAddEvent}
-                  className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"
-                >
-                  <Plus size={15} />
-                  <span className="hidden sm:inline">Add Event</span>
-                </button>
-              </div>
+              <button
+                onClick={handleAddEvent}
+                className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"
+              >
+                <Plus size={15} />
+                <span className="hidden sm:inline">Add Event</span>
+              </button>
             </div>
 
             <div className="grid gap-3 sm:gap-4">
@@ -657,94 +735,6 @@ function ContentManager() {
         )}
       </main>
 
-      {/* Verse Library Modal */}
-      {isVerseLibraryOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-serif text-[#2D2926]">Verse Library</h2>
-              <button onClick={() => setIsVerseLibraryOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Search by reference or text..."
-                value={verseSearchTerm}
-                onChange={(e) => setVerseSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 pl-9 rounded-xl border border-[#EAE1D4] text-sm"
-              />
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A7A6E]" />
-              {verseSearchTerm && (
-                <button onClick={() => setVerseSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X size={16} className="text-[#8A7A6E]" />
-                </button>
-              )}
-            </div>
-
-            {/* Saved Verses List */}
-            <div className="space-y-2 max-h-64 overflow-y-auto mb-6">
-              {verseLibrary.filter(v => 
-                v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
-                v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
-              ).length === 0 ? (
-                <p className="text-center text-[#8A7A6E] py-4">No verses found</p>
-              ) : (
-                verseLibrary.filter(v => 
-                  v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
-                  v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
-                ).map(verse => (
-                  <div key={verse.id} className={`border rounded-xl p-3 flex justify-between items-center ${verse.is_active ? 'bg-[#F5EFE6] border-[#C4A88B]' : 'border-[#EAE1D4]'}`}>
-                    <div className="flex-1">
-                      <p className="font-medium text-[#2D2926]">{verse.reference}</p>
-                      <p className="text-sm text-[#7A6A5E] line-clamp-1">{verse.text}</p>
-                      {verse.theme && <p className="text-xs text-[#B0A49A] mt-1">{verse.theme}</p>}
-                    </div>
-                    {verse.is_active ? (
-                      <span className="text-xs bg-[#2D2926] text-white px-2 py-1 rounded-full">Active</span>
-                    ) : (
-                      <button onClick={() => setActiveVerse(verse.id)} className="text-sm border border-[#EAE1D4] px-3 py-1 rounded-full hover:bg-[#F5EFE6]">Use</button>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Add New Verse */}
-            <div className="border-t border-[#EAE1D4] pt-4">
-              <h3 className="text-sm font-medium text-[#2D2926] mb-3">Add New Verse</h3>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Reference (e.g., Matthew 11:28)"
-                  value={newVerseForm.reference}
-                  onChange={(e) => setNewVerseForm(prev => ({ ...prev, reference: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-                <textarea
-                  placeholder="Verse text"
-                  rows={2}
-                  value={newVerseForm.text}
-                  onChange={(e) => setNewVerseForm(prev => ({ ...prev, text: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Theme (optional)"
-                  value={newVerseForm.theme}
-                  onChange={(e) => setNewVerseForm(prev => ({ ...prev, theme: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-                <button onClick={saveNewVerseToLibrary} className="w-full bg-[#2D2926] text-white py-2 rounded-lg text-sm hover:bg-[#4A3F38]">
-                  Save to Library
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Calendar Modal */}
       {isCalendarModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -785,9 +775,7 @@ function ContentManager() {
             </div>
             {calendarPreview && (
               <div className="space-y-5">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-[#2D2926]">{calendarPreview.weekRange}</p>
-                </div>
+                <div className="text-center"><p className="text-sm font-medium text-[#2D2926]">{calendarPreview.weekRange}</p></div>
                 <div className="border rounded-xl p-4">
                   <h3 className="text-sm font-medium mb-2">📖 Weekly Verse</h3>
                   <p className="font-serif">{calendarPreview.verse.reference}</p>
@@ -801,25 +789,13 @@ function ContentManager() {
                       <div><span className="text-[#8A7A6E]">Pianist:</span> {calendarPreview.roster.pianist}</div>
                       <div><span className="text-[#8A7A6E]">Reader:</span> {calendarPreview.roster.reader}</div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-[#8A7A6E]">No roster assigned for this week</p>
-                  )}
+                  ) : <p className="text-sm text-[#8A7A6E]">No roster assigned for this week</p>}
                 </div>
                 <div className="border rounded-xl p-4">
                   <h3 className="text-sm font-medium mb-2">📅 Events</h3>
                   {calendarPreview.events.length > 0 ? (
-                    <div className="space-y-2">
-                      {calendarPreview.events.map(event => (
-                        <div key={event.id} className="text-sm">
-                          <span className="font-medium">{event.date}</span>
-                          <span className="text-[#8A7A6E] mx-2">•</span>
-                          <span>{event.titleEn}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-[#8A7A6E]">No events scheduled this week</p>
-                  )}
+                    <div className="space-y-2">{calendarPreview.events.map(event => <div key={event.id} className="text-sm"><span className="font-medium">{event.date}</span><span className="text-[#8A7A6E] mx-2">•</span><span>{event.titleEn}</span></div>)}</div>
+                  ) : <p className="text-sm text-[#8A7A6E]">No events scheduled this week</p>}
                 </div>
               </div>
             )}
@@ -836,32 +812,10 @@ function ContentManager() {
               <button onClick={() => setIsEventModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
             </div>
             <div className="space-y-4">
-              <input 
-                type="date" 
-                value={eventForm.date} 
-                onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <input 
-                type="text" 
-                placeholder="Event Title" 
-                value={eventForm.titleEn} 
-                onChange={(e) => setEventForm(prev => ({ ...prev, titleEn: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <input 
-                type="time" 
-                value={eventForm.time} 
-                onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <textarea 
-                placeholder="Description" 
-                value={eventForm.descriptionEn} 
-                onChange={(e) => setEventForm(prev => ({ ...prev, descriptionEn: e.target.value }))} 
-                rows={3} 
-                className="w-full px-4 py-2 border rounded-xl text-sm resize-none" 
-              />
+              <input type="date" value={eventForm.date} onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Event Title" value={eventForm.titleEn} onChange={(e) => setEventForm(prev => ({ ...prev, titleEn: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="time" value={eventForm.time} onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <textarea placeholder="Description" value={eventForm.descriptionEn} onChange={(e) => setEventForm(prev => ({ ...prev, descriptionEn: e.target.value }))} rows={3} className="w-full px-4 py-2 border rounded-xl text-sm resize-none" />
               <button onClick={handleSaveEvent} className="w-full bg-[#2D2926] text-white py-2 rounded-xl hover:bg-[#433A34] transition">Save Event</button>
             </div>
           </div>
@@ -877,34 +831,10 @@ function ContentManager() {
               <button onClick={() => setIsRosterModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
             </div>
             <div className="space-y-4">
-              <input 
-                type="text" 
-                placeholder="Week Starting (DD/MM/YYYY)" 
-                value={rosterForm.weekStart} 
-                onChange={(e) => setRosterForm(prev => ({ ...prev, weekStart: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <input 
-                type="text" 
-                placeholder="Worship Leader" 
-                value={rosterForm.leader} 
-                onChange={(e) => setRosterForm(prev => ({ ...prev, leader: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <input 
-                type="text" 
-                placeholder="Pianist / Keyboardist" 
-                value={rosterForm.pianist} 
-                onChange={(e) => setRosterForm(prev => ({ ...prev, pianist: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
-              <input 
-                type="text" 
-                placeholder="Scripture Reader" 
-                value={rosterForm.reader} 
-                onChange={(e) => setRosterForm(prev => ({ ...prev, reader: e.target.value }))} 
-                className="w-full px-4 py-2 border rounded-xl text-sm" 
-              />
+              <input type="text" placeholder="Week Starting (DD/MM/YYYY)" value={rosterForm.weekStart} onChange={(e) => setRosterForm(prev => ({ ...prev, weekStart: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Worship Leader" value={rosterForm.leader} onChange={(e) => setRosterForm(prev => ({ ...prev, leader: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Pianist / Keyboardist" value={rosterForm.pianist} onChange={(e) => setRosterForm(prev => ({ ...prev, pianist: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
+              <input type="text" placeholder="Scripture Reader" value={rosterForm.reader} onChange={(e) => setRosterForm(prev => ({ ...prev, reader: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <button onClick={handleSaveRosterEdit} className="w-full bg-[#2D2926] text-white py-2 rounded-xl hover:bg-[#433A34] transition">Save Changes</button>
             </div>
           </div>
