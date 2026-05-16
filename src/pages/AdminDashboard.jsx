@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 function AdminDashboard() {
   const navigate = useNavigate()
   const [members, setMembers] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -33,6 +34,16 @@ function AdminDashboard() {
   useEffect(() => {
     localStorage.setItem('churchMembers', JSON.stringify(members))
   }, [members])
+
+  // Filter members based on search term
+  const filteredMembers = members.filter(member => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      member.name.toLowerCase().includes(searchLower) ||
+      member.address.toLowerCase().includes(searchLower) ||
+      (member.maritalStatus && member.maritalStatus.toLowerCase().includes(searchLower))
+    )
+  })
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -86,7 +97,7 @@ function AdminDashboard() {
   // Export to CSV
   const handleExportCSV = () => {
     const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
-    const rows = members.map(member => [
+    const rows = filteredMembers.map(member => [
       `"${member.name}"`,
       member.sex || 'Male',
       `"${member.address}"`,
@@ -150,11 +161,9 @@ function AdminDashboard() {
       const csvText = event.target.result
       const lines = csvText.split(/\r?\n/)
       
-      // Remove BOM if present
       const firstLine = lines[0].replace(/^\uFEFF/, '')
       const headers = firstLine.split(',').map(h => h.replace(/"/g, '').trim())
       
-      // Validate headers
       const requiredHeaders = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
       const missingHeaders = requiredHeaders.filter(h => !headers.includes(h))
       
@@ -170,7 +179,6 @@ function AdminDashboard() {
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue
         
-        // Simple CSV parsing (handles quoted fields)
         const row = []
         let inQuote = false
         let currentField = ''
@@ -195,20 +203,17 @@ function AdminDashboard() {
         
         const [name, sex, address, dob, registeredSince, baptismDate, maritalStatus] = row
         
-        // Validation
         if (!name || !address || !dob) {
           errors.push(`Row ${i}: Name, Address, and Date of Birth are required`)
           continue
         }
         
-        // Validate sex
         const validSex = ['Male', 'Female']
         if (sex && !validSex.includes(sex)) {
           errors.push(`Row ${i}: Invalid Sex (use Male or Female)`)
           continue
         }
         
-        // Validate date format (YYYY-MM-DD)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/
         if (dob && !dateRegex.test(dob)) {
           errors.push(`Row ${i}: Invalid Date of Birth format (use YYYY-MM-DD)`)
@@ -245,7 +250,6 @@ function AdminDashboard() {
     reader.readAsText(file, 'UTF-8')
   }
 
-  // Confirm and import members
   const confirmImport = () => {
     const newMembers = importPreview.map(member => ({
       ...member,
@@ -291,9 +295,9 @@ function AdminDashboard() {
               </button>
               <button
                 onClick={handleExportCSV}
-                disabled={members.length === 0}
+                disabled={filteredMembers.length === 0}
                 className={`border px-4 py-2 rounded-full text-sm font-medium transition ${
-                  members.length === 0
+                  filteredMembers.length === 0
                     ? 'border-gray-200 text-gray-300 cursor-not-allowed'
                     : 'border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'
                 }`}
@@ -324,66 +328,93 @@ function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
-        {/* Stats Summary */}
-        <div className="mb-6 flex flex-wrap gap-3">
+        {/* Stats and Search Bar */}
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#EAE1D4] text-sm text-[#5B534D]">
             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            {members.length} {members.length === 1 ? 'member' : 'members'} registered
+            {filteredMembers.length} {filteredMembers.length === 1 ? 'member' : 'members'} found
+            {searchTerm && ` (filtered from ${members.length} total)`}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by name, address, or status..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:w-80 px-4 py-2 pl-10 border border-[#EAE1D4] rounded-full focus:outline-none focus:ring-2 focus:ring-[#C4A88B] focus:border-transparent bg-white text-sm"
+            />
+            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8A7A6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#8A7A6E] hover:text-[#2D2926]"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
         {/* Member List */}
-        {members.length === 0 ? (
+        {filteredMembers.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-[#EAE1D4]">
-            <div className="text-5xl mb-4 opacity-30">👥</div>
-            <p className="text-[#8A7A6E] mb-4">No members yet</p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setIsFormOpen(true)}
-                className="text-[#2D2926] underline underline-offset-4 text-sm"
-              >
-                Add your first member
-              </button>
-              <button
-                onClick={() => setIsBulkImportOpen(true)}
-                className="text-[#2D2926] underline underline-offset-4 text-sm"
-              >
-                Or bulk import from CSV
-              </button>
-            </div>
+            <div className="text-5xl mb-4 opacity-30">{searchTerm ? '🔍' : '👥'}</div>
+            <p className="text-[#8A7A6E] mb-4">
+              {searchTerm ? `No members matching "${searchTerm}"` : 'No members yet'}
+            </p>
+            {!searchTerm && (
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setIsFormOpen(true)}
+                  className="text-[#2D2926] underline underline-offset-4 text-sm"
+                >
+                  Add your first member
+                </button>
+                <button
+                  onClick={() => setIsBulkImportOpen(true)}
+                  className="text-[#2D2926] underline underline-offset-4 text-sm"
+                >
+                  Or bulk import from CSV
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-2xl border border-[#EAE1D4] overflow-hidden">
               <thead className="bg-[#F5EFE6]">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Name</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Sex</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Address</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">DOB</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Registered</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Baptism</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D]">Status</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-[#5B534D]">Actions</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[18%]">Name</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[8%]">Sex</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[25%]">Address</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[10%]">DOB</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[10%]">Registered</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[10%]">Baptism</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-[#5B534D] w-[9%]">Status</th>
+                  <th className="text-right px-6 py-4 text-sm font-medium text-[#5B534D] w-[10%]">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {members.map((member) => (
+                {filteredMembers.map((member) => (
                   <tr key={member.id} className="border-t border-[#EAE1D4] hover:bg-[#FAF8F5] transition">
-                    <td className="px-6 py-4 text-[#2D2926] font-medium">{member.name}</td>
+                    <td className="px-6 py-4 text-[#2D2926] font-medium break-words">{member.name}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs ${
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                         member.sex === 'Male' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'
                       }`}>
                         {member.sex || 'Male'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-[#7A6A5E]">{member.address}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E]">{formatDate(member.dob)}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E]">{formatDate(member.registeredSince)}</td>
-                    <td className="px-6 py-4 text-[#7A6A5E]">{formatDate(member.baptismDate)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] break-words">{member.address}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.dob)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.registeredSince)}</td>
+                    <td className="px-6 py-4 text-[#7A6A5E] whitespace-nowrap">{formatDate(member.baptismDate)}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs ${
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                         member.maritalStatus === 'Married' 
                           ? 'bg-green-100 text-green-700'
                           : member.maritalStatus === 'Widowed'
@@ -393,14 +424,14 @@ function AdminDashboard() {
                         {member.maritalStatus || 'Single'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <button onClick={() => handleEdit(member)} className="text-[#8A7A6E] hover:text-[#2D2926] mr-4 text-sm transition">Edit</button>
                       <button onClick={() => handleDelete(member.id)} className="text-[#C4A88B] hover:text-red-600 text-sm transition">Delete</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
-             </table>
+            </table>
           </div>
         )}
 
@@ -481,21 +512,18 @@ function AdminDashboard() {
                 <button onClick={() => { setIsBulkImportOpen(false); setImportPreview([]); setImportErrors([]); if(fileInputRef.current) fileInputRef.current.value = '' }} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
               </div>
 
-              {/* Step 1: Download Template */}
               <div className="mb-6 p-4 bg-[#F5EFE6] rounded-xl">
                 <h3 className="font-medium text-[#2D2926] mb-2">1. Download Template</h3>
                 <p className="text-sm text-[#7A6A5E] mb-3">Use this CSV template to prepare your member list</p>
                 <button onClick={downloadTemplate} className="bg-[#2D2926] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#4A3F38] transition">📥 Download Template CSV</button>
               </div>
 
-              {/* Step 2: Upload File */}
               <div className="mb-6 p-4 bg-[#F5EFE6] rounded-xl">
                 <h3 className="font-medium text-[#2D2926] mb-2">2. Upload Your CSV</h3>
                 <p className="text-sm text-[#7A6A5E] mb-3">Select the completed CSV file to preview members</p>
                 <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="text-sm text-[#7A6A5E] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#2D2926] file:text-white hover:file:bg-[#4A3F38]" />
               </div>
 
-              {/* Errors */}
               {importErrors.length > 0 && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
                   <h3 className="font-medium text-red-700 mb-2">Errors Found:</h3>
@@ -506,7 +534,6 @@ function AdminDashboard() {
                 </div>
               )}
 
-              {/* Preview */}
               {importPreview.length > 0 && (
                 <div className="mb-6">
                   <h3 className="font-medium text-[#2D2926] mb-2">3. Preview ({importPreview.length} members)</h3>
@@ -520,7 +547,7 @@ function AdminDashboard() {
                           <tr key={i} className="border-t border-[#EAE1D4]">
                             <td className="px-3 py-2">{member.name}</td>
                             <td className="px-3 py-2">{member.sex}</td>
-                            <td className="px-3 py-2 text-[#7A6A5E]">{member.address.substring(0, 30)}</td>
+                            <td className="px-3 py-2 text-[#7A6A5E] break-words max-w-[200px]">{member.address.substring(0, 40)}</td>
                             <td className="px-3 py-2">{member.dob}</td>
                             <td className="px-3 py-2">{member.maritalStatus}</td>
                           </tr>
