@@ -273,7 +273,7 @@ export default function LandingPage() {
               <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-[#A58B75] rounded-full" />
             </div>
             <span className="uppercase tracking-[0.22em] text-[11px] text-[#8A7A6E] font-normal font-['DM_Sans',sans-serif]">
-              Gereja Baptis Tawau
+              GBT
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -325,7 +325,7 @@ export default function LandingPage() {
     style={{
       backgroundImage: "url('/logo_2.webp')", // Replace with your cross image path if different
       backgroundRepeat: "no-repeat",
-      backgroundPosition: "right center",
+      backgroundPosition: "center",
       backgroundSize: "auto 80%", // Adjust size as needed
       opacity: 0.07,              // Very transparent
       right: "0%",              // Shift to the right, cutting half
