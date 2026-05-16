@@ -536,14 +536,17 @@ export default function LandingPage() {
         </p>
       </footer>
 
-      <style>{`
-        @keyframes bob {
-          0%, 100% { transform: translateX(-50%) translateY(0); }
-          50% { transform: translateX(-50%) translateY(6px); }
-        }
-        * { box-sizing: border-box; }
-        html { scroll-behavior  : smooth; }
-      `}</style>
+<style>{`
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition-duration: 0.01ms !important; }
+  }
+`}</style>
     </div>
   )
 }
