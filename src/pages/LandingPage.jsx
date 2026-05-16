@@ -323,7 +323,7 @@ export default function LandingPage() {
   <div
     className="absolute inset-0 pointer-events-none z-0"
     style={{
-      backgroundImage: "url('/logo.webp')", // Replace with your cross image path if different
+      backgroundImage: "url('/logo_2.webp')", // Replace with your cross image path if different
       backgroundRepeat: "no-repeat",
       backgroundPosition: "right center",
       backgroundSize: "auto 80%", // Adjust size as needed
