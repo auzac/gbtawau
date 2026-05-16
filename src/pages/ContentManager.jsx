@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react'
 
+import PageHeader from '../components/layout/PageHeader'
+import Tabs from '../components/layout/Tabs'
+
+import Button from '../components/ui/Button'
+import SaveToast from '../components/ui/SaveToast'
+
+import VerseEditor from '../components/content/VerseEditor'
+import EventsPanel from '../components/content/EventsPanel'
+import RosterPanel from '../components/content/RosterPanel'
+
 import { loadVerse, saveVerse } from '../services/verseService'
 import { loadEvents, saveEvents } from '../services/eventService'
 import { loadRoster, saveRoster } from '../services/rosterService'
@@ -43,7 +53,7 @@ function ContentManager() {
   }
 
   const handleSaveRoster = (updatedRoster) => {
-    saveRoster(updatedRoster)
+    saveRoster(updatedRoster || roster)
     triggerToast('Roster saved')
   }
 
@@ -53,7 +63,7 @@ function ContentManager() {
         title="Content Manager"
         subtitle="Church website content administration"
         actions={
-          <>
+          <div className="flex items-center gap-2">
             <Button variant="secondary">
               Calendar
             </Button>
@@ -61,7 +71,7 @@ function ContentManager() {
             <Button variant="ghost">
               Logout
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -85,6 +95,7 @@ function ContentManager() {
         {activeTab === 'events' && (
           <EventsPanel
             events={events}
+            setEvents={setEvents}
             onSave={handleSaveEvents}
             onAdd={() => console.log('add event')}
             onEdit={() => console.log('edit event')}
@@ -95,6 +106,7 @@ function ContentManager() {
         {activeTab === 'roster' && (
           <RosterPanel
             roster={roster}
+            setRoster={setRoster}
             onEdit={() => console.log('edit roster')}
             onSave={handleSaveRoster}
             onHistory={() => console.log('open roster history')}
