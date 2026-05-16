@@ -1,7 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-import LandingPage from './components/LandingPage'
+import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import StaffHub from './pages/StaffHub'
 import MemberManager from './pages/MemberManager'
