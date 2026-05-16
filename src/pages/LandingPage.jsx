@@ -341,7 +341,7 @@ export default function LandingPage() {
     <div className="flex justify-center mb-8">
       <img
         src="/logo.webp"
-        alt="Gereja Baptis Tawau"
+        alt="GBT"
         loading="eager"
         className="w-[clamp(140px,38vw,200px)] object-contain opacity-95"
       />
