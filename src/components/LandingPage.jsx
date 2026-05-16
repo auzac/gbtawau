@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
@@ -6,6 +7,7 @@ const NAV_LINKS = [
   { en: 'Ministries', bm: 'Pelayanan', href: '#ministries' },
   { en: 'Events', bm: 'Acara', href: '#events' },
   { en: 'Contact', bm: 'Hubungi', href: '#contact' },
+  { en: 'Staff', bm: 'Kakitangan', href: '/login', isRouterLink: true },
 ]
 
 const MINISTRIES = [
@@ -50,6 +52,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [lang, setLang] = useState('en')
   const [scrolled, setScrolled] = useState(false)
+  const navigate = useNavigate()
 
   const t = (en, bm) => lang === 'bm' ? bm : en
 
@@ -63,6 +66,13 @@ export default function LandingPage() {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
+
+  const handleNavClick = (item) => {
+    setMenuOpen(false)
+    if (item.isRouterLink) {
+      navigate(item.href)
+    }
+  }
 
   return (
     <div style={{ fontFamily: "'Lora', 'Georgia', serif", background: '#FAF8F5', color: '#2D2926', minHeight: '100vh', overflowX: 'hidden' }}>
@@ -150,23 +160,43 @@ export default function LandingPage() {
               opacity: menuOpen ? 1 : 0,
               transition: `transform 0.5s ${0.05 * i + 0.1}s cubic-bezier(.4,0,.2,1), opacity 0.5s ${0.05 * i + 0.1}s`,
             }}>
-              <a
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                style={{
-                  display: 'block',
-                  fontFamily: "'Lora', serif",
-                  fontSize: 'clamp(2rem, 8vw, 3.5rem)',
-                  fontWeight: 400, color: '#F5F0EB',
-                  textDecoration: 'none', letterSpacing: '-0.01em',
-                  padding: '0.3rem 0',
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#C9A882' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#F5F0EB' }}
-              >
-                {t(item.en, item.bm)}
-              </a>
+              {item.isRouterLink ? (
+                <button
+                  onClick={() => handleNavClick(item)}
+                  style={{
+                    display: 'block',
+                    fontFamily: "'Lora', serif",
+                    fontSize: 'clamp(2rem, 8vw, 3.5rem)',
+                    fontWeight: 400, color: '#F5F0EB',
+                    textDecoration: 'none', letterSpacing: '-0.01em',
+                    padding: '0.3rem 0',
+                    transition: 'color 0.2s',
+                    background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#C9A882' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#F5F0EB' }}
+                >
+                  {t(item.en, item.bm)}
+                </button>
+              ) : (
+                <a
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: 'block',
+                    fontFamily: "'Lora', serif",
+                    fontSize: 'clamp(2rem, 8vw, 3.5rem)',
+                    fontWeight: 400, color: '#F5F0EB',
+                    textDecoration: 'none', letterSpacing: '-0.01em',
+                    padding: '0.3rem 0',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#C9A882' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#F5F0EB' }}
+                >
+                  {t(item.en, item.bm)}
+                </a>
+              )}
             </div>
           ))}
         </div>
@@ -471,21 +501,24 @@ export default function LandingPage() {
           </div>
 
           {/* Member portal CTA */}
-          <a href="#" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
-            fontWeight: 500, color: '#FAF8F5',
-            background: '#2D2926', borderRadius: 999,
-            padding: '14px 32px', textDecoration: 'none',
-            transition: 'background 0.25s, transform 0.2s',
-          }}
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontWeight: 500, color: '#FAF8F5',
+              background: '#2D2926', borderRadius: 999,
+              padding: '14px 32px', textDecoration: 'none',
+              transition: 'background 0.25s, transform 0.2s',
+              border: 'none', cursor: 'pointer',
+            }}
             onMouseEnter={e => { e.currentTarget.style.background = '#4A3F38' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#2D2926' }}
           >
             {t('Member Portal', 'Portal Ahli')}
             <span style={{ fontSize: 16, opacity: 0.7 }}>→</span>
-          </a>
+          </button>
         </div>
       </section>
 
@@ -509,11 +542,4 @@ export default function LandingPage() {
           50% { transform: translateX(-50%) translateY(6px); }
         }
         * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        @media (prefers-reduced-motion: reduce) {
-          * { animation: none !important; transition-duration: 0.01ms !important; }
-        }
-      `}</style>
-    </div>
-  )
-}
+        html { scroll-behavior
