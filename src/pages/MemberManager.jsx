@@ -297,23 +297,26 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#FAF8F5]">
 
       {/* ── Header */}
-      <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <span className="text-[#2D2926] text-xl">✝</span>
-            <div>
-              <h1 className="text-base font-serif font-semibold text-[#2D2926] leading-tight">Gereja Baptis Tawau</h1>
-              <p className="text-[10px] text-[#9A8B80] tracking-widest uppercase">Member Directory</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/login')}
-            className="text-xs text-[#8A7A6E] hover:text-[#2D2926] border border-[#EAE1D4] px-3 py-1.5 rounded-full transition hover:bg-[#F5EFE6]"
-          >
-            Logout
-          </button>
+<header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => navigate('/staff')} 
+          className="text-[#8A7A6E] hover:text-[#2D2926] text-xl leading-none"
+          aria-label="Back to Staff Hub"
+        >
+          ←
+        </button>
+        <div>
+          <h1 className="text-base font-serif font-light text-[#2D2926]">Member Management</h1>
+          <p className="text-[9px] text-[#8A7A6E] tracking-wide">Manage church members</p>
         </div>
-      </header>
+      </div>
+      <button onClick={handleLogout} className="text-[#8A7A6E] hover:text-[#2D2926] text-xs transition">Logout</button>
+    </div>
+  </div>
+</header>
 
       {/* ── Main */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">

@@ -111,25 +111,22 @@ function ContentManager() {
   return (
     <div className="min-h-screen bg-[#FAF8F5]">
       {/* Header */}
-      <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <button onClick={() => navigate('/staff')} className="text-[#8A7A6E] hover:text-[#2D2926] text-xl">←</button>
-              <div>
-                <h1 className="text-base font-serif font-light text-[#2D2926]">Content Manager</h1>
-                <p className="text-[9px] text-[#8A7A6E] tracking-wide">Website content editor</p>
-              </div>
-            </div>
-            <button
-              onClick={saveAll}
-              className="bg-[#2D2926] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[#4A3F38] transition"
-            >
-              {saved ? '✓ Saved!' : 'Save All'}
-            </button>
-          </div>
+<header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <button onClick={() => navigate('/staff')} className="text-[#8A7A6E] hover:text-[#2D2926] text-xl">←</button>
+        <div>
+          <h1 className="text-base font-serif font-light text-[#2D2926]">Content Manager</h1>
+          <p className="text-[9px] text-[#8A7A6E] tracking-wide">Website content editor</p>
         </div>
-      </header>
+      </div>
+      <button onClick={saveAll} className="bg-[#2D2926] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[#4A3F38] transition">
+        {saved ? '✓ Saved!' : 'Save All'}
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Tabs */}
       <div className="border-b border-[#EAE1D4] bg-white">
