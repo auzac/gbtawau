@@ -327,8 +327,8 @@ export default function LandingPage() {
       backgroundRepeat: "no-repeat",
       backgroundPosition: "right center",
       backgroundSize: "auto 80%", // Adjust size as needed
-      opacity: 0.10,              // Very transparent
-      right: "-15%",              // Shift to the right, cutting half
+      opacity: 0.07,              // Very transparent
+      right: "0%",              // Shift to the right, cutting half
       top: "50%",
       transform: "translateY(-50%)",
       width: "100%",
