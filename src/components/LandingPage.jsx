@@ -455,7 +455,7 @@ export default function LandingPage() {
           {/* Contact cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 12, marginBottom: '2rem' }}>
             {[
-              { label: t('Sunday Worship', 'Kebaktian Ahad'), value: '9:00 & 11:00 AM', icon: '◯' },
+              { label: t('Sunday Worship', 'Kebaktian Ahad'), value: '11:00 AM', icon: '◯' },
               { label: t('Wednesday Prayer', 'Doa Rabu'), value: '7:30 PM', icon: '◯' },
               { label: t('Phone', 'Telefon'), value: '+60 XX-XXX XXXX', icon: '◯' },
             ].map(c => (
