@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
   { en: 'About', bm: 'Tentang Kami', href: '#about' },
   { en: 'Events', bm: 'Acara', href: '#events' },
-  { en: 'Contact', bm: 'Hubungi', href: '#contact' },
+  { en: 'Contact', bm: 'Hubungi', href: '/login', isRouterLink: true },
   { en: 'Staff', bm: 'Kakitangan', href: '/login', isRouterLink: true },
 ]
 
@@ -31,7 +31,6 @@ export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
 
-  // Helper for bilingual nav
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
   useEffect(() => {
@@ -141,13 +140,21 @@ export default function LandingPage() {
   const goToPrevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
     setAutoplay(false)
-    setTimeout(() => setAutoplay(true), 10000) // resume after 10s idle
+    setTimeout(() => setAutoplay(true), 10000)
   }
 
   const goToNextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % carouselItems.length)
     setAutoplay(false)
     setTimeout(() => setAutoplay(true), 10000)
+  }
+
+  // Scroll to footer (for Contact card)
+  const scrollToFooter = () => {
+    const footer = document.getElementById('footer')
+    if (footer) {
+      footer.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   if (loading) {
@@ -165,7 +172,7 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-      {/* NAVBAR (same as before, but with toggleLocale) */}
+      {/* NAVBAR (unchanged from original, but uses toggleLocale) */}
       <nav
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5
@@ -211,7 +218,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU (unchanged, uses getNavText) */}
+      {/* FULLSCREEN MENU */}
       <div
         className={`
           fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500
@@ -249,17 +256,23 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {/* HERO SECTION with CAROUSEL */}
-      <section id="home" className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]">
+      {/* ========== HERO SECTION (original buttons restored) ========== */}
+      <section
+        id="home"
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+      >
+        {/* Ambient Orbs */}
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[12vh] bg-gradient-to-b from-transparent to-[#b49b7d]/40" />
 
         <div className="relative z-10 w-full max-w-2xl">
+          {/* Logo */}
           <div className="flex justify-center mb-8">
             <img src="/logo.webp" alt="Gereja Baptis Tawau" loading="eager" className="w-[clamp(140px,38vw,200px)] object-contain opacity-95" />
           </div>
 
+          {/* Verse */}
           <blockquote className="mb-10">
             <p className="italic text-[clamp(1.3rem,4vw,2rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-4 font-['Lora',serif]">
               "{verse.text}"
@@ -269,10 +282,71 @@ export default function LandingPage() {
             </cite>
           </blockquote>
 
-          {/* CAROUSEL - replaces old CTA + cards */}
-          {carouselItems.length > 0 && (
+          {/* Welcome CTA (restored) */}
+          <div className="mb-10">
+            <a
+              href="#about"
+              className="inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              {t('welcome_cta')}
+            </a>
+          </div>
+
+          {/* Quick Action Cards (restored) */}
+          <div className="flex flex-wrap justify-center gap-3">
+            {/* Calendar (links to Events) */}
+            <a
+              href="#events"
+              className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="3"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+                {t('hero_calendar')}
+              </span>
+            </a>
+
+            {/* Contact (scrolls to footer) */}
+            <button
+              onClick={scrollToFooter}
+              className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A6A5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="7" r="3"/>
+                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+              </svg>
+              <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+                {t('hero_contact')}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Scroll Cue */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-35 animate-bob flex flex-col items-center gap-2">
+          <div className="w-px h-9 bg-gradient-to-b from-transparent to-[#8A7A6E]" />
+          <div className="w-1 h-1 rounded-full bg-[#8A7A6E]" />
+        </div>
+      </section>
+
+      {/* ========== NEW CAROUSEL SECTION (below hero, above About) ========== */}
+      {carouselItems.length > 0 && (
+        <section className="px-5 py-12 md:py-16 bg-white/40">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-center text-[clamp(1.3rem,3vw,1.8rem)] font-['Lora',serif] tracking-[-0.01em] text-[#2D2926] mb-8">
+              {t('announcements_title') || (locale === 'bm' ? 'Pengumuman' : 'Announcements')}
+            </h2>
             <div
-              className="relative w-full max-w-3xl mx-auto mt-6 rounded-2xl overflow-hidden shadow-lg"
+              className="relative w-full rounded-2xl overflow-hidden shadow-lg"
               onMouseEnter={() => setAutoplay(false)}
               onMouseLeave={() => setAutoplay(true)}
             >
@@ -340,17 +414,11 @@ export default function LandingPage() {
                 </>
               )}
             </div>
-          )}
-
-          {/* Scroll Cue */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-35 animate-bob flex flex-col items-center gap-2">
-            <div className="w-px h-9 bg-gradient-to-b from-transparent to-[#8A7A6E]" />
-            <div className="w-1 h-1 rounded-full bg-[#8A7A6E]" />
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* ABOUT section (unchanged, just use t() instead of old function) */}
+      {/* ABOUT (unchanged) */}
       <section id="about" className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">
@@ -370,7 +438,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* EVENTS section (unchanged) */}
+      {/* EVENTS (unchanged) */}
       <section id="events" className="bg-[#F2EBE1] px-5 py-20 md:py-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
@@ -409,8 +477,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER - with Lucide icons, no contact section above */}
-      <footer className="bg-[#2D2926] px-6 py-10 text-center">
+      {/* FOOTER with id="footer" and contact info */}
+      <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
         <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">
           {t('footer_church')}
         </p>
