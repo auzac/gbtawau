@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogIn, ArrowLeft, Cross } from 'lucide-react'
+import { LogIn, ArrowLeft } from 'lucide-react'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -13,60 +13,69 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     if (!email || !password) {
       setError('Please enter both email and password')
       return
     }
-    
+
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // Demo auth — replace with Supabase later
-    if (email && password) {
-      navigate('/staff')
-    } else {
-      setError('Invalid credentials')
-      setIsLoading(false)
-    }
+
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    navigate('/staff')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAF8F5] to-[#F0E9DF] flex items-center justify-center px-4">
-      
-      {/* Login Card — Single, self-contained */}
-      <div className="w-full max-w-sm bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-[#EAE1D4] p-6 animate-fade-in-up">
-        
-        {/* Simple Cross Icon + Close/Return integrated */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="w-8 h-8 rounded-full bg-[#2D2926]/5 flex items-center justify-center">
-            <Cross size={16} className="text-[#2D2926]/60" />
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF8F5] via-[#F7F2EB] to-[#EFE7DC] flex items-center justify-center px-4 relative overflow-hidden">
+
+      {/* subtle background glow */}
+      <div className="absolute w-[500px] h-[500px] bg-[#C4A88B]/10 rounded-full blur-3xl top-[-150px] right-[-100px]" />
+      <div className="absolute w-[400px] h-[400px] bg-[#D8C2A8]/10 rounded-full blur-3xl bottom-[-150px] left-[-100px]" />
+
+      <div className="relative w-full max-w-sm bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-white/60 p-8 animate-fade-in-up">
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="absolute top-5 left-5 w-9 h-9 rounded-full hover:bg-[#F5EFE6] flex items-center justify-center transition-colors"
+          aria-label="Return to homepage"
+        >
+          <ArrowLeft size={16} className="text-[#8A7A6E]" />
+        </button>
+
+        {/* Cross */}
+        <div className="flex flex-col items-center mb-8 mt-2">
+          <div className="relative mb-5">
+            <div className="absolute inset-0 bg-[#C4A88B]/20 blur-xl rounded-full scale-150" />
+
+            {/* Elegant Cross */}
+            <div className="relative w-10 h-10 flex items-center justify-center">
+              <div className="absolute w-[2px] h-10 bg-gradient-to-b from-[#C8A97E] to-[#8C6A43] rounded-full" />
+              <div className="absolute w-6 h-[2px] top-[11px] bg-gradient-to-r from-[#C8A97E] to-[#8C6A43] rounded-full" />
+            </div>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            className="w-8 h-8 rounded-full hover:bg-[#F5EFE6] flex items-center justify-center transition"
-            aria-label="Return to homepage"
-          >
-            <ArrowLeft size={16} className="text-[#8A7A6E]" />
-          </button>
+
+          <h1 className="text-2xl font-serif text-[#2D2926] tracking-tight">
+            Staff Login
+          </h1>
+
+          <p className="text-sm text-[#9C8E84] mt-2">
+            Grace Baptist Tawau
+          </p>
         </div>
 
-        {/* Simple Title */}
-        <h1 className="text-xl font-serif text-[#2D2926] text-center mb-6">
-          Staff Login
-        </h1>
-
-        {/* Login Form */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#EAE1D4] bg-white focus:outline-none focus:ring-2 focus:ring-[#C4A88B] focus:border-transparent text-[#2D2926] placeholder:text-[#C0B5AF] text-sm"
               placeholder="Email"
-              required
               disabled={isLoading}
+              className="w-full px-4 py-3.5 rounded-2xl border border-[#E8DED1] bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#C4A88B]/40 focus:border-[#C4A88B]/30 text-[#2D2926] placeholder:text-[#B6AAA2] text-sm transition-all"
             />
           </div>
 
@@ -75,23 +84,24 @@ function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#EAE1D4] bg-white focus:outline-none focus:ring-2 focus:ring-[#C4A88B] focus:border-transparent text-[#2D2926] placeholder:text-[#C0B5AF] text-sm"
               placeholder="Password"
-              required
               disabled={isLoading}
+              className="w-full px-4 py-3.5 rounded-2xl border border-[#E8DED1] bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#C4A88B]/40 focus:border-[#C4A88B]/30 text-[#2D2926] placeholder:text-[#B6AAA2] text-sm transition-all"
             />
           </div>
 
           {error && (
-            <div className="p-2 rounded-lg bg-red-50">
-              <p className="text-red-500 text-xs text-center">{error}</p>
+            <div className="rounded-2xl bg-red-50 border border-red-100 px-4 py-3">
+              <p className="text-red-500 text-xs text-center">
+                {error}
+              </p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#2D2926] text-white py-3 rounded-xl font-medium hover:bg-[#4A3F38] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full bg-[#2D2926] hover:bg-[#433A34] text-white py-3.5 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-black/5 disabled:opacity-60"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -104,9 +114,9 @@ function Login() {
           </button>
         </form>
 
-        {/* Subtle demo note */}
-        <p className="text-center text-[10px] text-[#C0B5AF] mt-6">
-          Demo: any email/password
+        {/* Footer */}
+        <p className="text-center text-[11px] text-[#B6AAA2] mt-6">
+          Demo access • Any email and password
         </p>
       </div>
 
@@ -114,15 +124,16 @@ function Login() {
         @keyframes fade-in-up {
           from {
             opacity: 0;
-            transform: translateY(15px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
+
         .animate-fade-in-up {
-          animation: fade-in-up 0.4s ease-out;
+          animation: fade-in-up 0.45s ease-out;
         }
       `}</style>
     </div>
