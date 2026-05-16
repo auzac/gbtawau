@@ -1,5 +1,7 @@
+// src/pages/LandingPage.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
@@ -41,20 +43,102 @@ const MINISTRIES = [
   },
 ]
 
-const EVENTS = [
-  { date: 'Jun 1', day: 'Sunday', en: 'Communion Sunday', bm: 'Hari Perjamuan Kudus', time: '9:00 & 11:00 AM' },
-  { date: 'Jun 4', day: 'Wednesday', en: 'Midweek Prayer', bm: 'Doa Pertengahan Minggu', time: '7:30 PM' },
-  { date: 'Jun 15', day: 'Sunday', en: 'Youth Sunday', bm: 'Hari Belia', time: '11:00 AM' },
-  { date: 'Jun 22', day: 'Sunday', en: 'Baptism Service', bm: 'Majlis Pembaptisan', time: '9:00 AM' },
-]
-
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [lang, setLang] = useState('en')
   const [scrolled, setScrolled] = useState(false)
+  const [loading, setLoading] = useState(true)
+  
+  // Dynamic content from Supabase
+  const [verse, setVerse] = useState({
+    reference: 'Matthew 11:28',
+    text: 'Come to me, all you who are weary and burdened, and I will give you rest.',
+    theme: 'Rest and Peace'
+  })
+  const [events, setEvents] = useState([])
+  const [roster, setRoster] = useState([])
+  
   const navigate = useNavigate()
 
   const t = (en, bm) => lang === 'bm' ? bm : en
+
+  // Helper: Format time for display (24-hour to 12-hour)
+  const formatTimeForDisplay = (time24) => {
+    if (!time24) return ''
+    const [hour, minute] = time24.split(':')
+    const h = parseInt(hour)
+    const period = h >= 12 ? 'PM' : 'AM'
+    const hour12 = h % 12 || 12
+    return `${hour12}:${minute} ${period}`
+  }
+
+  // Helper: Format date for display (YYYY-MM-DD to DD MMM)
+  const formatEventDate = (dateStr) => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    const day = date.getDate()
+    const month = date.toLocaleString('default', { month: 'short' })
+    const dayName = date.toLocaleString('default', { weekday: 'long' })
+    return { day, month, dayName }
+  }
+
+  // Load data from Supabase
+  useEffect(() => {
+    loadContent()
+  }, [])
+
+  const loadContent = async () => {
+    setLoading(true)
+    await Promise.all([
+      loadActiveVerse(),
+      loadUpcomingEvents(),
+      loadUpcomingRoster()
+    ])
+    setLoading(false)
+  }
+
+  const loadActiveVerse = async () => {
+    const { data, error } = await supabase
+      .from('verse_library')
+      .select('*')
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (!error && data) {
+      setVerse({
+        reference: data.reference,
+        text: data.text,
+        theme: data.theme || ''
+      })
+    }
+  }
+
+  const loadUpcomingEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+      .order('time', { ascending: true })
+      .limit(6)
+
+    if (!error && data) {
+      setEvents(data)
+    }
+  }
+
+  const loadUpcomingRoster = async () => {
+    const { data, error } = await supabase
+      .from('roster')
+      .select('*')
+      .gte('week_start', new Date().toISOString().split('T')[0])
+      .order('week_start', { ascending: true })
+      .limit(4)
+
+    if (!error && data) {
+      setRoster(data)
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -72,6 +156,14 @@ export default function LandingPage() {
     if (item.isRouterLink) {
       navigate(item.href)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -237,7 +329,7 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Scripture */}
+          {/* Scripture — dynamic from Supabase */}
           <blockquote style={{ margin: '0 0 2rem', padding: 0 }}>
             <p style={{
               fontSize: 'clamp(1.3rem, 4vw, 2rem)',
@@ -245,14 +337,14 @@ export default function LandingPage() {
               fontStyle: 'italic', marginBottom: '0.85rem',
               letterSpacing: '-0.01em',
             }}>
-              "Come to me, all you who are weary and burdened, and I will give you rest."
+              "{verse.text}"
             </p>
             <cite style={{
               fontFamily: "'DM Sans', sans-serif",
               fontStyle: 'normal', fontSize: 10, letterSpacing: '0.3em',
               textTransform: 'uppercase', color: '#B09882',
             }}>
-              Matthew 11:28
+              {verse.reference}
             </cite>
           </blockquote>
 
@@ -271,7 +363,6 @@ export default function LandingPage() {
               onMouseEnter={e => { e.currentTarget.style.background = '#4A3F38'; e.currentTarget.style.transform = 'scale(1.02)' }}
               onMouseLeave={e => { e.currentTarget.style.background = '#2D2926'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              {/* Door/enter icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
                 <polyline points="10 17 15 12 10 7"/>
@@ -420,7 +511,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── EVENTS ── */}
+      {/* ── EVENTS ── (Dynamic from Supabase) */}
       <section id="events" style={{ padding: 'clamp(4rem, 10vw, 6rem) 1.25rem', background: '#F2EBE1' }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -433,38 +524,52 @@ export default function LandingPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {EVENTS.map((ev, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.75)',
-                border: '1px solid rgba(180,155,125,0.2)',
-                borderRadius: 16,
-                display: 'flex', alignItems: 'center', gap: 16,
-                padding: '1rem 1.25rem',
-                transition: 'transform 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
-              >
-                {/* Date block */}
-                <div style={{ minWidth: 52, textAlign: 'center', flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Lora', serif", fontSize: 22, fontWeight: 500, color: '#2D2926', lineHeight: 1 }}>{ev.date.split(' ')[1]}</div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#B09882', marginTop: 2 }}>{ev.date.split(' ')[0]}</div>
-                </div>
-
-                {/* Divider */}
-                <div style={{ width: 1, height: 40, background: 'rgba(180,155,125,0.25)', flexShrink: 0 }} />
-
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: "'Lora', serif", fontSize: 'clamp(14px, 3vw, 16px)', fontWeight: 500, margin: '0 0 3px', color: '#2D2926' }}>
-                    {t(ev.en, ev.bm)}
-                  </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#A08070', margin: 0 }}>
-                    {ev.day} · {ev.time}
-                  </p>
-                </div>
+            {events.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#8A7A6E' }}>
+                {t('No upcoming events', 'Tiada acara akan datang')}
               </div>
-            ))}
+            ) : (
+              events.map((event) => {
+                const { day, month, dayName } = formatEventDate(event.date)
+                return (
+                  <div key={event.id} style={{
+                    background: 'rgba(255,255,255,0.75)',
+                    border: '1px solid rgba(180,155,125,0.2)',
+                    borderRadius: 16,
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    padding: '1rem 1.25rem',
+                    transition: 'transform 0.2s',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
+                  >
+                    {/* Date block */}
+                    <div style={{ minWidth: 52, textAlign: 'center', flexShrink: 0 }}>
+                      <div style={{ fontFamily: "'Lora', serif", fontSize: 22, fontWeight: 500, color: '#2D2926', lineHeight: 1 }}>{day}</div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#B09882', marginTop: 2 }}>{month}</div>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ width: 1, height: 40, background: 'rgba(180,155,125,0.25)', flexShrink: 0 }} />
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "'Lora', serif", fontSize: 'clamp(14px, 3vw, 16px)', fontWeight: 500, margin: '0 0 3px', color: '#2D2926' }}>
+                        {t(event.title_en, event.title_bm || event.title_en)}
+                      </p>
+                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#A08070', margin: 0 }}>
+                        {dayName} · {formatTimeForDisplay(event.time)}
+                      </p>
+                      {event.location && (
+                        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: '#B09882', marginTop: 4 }}>
+                          📍 {event.location}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
       </section>
@@ -536,17 +641,17 @@ export default function LandingPage() {
         </p>
       </footer>
 
-<style>{`
-  @keyframes bob {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(6px); }
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition-duration: 0.01ms !important; }
-  }
-`}</style>
+      <style>{`
+        @keyframes bob {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50% { transform: translateX(-50%) translateY(6px); }
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation: none !important; transition-duration: 0.01ms !important; }
+        }
+      `}</style>
     </div>
   )
 }
