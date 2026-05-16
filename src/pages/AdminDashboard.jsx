@@ -6,7 +6,7 @@ function AdminDashboard() {
   const navigate = useNavigate()
   const [members, setMembers] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [showMemberTable, setShowMemberTable] = useState(false)
+  const [showMemberTable, setShowMemberTable] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -65,19 +65,9 @@ function AdminDashboard() {
     localStorage.setItem('churchMembers', JSON.stringify(members))
   }, [members])
 
-  // Get current date for welcome message
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 18) return 'Good afternoon'
-    return 'Good evening'
-  }
-
   // Calculate stats
   const maleCount = members.filter(m => m.sex === 'Male').length
   const femaleCount = members.filter(m => m.sex === 'Female').length
-  const marriedCount = members.filter(m => m.maritalStatus === 'Married').length
-  const recentMembers = [...members].sort((a, b) => b.id - a.id).slice(0, 5)
 
   const filteredMembers = members.filter(member => {
     const searchLower = searchTerm.toLowerCase()
@@ -294,18 +284,18 @@ function AdminDashboard() {
     <div className="min-h-screen bg-[#FAF8F5]">
       {/* Header */}
       <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#2D2926] flex items-center justify-center text-white text-sm">✝</div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✝</span>
               <div>
-                <h1 className="text-lg font-serif font-light text-[#2D2926]">Gereja Baptis Tawau</h1>
-                <p className="text-[10px] text-[#8A7A6E] tracking-wide">Member Management</p>
+                <h1 className="text-base font-serif font-light text-[#2D2926]">Gereja Baptis Tawau</h1>
+                <p className="text-[9px] text-[#8A7A6E] tracking-wide">Member Directory</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="text-[#8A7A6E] hover:text-[#2D2926] text-sm transition"
+              className="text-[#8A7A6E] hover:text-[#2D2926] text-xs transition"
             >
               Logout
             </button>
@@ -314,225 +304,194 @@ function AdminDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         
-        {/* Welcome Section */}
-        <div className="mb-8 text-center sm:text-left">
-          <h2 className="text-2xl sm:text-3xl font-serif font-light text-[#2D2926]">
-            {getGreeting()}, pastor.
-          </h2>
-          <p className="text-[#8A7A6E] mt-1 text-sm">
-            May the Lord guide your shepherding today.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-4 border border-[#EAE1D4] shadow-sm text-center">
-            <div className="text-2xl font-serif font-light text-[#2D2926]">{members.length}</div>
-            <div className="text-xs text-[#8A7A6E] uppercase tracking-wide mt-1">Total Members</div>
+        {/* Stats Cards - Simple */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-xl p-3 border border-[#EAE1D4] text-center">
+            <div className="text-xl font-serif text-[#2D2926]">{members.length}</div>
+            <div className="text-[10px] text-[#8A7A6E] uppercase tracking-wide">Total</div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-[#EAE1D4] shadow-sm text-center">
-            <div className="text-2xl font-serif font-light text-[#2D2926]">{maleCount}</div>
-            <div className="text-xs text-[#8A7A6E] uppercase tracking-wide mt-1">Male</div>
+          <div className="bg-white rounded-xl p-3 border border-[#EAE1D4] text-center">
+            <div className="text-xl font-serif text-[#2D2926]">{maleCount}</div>
+            <div className="text-[10px] text-[#8A7A6E] uppercase tracking-wide">Male</div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-[#EAE1D4] shadow-sm text-center">
-            <div className="text-2xl font-serif font-light text-[#2D2926]">{femaleCount}</div>
-            <div className="text-xs text-[#8A7A6E] uppercase tracking-wide mt-1">Female</div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-[#EAE1D4] shadow-sm text-center">
-            <div className="text-2xl font-serif font-light text-[#2D2926]">{marriedCount}</div>
-            <div className="text-xs text-[#8A7A6E] uppercase tracking-wide mt-1">Married</div>
+          <div className="bg-white rounded-xl p-3 border border-[#EAE1D4] text-center">
+            <div className="text-xl font-serif text-[#2D2926]">{femaleCount}</div>
+            <div className="text-[10px] text-[#8A7A6E] uppercase tracking-wide">Female</div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-2xl border border-[#EAE1D4] p-5 mb-8">
-          <h3 className="text-sm font-medium text-[#2D2926] mb-4">Quick Actions</h3>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => {
-                setFormData({ name: '', sex: 'Male', address: '', dob: '', registeredSince: '', baptismDate: '', maritalStatus: 'Single' })
-                setEditingId(null)
-                setIsFormOpen(true)
-              }}
-              className="bg-[#2D2926] text-white px-5 py-2 rounded-full text-sm hover:bg-[#4A3F38] transition"
-            >
-              + Add Member
-            </button>
-            <button
-              onClick={() => setIsBulkImportOpen(true)}
-              className="border border-[#EAE1D4] text-[#7A6A5E] px-5 py-2 rounded-full text-sm hover:bg-[#F5EFE6] transition"
-            >
-              📤 Bulk Import
-            </button>
-            <button
-              onClick={handleExportCSV}
-              disabled={members.length === 0}
-              className={`border px-5 py-2 rounded-full text-sm transition ${
-                members.length === 0
-                  ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                  : 'border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'
-              }`}
-            >
-              📥 Export CSV
-            </button>
-          </div>
-        </div>
-
-        {/* Recent Members Section */}
-        <div className="bg-white rounded-2xl border border-[#EAE1D4] overflow-hidden">
-          <div 
-            className="px-5 py-4 bg-[#FBF9F6] border-b border-[#EAE1D4] flex justify-between items-center cursor-pointer hover:bg-[#F5EFE6] transition"
-            onClick={() => setShowMemberTable(!showMemberTable)}
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => {
+              setFormData({ name: '', sex: 'Male', address: '', dob: '', registeredSince: '', baptismDate: '', maritalStatus: 'Single' })
+              setEditingId(null)
+              setIsFormOpen(true)
+            }}
+            className="bg-[#2D2926] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[#4A3F38] transition"
           >
+            + Add Member
+          </button>
+          <button
+            onClick={() => setIsBulkImportOpen(true)}
+            className="border border-[#EAE1D4] text-[#7A6A5E] px-4 py-1.5 rounded-full text-sm hover:bg-[#F5EFE6] transition"
+          >
+            Bulk Import
+          </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={members.length === 0}
+            className={`border px-4 py-1.5 rounded-full text-sm transition ${
+              members.length === 0
+                ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                : 'border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'
+            }`}
+          >
+            Export CSV
+          </button>
+        </div>
+
+        {/* Member Directory */}
+        <div className="bg-white rounded-xl border border-[#EAE1D4] overflow-hidden">
+          <div className="px-4 py-3 bg-[#FBF9F6] border-b border-[#EAE1D4] flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-[#2D2926]">
-                {showMemberTable ? '▼' : '▶'} Member Directory
-              </h3>
-              <p className="text-xs text-[#8A7A6E] mt-0.5">
-                {members.length} souls entrusted to your care
-              </p>
+              <h2 className="text-sm font-medium text-[#2D2926]">Member Directory</h2>
+              <p className="text-[10px] text-[#8A7A6E]">{members.length} total</p>
             </div>
-            {members.length > 5 && !showMemberTable && (
-              <span className="text-xs text-[#8A7A6E]">{members.length - 5} more not shown</span>
-            )}
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-40 sm:w-56 px-3 py-1.5 pl-8 border border-[#EAE1D4] rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#C4A88B]"
+              />
+              <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-[#8A7A6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
 
-          {showMemberTable && (
-            <>
-              {/* Search */}
-              <div className="px-5 py-3 border-b border-[#EAE1D4] bg-white">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search by name or address..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full sm:w-64 px-4 py-2 pl-9 border border-[#EAE1D4] rounded-full focus:outline-none focus:ring-2 focus:ring-[#C4A88B] text-sm"
-                  />
-                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8A7A6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Table */}
-              {(searchTerm ? filteredMembers : members).length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-4xl mb-2 opacity-30">📋</div>
-                  <p className="text-[#8A7A6E] text-sm">
-                    {searchTerm ? `No members matching "${searchTerm}"` : 'No members yet'}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[#F5EFE6]">
-                      <tr>
-                        <th className="text-left px-5 py-3 font-medium text-[#5B534D]">Name</th>
-                        <th className="text-left px-5 py-3 font-medium text-[#5B534D] hidden sm:table-cell">Sex</th>
-                        <th className="text-left px-5 py-3 font-medium text-[#5B534D] hidden md:table-cell">Address</th>
-                        <th className="text-left px-5 py-3 font-medium text-[#5B534D] hidden lg:table-cell">DOB</th>
-                        <th className="text-left px-5 py-3 font-medium text-[#5B534D]">Status</th>
-                        <th className="text-right px-5 py-3 font-medium text-[#5B534D]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(searchTerm ? filteredMembers : members).map((member) => (
-                        <tr key={member.id} className="border-t border-[#EAE1D4] hover:bg-[#FAF8F5]">
-                          <td className="px-5 py-3 text-[#2D2926] font-medium">{member.name}</td>
-                          <td className="px-5 py-3 hidden sm:table-cell">
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              member.sex === 'Male' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'
-                            }`}>
-                              {member.sex || 'Male'}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-[#7A6A5E] hidden md:table-cell max-w-[200px] truncate">{member.address}</td>
-                          <td className="px-5 py-3 text-[#7A6A5E] hidden lg:table-cell">{formatDateForDisplay(member.dob)}</td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              member.maritalStatus === 'Married' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {member.maritalStatus || 'Single'}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-right whitespace-nowrap">
-                            <button onClick={() => handleEdit(member)} className="text-[#8A7A6E] hover:text-[#2D2926] mr-3 text-xs transition">Edit</button>
-                            <button onClick={() => handleDelete(member.id)} className="text-[#C4A88B] hover:text-red-600 text-xs transition">Delete</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+          {/* Table */}
+          {(searchTerm ? filteredMembers : members).length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-3xl mb-2 opacity-30">📋</div>
+              <p className="text-[#8A7A6E] text-sm">
+                {searchTerm ? `No results for "${searchTerm}"` : 'No members yet'}
+              </p>
+              {!searchTerm && (
+                <button onClick={() => setIsFormOpen(true)} className="mt-3 text-[#2D2926] underline text-sm">
+                  Add your first member
+                </button>
               )}
-            </>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-[#F5EFE6]">
+                  <tr>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-[#5B534D]">Name</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-[#5B534D] hidden sm:table-cell">Sex</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-[#5B534D] hidden md:table-cell">Address</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-[#5B534D] hidden lg:table-cell">DOB</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-[#5B534D]">Status</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-[#5B534D]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(searchTerm ? filteredMembers : members).map((member) => (
+                    <tr key={member.id} className="border-t border-[#EAE1D4] hover:bg-[#FAF8F5]">
+                      <td className="px-4 py-2 text-[#2D2926] font-medium text-sm">{member.name}</td>
+                      <td className="px-4 py-2 hidden sm:table-cell">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                          member.sex === 'Male' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'
+                        }`}>
+                          {member.sex || 'Male'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-[#7A6A5E] text-sm hidden md:table-cell truncate max-w-[180px]">{member.address}</td>
+                      <td className="px-4 py-2 text-[#7A6A5E] text-sm hidden lg:table-cell">{formatDateForDisplay(member.dob)}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                          member.maritalStatus === 'Married' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {member.maritalStatus || 'Single'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right whitespace-nowrap">
+                        <button onClick={() => handleEdit(member)} className="text-[#8A7A6E] hover:text-[#2D2926] mr-2 text-xs transition">Edit</button>
+                        <button onClick={() => handleDelete(member.id)} className="text-[#C4A88B] hover:text-red-600 text-xs transition">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
-        {/* Small footer note */}
-        <p className="text-center text-[10px] text-[#B0A49A] mt-6 tracking-wide">
-          All data is stored locally in your browser
+        {/* Footer note */}
+        <p className="text-center text-[9px] text-[#B0A49A] mt-5 tracking-wide">
+          Data stored locally in your browser
         </p>
       </main>
 
-      {/* Add/Edit Modal (simplified) */}
+      {/* Add/Edit Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-serif text-[#2D2926]">{editingId ? 'Edit Member' : 'Add Member'}</h2>
-              <button onClick={() => { setIsFormOpen(false); setEditingId(null); }} className="text-[#8A7A6E] text-2xl leading-none">×</button>
+          <div className="bg-white rounded-xl max-w-md w-full p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-serif text-[#2D2926]">{editingId ? 'Edit Member' : 'Add Member'}</h2>
+              <button onClick={() => { setIsFormOpen(false); setEditingId(null); }} className="text-[#8A7A6E] text-xl">×</button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Full Name" className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg" />
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2"><input type="radio" name="sex" value="Male" checked={formData.sex === 'Male'} onChange={handleInputChange} /> Male</label>
-                <label className="flex items-center gap-2"><input type="radio" name="sex" value="Female" checked={formData.sex === 'Female'} onChange={handleInputChange} /> Female</label>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Full Name" className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm" />
+              <div className="flex gap-4 text-sm">
+                <label className="flex items-center gap-1"><input type="radio" name="sex" value="Male" checked={formData.sex === 'Male'} onChange={handleInputChange} /> Male</label>
+                <label className="flex items-center gap-1"><input type="radio" name="sex" value="Female" checked={formData.sex === 'Female'} onChange={handleInputChange} /> Female</label>
               </div>
-              <input type="text" name="address" value={formData.address} onChange={handleInputChange} required placeholder="Address" className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg" />
-              <input type="text" name="dob" value={formData.dob ? formatDateForDisplay(formData.dob) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, dob: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, dob: '' })) }} required placeholder="Date of Birth (DD/MM/YYYY)" className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg" />
-              <input type="text" name="registeredSince" value={formData.registeredSince ? formatDateForDisplay(formData.registeredSince) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, registeredSince: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, registeredSince: '' })) }} placeholder="Registered Since (DD/MM/YYYY)" className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg" />
-              <input type="text" name="baptismDate" value={formData.baptismDate ? formatDateForDisplay(formData.baptismDate) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, baptismDate: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, baptismDate: '' })) }} placeholder="Baptism Date (DD/MM/YYYY)" className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg" />
-              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} className="w-full px-4 py-2 border border-[#EAE1D4] rounded-lg">
+              <input type="text" name="address" value={formData.address} onChange={handleInputChange} required placeholder="Address" className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm" />
+              <input type="text" name="dob" value={formData.dob ? formatDateForDisplay(formData.dob) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, dob: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, dob: '' })) }} required placeholder="Date of Birth (DD/MM/YYYY)" className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm" />
+              <input type="text" name="registeredSince" value={formData.registeredSince ? formatDateForDisplay(formData.registeredSince) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, registeredSince: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, registeredSince: '' })) }} placeholder="Registered Since (DD/MM/YYYY)" className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm" />
+              <input type="text" name="baptismDate" value={formData.baptismDate ? formatDateForDisplay(formData.baptismDate) : ''} onChange={(e) => { const v = e.target.value; if (isValidDate(v)) setFormData(prev => ({ ...prev, baptismDate: convertToStorageFormat(v) })); else if (!v) setFormData(prev => ({ ...prev, baptismDate: '' })) }} placeholder="Baptism Date (DD/MM/YYYY)" className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm" />
+              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} className="w-full px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm">
                 <option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option>
               </select>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" className="flex-1 bg-[#2D2926] text-white py-2 rounded-full">{editingId ? 'Update' : 'Add'}</button>
-                <button type="button" onClick={() => { setIsFormOpen(false); setEditingId(null); setFormData({ name: '', sex: 'Male', address: '', dob: '', registeredSince: '', baptismDate: '', maritalStatus: 'Single' }) }} className="flex-1 border border-[#EAE1D4] text-[#7A6A5E] py-2 rounded-full">Cancel</button>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 bg-[#2D2926] text-white py-2 rounded-full text-sm">{editingId ? 'Update' : 'Add'}</button>
+                <button type="button" onClick={() => { setIsFormOpen(false); setEditingId(null); setFormData({ name: '', sex: 'Male', address: '', dob: '', registeredSince: '', baptismDate: '', maritalStatus: 'Single' }) }} className="flex-1 border border-[#EAE1D4] text-[#7A6A5E] py-2 rounded-full text-sm">Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Bulk Import Modal (simplified) */}
+      {/* Bulk Import Modal */}
       {isBulkImportOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-serif text-[#2D2926]">Bulk Import</h2>
-              <button onClick={() => { setIsBulkImportOpen(false); setImportPreview([]); setImportErrors([]); }} className="text-[#8A7A6E] text-2xl leading-none">×</button>
+          <div className="bg-white rounded-xl max-w-md w-full p-5 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-serif text-[#2D2926]">Bulk Import</h2>
+              <button onClick={() => { setIsBulkImportOpen(false); setImportPreview([]); setImportErrors([]); }} className="text-[#8A7A6E] text-xl">×</button>
             </div>
-            <div className="space-y-5">
-              <div className="p-4 bg-[#F5EFE6] rounded-xl">
+            <div className="space-y-4">
+              <div className="p-3 bg-[#F5EFE6] rounded-lg">
                 <p className="text-sm text-[#2D2926] mb-2">1. Download template</p>
-                <button onClick={downloadTemplate} className="bg-[#2D2926] text-white px-4 py-1.5 rounded-lg text-sm">Download CSV Template</button>
+                <button onClick={downloadTemplate} className="bg-[#2D2926] text-white px-3 py-1 rounded-lg text-sm">Download CSV Template</button>
               </div>
-              <div className="p-4 bg-[#F5EFE6] rounded-xl">
+              <div className="p-3 bg-[#F5EFE6] rounded-lg">
                 <p className="text-sm text-[#2D2926] mb-2">2. Upload your CSV</p>
-                <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="text-sm" />
+                <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="text-xs" />
               </div>
-              {importErrors.length > 0 && <div className="p-3 bg-red-50 rounded-lg text-red-600 text-xs max-h-32 overflow-y-auto">{importErrors.slice(0, 5).map((e, i) => <div key={i}>⚠️ {e}</div>)}</div>}
+              {importErrors.length > 0 && <div className="p-2 bg-red-50 rounded-lg text-red-600 text-xs max-h-32 overflow-y-auto">{importErrors.slice(0, 5).map((e, i) => <div key={i}>⚠️ {e}</div>)}</div>}
               {importPreview.length > 0 && (
                 <div>
-                  <p className="text-sm mb-2">Preview ({importPreview.length} members)</p>
-                  <div className="max-h-48 overflow-y-auto border rounded-lg text-xs">
-                    <table className="w-full"><tbody>{importPreview.slice(0, 8).map((m, i) => <tr key={i} className="border-t"><td className="p-2">{m.name}</td><td className="p-2">{m.sex}</td></tr>)}</tbody></table>
-                  </div>
-                  <button onClick={confirmImport} className="w-full mt-3 bg-[#2D2926] text-white py-2 rounded-full">Import {importPreview.length} Members</button>
+                  <p className="text-sm mb-2">{importPreview.length} members ready</p>
+                  <div className="max-h-40 overflow-y-auto border rounded-lg text-xs"><table className="w-full"><tbody>{importPreview.slice(0, 6).map((m, i) => <tr key={i} className="border-t"><td className="p-2">{m.name}</td><td className="p-2">{m.sex}</td></tr>)}</tbody></table></div>
+                  <button onClick={confirmImport} className="w-full mt-3 bg-[#2D2926] text-white py-2 rounded-full text-sm">Import {importPreview.length}</button>
                 </div>
               )}
             </div>
