@@ -310,40 +310,93 @@ export default function LandingPage() {
       </div>
 
       {/* HERO SECTION (unchanged) */}
-      <section id="home" className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]">
-        <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
-        <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[12vh] bg-gradient-to-b from-transparent to-[#b49b7d]/40" />
-        <div className="relative z-10 w-full max-w-2xl">
-          <div className="flex justify-center mb-8">
-            <img src="/logo.webp" alt="Gereja Baptis Tawau" loading="eager" className="w-[clamp(140px,38vw,200px)] object-contain opacity-95" />
-          </div>
-          <blockquote className="mb-10">
-            <p className="italic text-[clamp(1.3rem,4vw,2rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-4 font-['Lora',serif]">"{verse.text}"</p>
-            <cite className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">{verse.reference}</cite>
-          </blockquote>
-          <div className="mb-10">
-            <a href="#about" className="inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              {t('welcome_cta')}
-            </a>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button onClick={openEventsModal} className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer">
-              <Calendar size={22} stroke="#7A6A5E" strokeWidth="1.5" />
-              <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">{t('events_button')}</span>
-            </button>
-            <button onClick={openRosterModal} className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer">
-              <Users size={22} stroke="#7A6A5E" strokeWidth="1.5" />
-              <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">{t('roster_button')}</span>
-            </button>
-          </div>
-        </div>
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-35 animate-bob flex flex-col items-center gap-2">
-          <div className="w-px h-9 bg-gradient-to-b from-transparent to-[#8A7A6E]" />
-          <div className="w-1 h-1 rounded-full bg-[#8A7A6E]" />
-        </div>
-      </section>
+      {/* ========== HERO SECTION ========== */}
+<section
+  id="home"
+  className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+>
+  {/* Ambient Orbs (kept for aesthetics) */}
+  <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
+  <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
+
+  {/* Large Cross Logo Background (right side, half visible) */}
+  <div
+    className="absolute inset-0 pointer-events-none z-0"
+    style={{
+      backgroundImage: "url('/logo.webp')", // Replace with your cross image path if different
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "right center",
+      backgroundSize: "auto 80%", // Adjust size as needed
+      opacity: 0.12,              // Very transparent
+      right: "-15%",              // Shift to the right, cutting half
+      top: "50%",
+      transform: "translateY(-50%)",
+      width: "100%",
+      height: "100%"
+    }}
+  />
+
+  <div className="relative z-10 w-full max-w-2xl">
+    {/* Logo */}
+    <div className="flex justify-center mb-8">
+      <img
+        src="/logo.webp"
+        alt="Gereja Baptis Tawau"
+        loading="eager"
+        className="w-[clamp(140px,38vw,200px)] object-contain opacity-95"
+      />
+    </div>
+
+    {/* Verse */}
+    <blockquote className="mb-10">
+      <p className="italic text-[clamp(1.3rem,4vw,2rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-4 font-['Lora',serif]">
+        "{verse.text}"
+      </p>
+      <cite className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
+        {verse.reference}
+      </cite>
+    </blockquote>
+
+    {/* Welcome CTA */}
+    <div className="mb-10">
+      <a
+        href="#about"
+        className="inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        {t('welcome_cta')}
+      </a>
+    </div>
+
+    {/* Quick Action Cards */}
+    <div className="flex flex-wrap justify-center gap-3">
+      <button
+        onClick={openEventsModal}
+        className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+      >
+        <Calendar size={22} stroke="#7A6A5E" strokeWidth="1.5" />
+        <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+          {t('events_button')}
+        </span>
+      </button>
+      <button
+        onClick={openRosterModal}
+        className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+      >
+        <Users size={22} stroke="#7A6A5E" strokeWidth="1.5" />
+        <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+          {t('roster_button')}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  {/* Removed the top vertical line and the bottom scroll cue entirely */}
+</section>
 
       {/* CAROUSEL SECTION (unchanged) */}
       {carouselItems.length > 0 && carouselItems[currentSlide] && (
