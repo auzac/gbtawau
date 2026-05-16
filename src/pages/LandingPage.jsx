@@ -143,19 +143,17 @@ export default function LandingPage() {
     .select('*')
     .order('week_start', { ascending: true })
 
-  console.log('Raw roster data from Supabase:', data)  // <-- Debug
+  console.log('Raw roster data:', data)
 
   if (!error && data) {
     setRosters(data)
-    // Build available months from week_start dates
     const monthsSet = new Set()
     data.forEach(roster => {
       if (roster.week_start) {
-        // Handle both date string and timestamp
         const date = new Date(roster.week_start)
         if (!isNaN(date.getTime())) {
           const year = date.getFullYear()
-          const month = date.getMonth() // 0-11
+          const month = date.getMonth()
           const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`
           const monthName = date.toLocaleString(locale === 'bm' ? 'ms-MY' : 'en-US', { month: 'long', year: 'numeric' })
           monthsSet.add(JSON.stringify({ value: monthStr, label: monthName }))
@@ -164,44 +162,43 @@ export default function LandingPage() {
     })
     const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
     monthsArray.sort((a,b) => a.value.localeCompare(b.value))
+    console.log('Available months:', monthsArray)
     setAvailableMonths(monthsArray)
     if (monthsArray.length > 0) {
       setSelectedMonth(monthsArray[0].value)
     }
   } else {
     console.error('Error loading rosters:', error)
-    setRosters([])
   }
 }
 
 const getRosterForWeek = (weekNumber) => {
-  if (!selectedMonth) return null;
-  const [year, month] = selectedMonth.split('-').map(Number);
+  if (!selectedMonth) return null
+  const [year, month] = selectedMonth.split('-').map(Number)
   
-  // First day of the month
-  const firstDayOfMonth = new Date(year, month - 1, 1);
-  // Find the first Monday of the month
-  const firstMonday = new Date(firstDayOfMonth);
-  const dayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, ...
-  const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
-  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday);
+  // Find first Monday of the month
+  const firstDayOfMonth = new Date(year, month - 1, 1)
+  const firstMonday = new Date(firstDayOfMonth)
+  const dayOfWeek = firstDayOfMonth.getDay() // 0=Sun, 1=Mon...
+  const daysToMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7
+  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday)
   
-  // Calculate the target Monday for the selected week
-  const targetMonday = new Date(firstMonday);
-  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
+  const targetMonday = new Date(firstMonday)
+  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7)
+  const targetDateStr = targetMonday.toISOString().split('T')[0]
   
-  // Format as YYYY-MM-DD
-  const targetDateStr = targetMonday.toISOString().split('T')[0];
+  console.log(`Looking for week ${weekNumber}, target date: ${targetDateStr}`)
   
-  // Find the matching roster
   const matched = rosters.find(r => {
-    if (!r.week_start) return false;
-    const rosterDate = new Date(r.week_start);
-    if (isNaN(rosterDate.getTime())) return false;
-    return rosterDate.toISOString().split('T')[0] === targetDateStr;
-  });
+    if (!r.week_start) return false
+    const rosterDate = new Date(r.week_start)
+    if (isNaN(rosterDate.getTime())) return false
+    const rosterDateStr = rosterDate.toISOString().split('T')[0]
+    return rosterDateStr === targetDateStr
+  })
   
-  return matched || null;
+  console.log(`Match found:`, matched)
+  return matched || null
 };
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
@@ -510,32 +507,50 @@ const getRosterForWeek = (weekNumber) => {
               {/* Roster details */}
               <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5">
                 {rosterForSelectedWeek ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <User size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_leader')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.leader || '—'}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Users size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_pianist')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.pianist || '—'}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <User size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_reader')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.reader || '—'}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-center text-[#8A7A6E] py-6">{t('roster_no_data')}</p>
-                )}
+  <>
+    {/* Debug info */}
+    <div className="text-xs text-gray-400 mb-2 p-2 bg-gray-100 rounded">
+      Debug: selectedMonth={selectedMonth}, week={selectedWeek}<br />
+      Target date: {selectedMonth && (() => {
+        const [year, month] = selectedMonth.split('-').map(Number);
+        const firstDay = new Date(year, month-1, 1);
+        const firstMon = new Date(firstDay);
+        const dow = firstDay.getDay();
+        const daysToMon = dow === 0 ? 1 : (8-dow)%7;
+        firstMon.setDate(firstDay.getDate() + daysToMon);
+        const target = new Date(firstMon);
+        target.setDate(firstMon.getDate() + (selectedWeek-1)*7);
+        return target.toISOString().split('T')[0];
+      })()}
+    </div>
+    {/* Roster details */}
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <User size={18} className="text-[#B09882]" />
+        <div>
+          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_leader')}</p>
+          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.leader || '—'}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Users size={18} className="text-[#B09882]" />
+        <div>
+          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_pianist')}</p>
+          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.pianist || '—'}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <User size={18} className="text-[#B09882]" />
+        <div>
+          <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_reader')}</p>
+          <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.reader || '—'}</p>
+        </div>
+      </div>
+    </div>
+  </>
+) : (
+  <p className="text-center text-[#8A7A6E] py-6">{t('roster_no_data')}</p>
+)}
               </div>
             </div>
 
