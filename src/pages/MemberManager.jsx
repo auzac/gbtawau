@@ -1048,5 +1048,3 @@ export default function MemberManager() {
     </div>
   )
 }
-
-export default MemberManager
