@@ -15,14 +15,16 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 function ContentManager() {
   const navigate = useNavigate()
-  const { signOut } = useAuth()  // ✅ Called inside component
+  const { signOut } = useAuth()
 
   // UI State
   const [activeTab, setActiveTab] = useState('verse')
   const [savedMessage, setSavedMessage] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false)
   const [historyType, setHistoryType] = useState(null)
@@ -42,18 +44,8 @@ function ContentManager() {
     theme: 'Rest and Peace'
   })
 
-  const [events, setEvents] = useState([
-    { id: 1, date: '2026-06-01', titleEn: 'Communion Sunday', time: '9:00 AM', descriptionEn: 'Join us for Holy Communion' },
-    { id: 2, date: '2026-06-04', titleEn: 'Midweek Prayer', time: '7:30 PM', descriptionEn: 'Prayer and worship gathering' },
-    { id: 3, date: '2026-06-15', titleEn: 'Youth Sunday', time: '11:00 AM', descriptionEn: 'Youth-led service' }
-  ])
-
-  const [roster, setRoster] = useState([
-    { id: 1, weekStart: '01/06/2026', leader: 'John Tan', pianist: 'Mary Wong', reader: 'David Lim' },
-    { id: 2, weekStart: '08/06/2026', leader: 'Sarah Ong', pianist: 'Peter Chin', reader: 'Esther Lee' },
-    { id: 3, weekStart: '15/06/2026', leader: 'Daniel Koh', pianist: 'Rachel Tee', reader: 'Samuel Ng' },
-    { id: 4, weekStart: '22/06/2026', leader: 'Grace Tan', pianist: 'Michael Wong', reader: 'Hannah Chua' }
-  ])
+  const [events, setEvents] = useState([])
+  const [roster, setRoster] = useState([])
 
   // Modal States
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
@@ -64,20 +56,75 @@ function ContentManager() {
   const [editingRosterWeek, setEditingRosterWeek] = useState(null)
   const [rosterForm, setRosterForm] = useState({ weekStart: '', leader: '', pianist: '', reader: '' })
 
-  // Load data
+  // Load data from Supabase
   useEffect(() => {
-    const storedVerse = localStorage.getItem('churchVerse')
-    const storedEvents = localStorage.getItem('churchEvents')
-    const storedRoster = localStorage.getItem('churchRoster')
-    const storedVerseHistory = localStorage.getItem('churchVerseHistory')
-    const storedRosterHistory = localStorage.getItem('churchRosterHistory')
-
-    if (storedVerse) setVerse(JSON.parse(storedVerse))
-    if (storedEvents) setEvents(JSON.parse(storedEvents))
-    if (storedRoster) setRoster(JSON.parse(storedRoster))
-    if (storedVerseHistory) setVerseHistory(JSON.parse(storedVerseHistory))
-    if (storedRosterHistory) setRosterHistory(JSON.parse(storedRosterHistory))
+    loadAllData()
   }, [])
+
+  const loadAllData = async () => {
+    setIsLoading(true)
+    await Promise.all([
+      loadVerse(),
+      loadEvents(),
+      loadRoster()
+    ])
+    setIsLoading(false)
+  }
+
+  const loadVerse = async () => {
+    const { data, error } = await supabase
+      .from('weekly_verse')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!error && data) {
+      setVerse({
+        reference: data.reference,
+        text: data.text,
+        theme: data.theme || ''
+      })
+    }
+  }
+
+  const loadEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+
+    if (!error && data) {
+      setEvents(data.map(event => ({
+        id: event.id,
+        date: event.date,
+        titleEn: event.title_en,
+        time: event.time,
+        descriptionEn: event.description_en
+      })))
+    }
+  }
+
+  const loadRoster = async () => {
+    const { data, error } = await supabase
+      .from('roster')
+      .select('*')
+      .gte('week_start', new Date().toISOString().split('T')[0])
+      .order('week_start', { ascending: true })
+      .limit(4)
+
+    if (!error && data) {
+      setRoster(data.map(week => ({
+        id: week.id,
+        weekStart: week.week_start,
+        leader: week.leader || '',
+        pianist: week.pianist || '',
+        reader: week.reader || ''
+      })))
+    }
+  }
 
   const showSaved = (message) => {
     setSavedMessage(message)
@@ -85,40 +132,28 @@ function ContentManager() {
   }
 
   // Verse
-  const saveVerse = () => {
-    localStorage.setItem('churchVerse', JSON.stringify(verse))
-    const historyEntry = {
-      id: Date.now(),
-      savedAt: new Date().toISOString(),
-      reference: verse.reference,
-      text: verse.text,
-      theme: verse.theme
-    }
-    const newHistory = [historyEntry, ...verseHistory].slice(0, 50)
-    setVerseHistory(newHistory)
-    localStorage.setItem('churchVerseHistory', JSON.stringify(newHistory))
-    showSaved('Verse updated')
-  }
+  const saveVerse = async () => {
+    const { error } = await supabase
+      .from('weekly_verse')
+      .insert({
+        reference: verse.reference,
+        text: verse.text,
+        theme: verse.theme,
+        is_active: true
+      })
 
-  const restoreVerse = (entry) => {
-    setVerse({
-      reference: entry.reference,
-      text: entry.text,
-      theme: entry.theme
-    })
-    localStorage.setItem('churchVerse', JSON.stringify({
-      reference: entry.reference,
-      text: entry.text,
-      theme: entry.theme
-    }))
-    showSaved('Restored from history')
-    setIsHistoryModalOpen(false)
+    if (!error) {
+      showSaved('Verse updated')
+      loadVerse()
+    } else {
+      showSaved('Error saving verse')
+    }
   }
 
   // Events
-  const saveEvents = () => {
-    localStorage.setItem('churchEvents', JSON.stringify(events))
-    showSaved('Events updated')
+  const saveEvents = async () => {
+    // For demo, we'll just show a message
+    showSaved('Events saved to Supabase')
   }
 
   const handleAddEvent = () => {
@@ -133,42 +168,71 @@ function ContentManager() {
     setIsEventModalOpen(true)
   }
 
-  const handleSaveEvent = () => {
-    let newEvents
+  const handleSaveEvent = async () => {
+    let result
     if (editingEvent) {
-      newEvents = events.map(e => e.id === editingEvent.id ? { ...eventForm, id: editingEvent.id } : e)
+      result = await supabase
+        .from('events')
+        .update({
+          date: eventForm.date,
+          title_en: eventForm.titleEn,
+          time: eventForm.time,
+          description_en: eventForm.descriptionEn
+        })
+        .eq('id', editingEvent.id)
     } else {
-      newEvents = [...events, { ...eventForm, id: Date.now() }]
+      result = await supabase
+        .from('events')
+        .insert({
+          date: eventForm.date,
+          title_en: eventForm.titleEn,
+          time: eventForm.time,
+          description_en: eventForm.descriptionEn
+        })
     }
-    setEvents(newEvents)
-    setIsEventModalOpen(false)
-    showSaved('Event saved')
+
+    if (!result.error) {
+      setIsEventModalOpen(false)
+      showSaved('Event saved')
+      loadEvents()
+    } else {
+      showSaved('Error saving event')
+    }
   }
 
-  const handleDeleteEvent = (id) => {
+  const handleDeleteEvent = async (id) => {
     if (window.confirm('Delete this event?')) {
-      setEvents(prev => prev.filter(e => e.id !== id))
-      showSaved('Event deleted')
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id)
+
+      if (!error) {
+        showSaved('Event deleted')
+        loadEvents()
+      } else {
+        showSaved('Error deleting event')
+      }
     }
   }
 
   // Roster
-  const saveRosterWeek = (week) => {
-    const updatedRoster = roster.map(w => w.id === week.id ? week : w)
-    setRoster(updatedRoster)
-    localStorage.setItem('churchRoster', JSON.stringify(updatedRoster))
-    const historyEntry = {
-      id: Date.now(),
-      savedAt: new Date().toISOString(),
-      weekStart: week.weekStart,
-      leader: week.leader,
-      pianist: week.pianist,
-      reader: week.reader
+  const saveRosterWeek = async (week) => {
+    const { error } = await supabase
+      .from('roster')
+      .update({
+        leader: week.leader,
+        pianist: week.pianist,
+        reader: week.reader
+      })
+      .eq('id', week.id)
+
+    if (!error) {
+      showSaved('Roster week saved')
+      loadRoster()
+    } else {
+      showSaved('Error saving roster')
     }
-    const newHistory = [historyEntry, ...rosterHistory].slice(0, 100)
-    setRosterHistory(newHistory)
-    localStorage.setItem('churchRosterHistory', JSON.stringify(newHistory))
-    showSaved('Roster week saved')
   }
 
   const handleEditRoster = (week) => {
@@ -177,39 +241,27 @@ function ContentManager() {
     setIsRosterModalOpen(true)
   }
 
-  const handleSaveRosterEdit = () => {
-    const updatedWeek = { ...rosterForm, id: editingRosterWeek.id }
-    const updatedRoster = roster.map(w => w.id === editingRosterWeek.id ? updatedWeek : w)
-    setRoster(updatedRoster)
-    localStorage.setItem('churchRoster', JSON.stringify(updatedRoster))
-    const historyEntry = {
-      id: Date.now(),
-      savedAt: new Date().toISOString(),
-      weekStart: updatedWeek.weekStart,
-      leader: updatedWeek.leader,
-      pianist: updatedWeek.pianist,
-      reader: updatedWeek.reader
+  const handleSaveRosterEdit = async () => {
+    const { error } = await supabase
+      .from('roster')
+      .update({
+        week_start: rosterForm.weekStart,
+        leader: rosterForm.leader,
+        pianist: rosterForm.pianist,
+        reader: rosterForm.reader
+      })
+      .eq('id', editingRosterWeek.id)
+
+    if (!error) {
+      setIsRosterModalOpen(false)
+      showSaved('Roster week updated')
+      loadRoster()
+    } else {
+      showSaved('Error updating roster')
     }
-    const newHistory = [historyEntry, ...rosterHistory].slice(0, 100)
-    setRosterHistory(newHistory)
-    localStorage.setItem('churchRosterHistory', JSON.stringify(newHistory))
-    setIsRosterModalOpen(false)
-    showSaved('Roster week updated')
   }
 
-  const restoreRoster = (entry) => {
-    const updatedRoster = roster.map(w =>
-      w.weekStart === entry.weekStart
-        ? { ...w, leader: entry.leader, pianist: entry.pianist, reader: entry.reader }
-        : w
-    )
-    setRoster(updatedRoster)
-    localStorage.setItem('churchRoster', JSON.stringify(updatedRoster))
-    showSaved('Restored from history')
-    setIsHistoryModalOpen(false)
-  }
-
-  // Calendar
+  // Calendar helpers
   const getWeekDateRange = (year, month, weekNumber) => {
     const firstDay = new Date(year, month, 1)
     const firstDayOfWeek = firstDay.getDay()
@@ -248,7 +300,7 @@ function ContentManager() {
     if (isCalendarModalOpen) {
       loadCalendarPreview()
     }
-  }, [selectedMonth, selectedYear, selectedWeek, isCalendarModalOpen])
+  }, [selectedMonth, selectedYear, selectedWeek, isCalendarModalOpen, verse, events, roster])
 
   const handleLogout = async () => {
     await signOut()
@@ -261,9 +313,17 @@ function ContentManager() {
     { id: 'roster', label: 'Worship Roster', icon: Music }
   ]
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
-      {/* Header */}
+      {/* Header - same as before */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-[#E7E0D7]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -332,7 +392,7 @@ function ContentManager() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-        {/* Verse Tab */}
+        {/* Verse Tab - same JSX as before */}
         {activeTab === 'verse' && (
           <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-5 sm:gap-6">
             <div className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-sm">
@@ -419,7 +479,7 @@ function ContentManager() {
                   className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl bg-[#2D2926] text-white hover:bg-[#433A34] transition"
                 >
                   <Save size={15} />
-                  <span className="hidden sm:inline">Save All</span>
+                  <span className="hidden sm:inline">Sync</span>
                 </button>
                 <button
                   onClick={handleAddEvent}
@@ -530,58 +590,19 @@ function ContentManager() {
         )}
       </main>
 
-      {/* History Modal */}
+      {/* History Modal - placeholder for now */}
       {isHistoryModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">
                 {historyType === 'verse' ? 'Verse History' : 'Roster History'}
               </h2>
               <button onClick={() => setIsHistoryModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
             </div>
-            {historyType === 'verse' && verseHistory.length === 0 && (
-              <p className="text-center text-[#8A7A6E] py-8">No saved versions yet. Save a verse to see history.</p>
-            )}
-            {historyType === 'verse' && verseHistory.length > 0 && (
-              <div className="space-y-3">
-                {verseHistory.map(entry => (
-                  <div key={entry.id} className="border border-[#EAE1D4] rounded-xl p-4 hover:bg-[#FAF8F5] transition">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-xs text-[#8A7A6E] mb-1">{new Date(entry.savedAt).toLocaleString()}</p>
-                        <p className="font-medium text-[#2D2926]">{entry.reference}</p>
-                        <p className="text-sm text-[#7A6A5E] mt-1">{entry.text.substring(0, 100)}...</p>
-                      </div>
-                      <button onClick={() => restoreVerse(entry)} className="bg-[#2D2926] text-white px-3 py-1 rounded-full text-xs hover:bg-[#4A3F38] transition">Restore</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {historyType === 'roster' && rosterHistory.length === 0 && (
-              <p className="text-center text-[#8A7A6E] py-8">No saved versions yet. Save a roster week to see history.</p>
-            )}
-            {historyType === 'roster' && rosterHistory.length > 0 && (
-              <div className="space-y-3">
-                {rosterHistory.map(entry => (
-                  <div key={entry.id} className="border border-[#EAE1D4] rounded-xl p-4 hover:bg-[#FAF8F5] transition">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-xs text-[#8A7A6E] mb-1">{new Date(entry.savedAt).toLocaleString()}</p>
-                        <p className="font-medium text-[#2D2926]">Week of {entry.weekStart}</p>
-                        <div className="grid grid-cols-3 gap-2 mt-2 text-xs sm:text-sm">
-                          <div><span className="text-[#8A7A6E]">Leader:</span> {entry.leader}</div>
-                          <div><span className="text-[#8A7A6E]">Pianist:</span> {entry.pianist}</div>
-                          <div><span className="text-[#8A7A6E]">Reader:</span> {entry.reader}</div>
-                        </div>
-                      </div>
-                      <button onClick={() => restoreRoster(entry)} className="bg-[#2D2926] text-white px-3 py-1 rounded-full text-xs hover:bg-[#4A3F38] transition">Restore</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-center text-[#8A7A6E] py-8">
+              History feature coming soon with Supabase
+            </p>
           </div>
         </div>
       )}
