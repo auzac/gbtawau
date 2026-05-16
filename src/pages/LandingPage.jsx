@@ -163,24 +163,31 @@ export default function LandingPage() {
 const getRosterForWeek = (weekNumber) => {
   if (!selectedMonth) return null
   const [year, month] = selectedMonth.split('-').map(Number)
-  // Find the Sunday date of that week (weekNumber: 1 = first Sunday of month)
+  
+  // Find the first Monday of the month
   const firstDayOfMonth = new Date(year, month - 1, 1)
-  const firstSunday = new Date(firstDayOfMonth)
-  firstSunday.setDate(firstDayOfMonth.getDate() + (7 - firstDayOfMonth.getDay()) % 7)
-  const targetSunday = new Date(firstSunday)
-  targetSunday.setDate(firstSunday.getDate() + (weekNumber - 1) * 7)
-  // Format as YYYY-MM-DD (date only, no time)
-  const targetDateStr = targetSunday.toISOString().split('T')[0]
-
-  // Find roster where week_start matches the target date (ignoring time part)
-  return rosters.find(r => {
+  const firstMonday = new Date(firstDayOfMonth)
+  const dayOfWeek = firstDayOfMonth.getDay() // 0 = Sunday, 1 = Monday, ...
+  // Days until next Monday (if today is Sunday, next Monday is 1 day later)
+  const daysToMonday = (dayOfWeek === 0 ? 1 : 8 - dayOfWeek) % 7
+  firstMonday.setDate(firstDayOfMonth.getDate() + daysToMonday)
+  
+  // Calculate target Monday for the selected week (week 1 = first Monday)
+  const targetMonday = new Date(firstMonday)
+  targetMonday.setDate(firstMonday.getDate() + (weekNumber - 1) * 7)
+  
+  // Format as YYYY-MM-DD (date only)
+  const targetDateStr = targetMonday.toISOString().split('T')[0]
+  
+  // Find a roster with matching week_start (use first match if duplicates)
+  const matched = rosters.find(r => {
     if (!r.week_start) return false
-    // Convert roster week_start to YYYY-MM-DD string for comparison
     const rosterDate = new Date(r.week_start)
     if (isNaN(rosterDate.getTime())) return false
-    const rosterDateStr = rosterDate.toISOString().split('T')[0]
-    return rosterDateStr === targetDateStr
+    return rosterDate.toISOString().split('T')[0] === targetDateStr
   })
+  
+  return matched || null
 }
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
