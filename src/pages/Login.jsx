@@ -10,7 +10,7 @@ function Login() {
     e.preventDefault()
     // Simple demo auth — in production, add real authentication
     if (email && password) {
-      navigate('/admin/dashboard')
+      navigate('/staff')
     }
   }
 
