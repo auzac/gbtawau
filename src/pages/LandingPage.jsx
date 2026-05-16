@@ -124,50 +124,64 @@ export default function LandingPage() {
   }
 
   const loadRosters = async () => {
-    const { data, error } = await supabase
-      .from('roster')
-      .select('*')
-      .order('week_start', { ascending: true })
+  const { data, error } = await supabase
+    .from('roster')
+    .select('*')
+    .order('week_start', { ascending: true })
 
-    if (!error && data) {
-      setRosters(data)
-      // Build available months from week_start dates
-      const monthsSet = new Set()
-      data.forEach(roster => {
-        if (roster.week_start) {
-          const date = new Date(roster.week_start)
+  console.log('Raw roster data from Supabase:', data)  // <-- Debug
+
+  if (!error && data) {
+    setRosters(data)
+    // Build available months from week_start dates
+    const monthsSet = new Set()
+    data.forEach(roster => {
+      if (roster.week_start) {
+        // Handle both date string and timestamp
+        const date = new Date(roster.week_start)
+        if (!isNaN(date.getTime())) {
           const year = date.getFullYear()
           const month = date.getMonth() // 0-11
           const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`
           const monthName = date.toLocaleString(locale === 'bm' ? 'ms-MY' : 'en-US', { month: 'long', year: 'numeric' })
           monthsSet.add(JSON.stringify({ value: monthStr, label: monthName }))
         }
-      })
-      const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
-      monthsArray.sort((a,b) => a.value.localeCompare(b.value))
-      setAvailableMonths(monthsArray)
-      if (monthsArray.length > 0) {
-        setSelectedMonth(monthsArray[0].value)
       }
-    } else {
-      setRosters([])
+    })
+    const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
+    monthsArray.sort((a,b) => a.value.localeCompare(b.value))
+    setAvailableMonths(monthsArray)
+    if (monthsArray.length > 0) {
+      setSelectedMonth(monthsArray[0].value)
     }
+  } else {
+    console.error('Error loading rosters:', error)
+    setRosters([])
   }
+}
 
-  // Helper: get roster for a specific week (week number 1-4) within selected month
-  const getRosterForWeek = (weekNumber) => {
-    if (!selectedMonth) return null
-    const [year, month] = selectedMonth.split('-').map(Number)
-    // Find the Sunday date of that week (weekNumber: 1 = first Sunday of month)
-    const firstDayOfMonth = new Date(year, month - 1, 1)
-    const firstSunday = new Date(firstDayOfMonth)
-    firstSunday.setDate(firstDayOfMonth.getDate() + (7 - firstDayOfMonth.getDay()) % 7)
-    const targetSunday = new Date(firstSunday)
-    targetSunday.setDate(firstSunday.getDate() + (weekNumber - 1) * 7)
-    // Format as YYYY-MM-DD
-    const targetDateStr = targetSunday.toISOString().split('T')[0]
-    return rosters.find(r => r.week_start === targetDateStr)
-  }
+const getRosterForWeek = (weekNumber) => {
+  if (!selectedMonth) return null
+  const [year, month] = selectedMonth.split('-').map(Number)
+  // Find the Sunday date of that week (weekNumber: 1 = first Sunday of month)
+  const firstDayOfMonth = new Date(year, month - 1, 1)
+  const firstSunday = new Date(firstDayOfMonth)
+  firstSunday.setDate(firstDayOfMonth.getDate() + (7 - firstDayOfMonth.getDay()) % 7)
+  const targetSunday = new Date(firstSunday)
+  targetSunday.setDate(firstSunday.getDate() + (weekNumber - 1) * 7)
+  // Format as YYYY-MM-DD (date only, no time)
+  const targetDateStr = targetSunday.toISOString().split('T')[0]
+
+  // Find roster where week_start matches the target date (ignoring time part)
+  return rosters.find(r => {
+    if (!r.week_start) return false
+    // Convert roster week_start to YYYY-MM-DD string for comparison
+    const rosterDate = new Date(r.week_start)
+    if (isNaN(rosterDate.getTime())) return false
+    const rosterDateStr = rosterDate.toISOString().split('T')[0]
+    return rosterDateStr === targetDateStr
+  })
+}
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
 
