@@ -19,5 +19,16 @@
   "welcome_cta": "Welcome",
   "hero_calendar": "Calendar",
   "hero_contact": "Contact",
-  "announcements_title": "Announcements"
+  "announcements_title": "Announcements",
+"events_button": "Events",
+"events_modal_title": "Upcoming Events",
+"events_modal_close": "Close",
+"events_modal_back": "Back",
+"event_details_title": "Event Details",
+"event_location": "Location",
+"event_date": "Date",
+"event_time": "Time",
+"event_pic": "Person In Charge",
+"event_description": "Description",
+"no_events": "No upcoming events"
 }

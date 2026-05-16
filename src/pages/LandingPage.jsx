@@ -509,29 +509,57 @@ export default function LandingPage() {
                 events.length === 0 ? (
                   <p className="text-center text-[#8A7A6E] py-10">{t('no_events')}</p>
                 ) : (
-                  <div className="space-y-3">
-                    {events.map((event) => {
-                      const { day, month, dayName } = formatEventDate(event.date)
-                      const title = locale === 'bm' && event.title_bm ? event.title_bm : event.title_en
-                      return (
-                        <button
-                          key={event.id}
-                          onClick={() => showEventDetails(event)}
-                          className="w-full text-left bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-4 flex items-center gap-4 transition hover:shadow-md hover:-translate-y-0.5"
-                        >
-                          <div className="min-w-[60px] text-center">
-                            <div className="text-2xl font-['Lora',serif] font-medium text-[#2D2926]">{day}</div>
-                            <div className="uppercase text-[10px] text-[#B09882] font-['DM_Sans',sans-serif]">{month}</div>
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-['Lora',serif] font-medium text-[#2D2926]">{title}</h3>
-                            <p className="text-xs text-[#A08070] mt-1">{dayName} · {formatTimeForDisplay(event.time)}</p>
-                          </div>
-                          <ArrowLeft size={18} className="text-[#B09882] rotate-180" />
-                        </button>
-                      )
-                    })}
-                  </div>
+                  <div className="space-y-4">
+  <h3 className="text-2xl font-['Lora',serif] text-[#2D2926]">
+    {locale === 'bm' && selectedEvent.title_bm ? selectedEvent.title_bm : selectedEvent.title_en}
+  </h3>
+
+  <div className="space-y-3 text-[#2D2926]">
+    {/* Date */}
+    <div className="flex items-center gap-3">
+      <Calendar size={18} className="text-[#B09882]" />
+      <span>
+        {new Date(selectedEvent.date).toLocaleDateString(locale === 'bm' ? 'ms-MY' : 'en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </span>
+    </div>
+
+    {/* Time (if exists) */}
+    {selectedEvent.time && (
+      <div className="flex items-center gap-3">
+        <Clock size={18} className="text-[#B09882]" />
+        <span>{formatTimeForDisplay(selectedEvent.time)}</span>
+      </div>
+    )}
+
+    {/* Location (if exists) */}
+    {selectedEvent.location && (
+      <div className="flex items-center gap-3">
+        <MapPinned size={18} className="text-[#B09882]" />
+        <span>{selectedEvent.location}</span>
+      </div>
+    )}
+
+    {/* PIC (fallback if missing) */}
+    <div className="flex items-center gap-3">
+      <User size={18} className="text-[#B09882]" />
+      <span>{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</span>
+    </div>
+
+    {/* Description (if any) */}
+    {(selectedEvent.description_en || selectedEvent.description_bm) && (
+      <div className="pt-2 border-t border-[#d9c9b7]/30 mt-2">
+        <p className="text-[#5A4E46] text-sm leading-relaxed">
+          {locale === 'bm' && selectedEvent.description_bm ? selectedEvent.description_bm : selectedEvent.description_en}
+        </p>
+      </div>
+    )}
+  </div>
+</div>
                 )
               ) : (
                 // Detail view

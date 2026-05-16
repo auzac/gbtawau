@@ -19,5 +19,16 @@
   "welcome_cta": "Masuk",
   "hero_calendar": "Kalendar",
   "hero_contact": "Hubungi",
-  "announcements_title": "Pengumuman"
+  "announcements_title": "Pengumuman",
+"events_button": "Acara",
+"events_modal_title": "Acara Akan Datang",
+"events_modal_close": "Tutup",
+"events_modal_back": "Kembali",
+"event_details_title": "Butiran Acara",
+"event_location": "Lokasi",
+"event_date": "Tarikh",
+"event_time": "Masa",
+"event_pic": "Penanggungjawab",
+"event_description": "Keterangan",
+"no_events": "Tiada acara akan datang"
 }
