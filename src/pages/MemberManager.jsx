@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -95,6 +96,7 @@ function MemberManager() {
   const { signOut } = useAuth()
 
   const [members, setMembers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [ageFilter, setAgeFilter] = useState('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -102,6 +104,7 @@ function MemberManager() {
   const [editingId, setEditingId] = useState(null)
   const [importPreview, setImportPreview] = useState([])
   const [importErrors, setImportErrors] = useState([])
+  const [savedMessage, setSavedMessage] = useState(null)
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
 
@@ -110,17 +113,31 @@ function MemberManager() {
     navigate('/login')
   }
 
-  // ── Persistence
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('churchMembers')
-      if (stored) setMembers(JSON.parse(stored))
-    } catch { /* ignore */ }
-  }, [])
+  const showSaved = (message, isError = false) => {
+    setSavedMessage({ text: message, isError })
+    setTimeout(() => setSavedMessage(null), 2200)
+  }
+
+  // ── Load members from Supabase
+  const loadMembers = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .order('name', { ascending: true })
+
+    if (error) {
+      showSaved('Error loading members', true)
+      console.error(error)
+    } else if (data) {
+      setMembers(data)
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
-    localStorage.setItem('churchMembers', JSON.stringify(members))
-  }, [members])
+    loadMembers()
+  }, [])
 
   // ── Stats
   const stats = useMemo(() => {
@@ -130,7 +147,7 @@ function MemberManager() {
     const children = members.filter(m => { const a = calcAge(m.dob); return a !== null && a >= 0 && a <= 12 }).length
     const youth = members.filter(m => { const a = calcAge(m.dob); return a !== null && a >= 13 && a <= 25 }).length
     const adults = members.filter(m => { const a = calcAge(m.dob); return a !== null && a >= 26 }).length
-    const baptised = members.filter(m => m.baptismDate).length
+    const baptised = members.filter(m => m.baptism_date).length
     return { total, male, female, children, youth, adults, baptised }
   }, [members])
 
@@ -162,13 +179,53 @@ function MemberManager() {
     setFormData(p => ({ ...p, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    
     if (editingId !== null) {
-      setMembers(p => p.map(m => m.id === editingId ? { ...formData, id: editingId } : m))
+      // Update existing member
+      const { error } = await supabase
+        .from('members')
+        .update({
+          name: formData.name,
+          sex: formData.sex,
+          address: formData.address,
+          dob: formData.dob,
+          registered_since: formData.registeredSince || null,
+          baptism_date: formData.baptismDate || null,
+          marital_status: formData.maritalStatus,
+          updated_at: new Date()
+        })
+        .eq('id', editingId)
+
+      if (error) {
+        showSaved('Error updating member', true)
+      } else {
+        showSaved('Member updated')
+        loadMembers()
+      }
     } else {
-      setMembers(p => [...p, { ...formData, id: Date.now() }])
+      // Add new member
+      const { error } = await supabase
+        .from('members')
+        .insert({
+          name: formData.name,
+          sex: formData.sex,
+          address: formData.address,
+          dob: formData.dob,
+          registered_since: formData.registeredSince || null,
+          baptism_date: formData.baptismDate || null,
+          marital_status: formData.maritalStatus
+        })
+
+      if (error) {
+        showSaved('Error adding member', true)
+      } else {
+        showSaved('Member added')
+        loadMembers()
+      }
     }
+    
     setFormData(DEFAULT_FORM)
     setEditingId(null)
     setIsFormOpen(false)
@@ -180,17 +237,27 @@ function MemberManager() {
       sex: member.sex || 'Male',
       address: member.address,
       dob: member.dob || '',
-      registeredSince: member.registeredSince || '',
-      baptismDate: member.baptismDate || '',
-      maritalStatus: member.maritalStatus || 'Single'
+      registeredSince: member.registered_since || '',
+      baptismDate: member.baptism_date || '',
+      maritalStatus: member.marital_status || 'Single'
     })
     setEditingId(member.id)
     setIsFormOpen(true)
   }
 
-  const handleDelete = (id) => {
-    if (window.confirm('Remove this member from the directory?')) {
-      setMembers(p => p.filter(m => m.id !== id))
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`Remove "${name}" from the directory?`)) {
+      const { error } = await supabase
+        .from('members')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        showSaved('Error deleting member', true)
+      } else {
+        showSaved('Member removed')
+        loadMembers()
+      }
     }
   }
 
@@ -199,8 +266,8 @@ function MemberManager() {
     const headers = ['Name', 'Sex', 'Address', 'Date of Birth', 'Registered Since', 'Baptism Date', 'Marital Status']
     const rows = filteredMembers.map(m => [
       `"${m.name}"`, m.sex || 'Male', `"${m.address}"`,
-      toCSV(m.dob), toCSV(m.registeredSince), toCSV(m.baptismDate),
-      m.maritalStatus || 'Single'
+      toCSV(m.dob), toCSV(m.registered_since), toCSV(m.baptism_date),
+      m.marital_status || 'Single'
     ])
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -210,6 +277,7 @@ function MemberManager() {
     link.download = `church_members_${new Date().toISOString().split('T')[0]}.csv`
     link.click()
     URL.revokeObjectURL(url)
+    showSaved('Members exported')
   }
 
   // ── Template download
@@ -268,10 +336,9 @@ function MemberManager() {
         parsed.push({
           name, sex: sex || 'Male', address,
           dob: toStorage(dob),
-          registeredSince: registeredSince ? toStorage(registeredSince) : '',
-          baptismDate: baptismDate ? toStorage(baptismDate) : '',
-          maritalStatus: maritalStatus || 'Single',
-          id: null
+          registered_since: registeredSince ? toStorage(registeredSince) : null,
+          baptism_date: baptismDate ? toStorage(baptismDate) : null,
+          marital_status: maritalStatus || 'Single'
         })
       }
       if (errors.length > 0) { setImportErrors(errors); setImportPreview([]) }
@@ -280,8 +347,18 @@ function MemberManager() {
     reader.readAsText(file, 'UTF-8')
   }
 
-  const confirmImport = () => {
-    setMembers(p => [...p, ...importPreview.map(m => ({ ...m, id: Date.now() + Math.random() }))])
+  const confirmImport = async () => {
+    const { error } = await supabase
+      .from('members')
+      .insert(importPreview)
+
+    if (error) {
+      showSaved('Error importing members', true)
+    } else {
+      showSaved(`${importPreview.length} members imported`)
+      loadMembers()
+    }
+    
     setIsBulkImportOpen(false)
     setImportPreview([])
     setImportErrors([])
@@ -300,9 +377,25 @@ function MemberManager() {
     setFormData(DEFAULT_FORM)
   }
 
-  // ── Render
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF8F5]">
+
+      {/* Save Toast */}
+      {savedMessage && (
+        <div className="fixed top-20 right-4 sm:right-6 z-50">
+          <div className={`flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl text-sm animate-fade-in ${savedMessage.isError ? 'bg-red-600 text-white' : 'bg-[#2D2926] text-white'}`}>
+            {savedMessage.isError ? '⚠️' : '✓'} {savedMessage.text}
+          </div>
+        </div>
+      )}
 
       {/* ── Header */}
       <header className="bg-white border-b border-[#EAE1D4] sticky top-0 z-10">
@@ -329,7 +422,7 @@ function MemberManager() {
       {/* ── Main */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-        {/* ── Stats — primary focus */}
+        {/* ── Stats */}
         <div>
           <h2 className="text-xs uppercase tracking-widest text-[#9A8B80] mb-3 font-medium">Congregation Overview</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -487,17 +580,17 @@ function MemberManager() {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            member.maritalStatus === 'Married' ? 'bg-green-50 text-green-700' :
-                            member.maritalStatus === 'Widowed' ? 'bg-gray-100 text-gray-600' :
-                            member.maritalStatus === 'Divorced' ? 'bg-red-50 text-red-700' :
+                            member.marital_status === 'Married' ? 'bg-green-50 text-green-700' :
+                            member.marital_status === 'Widowed' ? 'bg-gray-100 text-gray-600' :
+                            member.marital_status === 'Divorced' ? 'bg-red-50 text-red-700' :
                             'bg-blue-50 text-blue-700'
                           }`}>
-                            {member.maritalStatus || 'Single'}
+                            {member.marital_status || 'Single'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
                           <button onClick={() => handleEdit(member)} className="text-xs text-[#8A7A6E] hover:text-[#2D2926] transition font-medium">Edit</button>
-                          <button onClick={() => handleDelete(member.id)} className="text-xs text-[#C4A88B] hover:text-red-600 transition font-medium">Delete</button>
+                          <button onClick={() => handleDelete(member.id, member.name)} className="text-xs text-[#C4A88B] hover:text-red-600 transition font-medium">Delete</button>
                         </td>
                       </tr>
                     )
@@ -509,7 +602,7 @@ function MemberManager() {
         </div>
 
         <p className="text-center text-[10px] text-[#C0B5AF] tracking-widest uppercase">
-          Data stored locally in your browser
+          Data stored in Supabase • Cloud synced
         </p>
       </main>
 
@@ -664,9 +757,16 @@ function MemberManager() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.25s ease-out; }
+      `}</style>
     </div>
   )
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────────
 export default MemberManager
