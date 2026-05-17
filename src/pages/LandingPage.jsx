@@ -310,6 +310,7 @@ export default function LandingPage() {
       {/* HERO SECTION (unchanged) */}
       {/* ========== HERO SECTION ========== */}
 {/* ========== HERO + CAROUSEL INTEGRATED SECTION ========== */}
+{/* ========== HERO + CAROUSEL INTEGRATED SECTION (with stable verse container) ========== */}
 <section
   id="home"
   className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
@@ -318,7 +319,7 @@ export default function LandingPage() {
   <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
   <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
-  {/* Large Cross Logo Background (right side, half visible) */}
+  {/* Large Cross Logo Background */}
   <div
     className="absolute inset-0 pointer-events-none z-0"
     style={{
@@ -331,18 +332,38 @@ export default function LandingPage() {
   />
 
   <div className="relative z-10 w-full max-w-3xl mx-auto">
-    {/* Verse - smaller and tighter */}
-    <blockquote className="mb-6">
-      <p className="italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif]">
-        "{verse.text}"
-      </p>
-      <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
-        {verse.reference}
-      </cite>
-    </blockquote>
+    
+    {/* VERSE WRAPPER - Fixed height container to prevent layout shift */}
+    <div 
+      className="hero-verse-wrapper mx-auto mb-6"
+      style={{
+        minHeight: '120px',
+        maxHeight: '160px',
+        overflowY: 'auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+      }}
+    >
+      <blockquote className="w-full">
+        <p 
+          className="hero-verse-text italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif]"
+          style={{
+            overflowWrap: 'break-word',
+            wordWrap: 'break-word',
+          }}
+        >
+          "{verse.text}"
+        </p>
+        <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
+          {verse.reference}
+        </cite>
+      </blockquote>
+    </div>
 
-    {/* Welcome CTA - moved up, more compact */}
-    <div className="mb-8">
+    {/* WELCOME BUTTON - Decoupled, always in same position */}
+    <div className="hero-button-group mb-8">
       <a
         href="#about"
         className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
@@ -356,8 +377,8 @@ export default function LandingPage() {
       </a>
     </div>
 
-    {/* Quick Action Cards - more compact */}
-    <div className="flex flex-wrap justify-center gap-3 mb-8">
+    {/* QUICK ACTION CARDS - Decoupled */}
+    <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-8">
       <button
         onClick={openEventsModal}
         className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
@@ -378,8 +399,8 @@ export default function LandingPage() {
       </button>
     </div>
 
-    {/* CAROUSEL - integrated directly below buttons, no separate section */}
-    <div className="w-full mt-4">
+    {/* CAROUSEL - Anchored below all buttons */}
+    <div className="hero-carousel-container w-full mt-4">
       <div
         className="relative w-full rounded-xl overflow-hidden shadow-md"
         onMouseEnter={() => setAutoplay(false)}
@@ -436,7 +457,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Navigation Arrows */}
+        {/* Navigation Arrows & Dots */}
         {(carouselItems.length > 0 || true) && (
           <>
             <button
@@ -454,7 +475,6 @@ export default function LandingPage() {
               <ChevronRight size={20} className="text-white" />
             </button>
             
-            {/* Dots */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
               {[0, 1, 2].map((idx) => (
                 <button
