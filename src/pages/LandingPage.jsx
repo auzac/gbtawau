@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react'
+// src/pages/LandingPage.jsx
+
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, 
-  Calendar, User, MapPinned, ArrowLeft, Users, ChevronDown
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Users,
+  ArrowUpRight,
+  ArrowLeft,
+  Clock,
+  MapPinned,
+  User,
+  MapPin,
+  Phone,
+  X,
+  ChevronDown,
 } from 'lucide-react'
+
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
 
-// Import Splide styles
 import '@splidejs/splide/css'
 
 const NAV_LINKS = [
@@ -23,20 +36,25 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const { t, locale, toggleLocale } = useLocale()
 
-  // States
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [verse, setVerse] = useState({ reference: 'Matthew 11:28', text: 'Come to me...', theme: '' })
+
+  const [verse, setVerse] = useState({
+    reference: 'Matthew 11:28',
+    text: 'Come to me...',
+    theme: '',
+  })
+
   const [events, setEvents] = useState([])
   const [carouselItems, setCarouselItems] = useState([])
-  const [splideInitialized, setSplideInitialized] = useState(false)
+  const [splideReady, setSplideReady] = useState(false)
 
-  // Events modal
+  // Events Modal
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
 
-  // Roster modal
+  // Roster Modal
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false)
   const [rosters, setRosters] = useState([])
   const [rosterMap, setRosterMap] = useState({})
@@ -46,544 +64,831 @@ export default function LandingPage() {
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
-  // Load all data
+  const marqueeItems = useMemo(
+    () => [
+      'Grace Bible Church Tawau',
+      'Sunday Worship',
+      'Community',
+      'Faith',
+      'Prayer',
+      'Discipleship',
+      'Worship',
+      'Fellowship',
+      'Kingdom Living',
+      'Youth',
+    ],
+    []
+  )
+
   useEffect(() => {
     loadContent()
   }, [])
 
-  // Initialize Splide carousel
   useEffect(() => {
-    let splide = null
-    
-    const initSplide = async () => {
-      if (carouselItems.length === 0) return
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      const container = document.querySelector('.splide-carousel')
-      if (!container || splide) return
-      
-      try {
-        const Splide = (await import('@splidejs/splide')).default
-        
-        splide = new Splide('.splide-carousel', {
-          type: 'slide',
-          perPage: 1,
-          perMove: 1,
-          gap: '0rem',
-          focus: 'center',
-          speed: 600,
-          rewind: true,
-          rewindSpeed: 400,
-          pagination: true,
-          arrows: false,
-          dragAngleThreshold: 30,
-          updateOnMove: true,
-          trimSpace: false,
-          wheel: false,
-          waitForTransition: false,
-        })
-        
-        splide.mount()
-        window.splideInstance = splide
-        setSplideInitialized(true)
-        
-      } catch (err) {
-        console.error('Splide initialization failed:', err)
-      }
-    }
-    
-    const timeoutId = setTimeout(initSplide, 200)
-    
-    return () => {
-      clearTimeout(timeoutId)
-      if (splide) {
-        splide.destroy()
-        window.splideInstance = null
-      }
-    }
-  }, [carouselItems.length])
-
-  // Custom navigation for carousel
-  useEffect(() => {
-    if (!splideInitialized) return
-    
-    const timer = setTimeout(() => {
-      const prevButtons = document.querySelectorAll('.custom-prev')
-      const nextButtons = document.querySelectorAll('.custom-next')
-      
-      const handlePrev = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (window.splideInstance) {
-          window.splideInstance.go('<')
-        }
-      }
-      
-      const handleNext = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (window.splideInstance) {
-          window.splideInstance.go('>')
-        }
-      }
-      
-      const desktopPrev = document.querySelector('.carousel-arrow-left')
-      const desktopNext = document.querySelector('.carousel-arrow-right')
-      
-      if (desktopPrev) {
-        desktopPrev.removeEventListener('click', handlePrev)
-        desktopPrev.addEventListener('click', handlePrev)
-      }
-      if (desktopNext) {
-        desktopNext.removeEventListener('click', handleNext)
-        desktopNext.addEventListener('click', handleNext)
-      }
-      
-      prevButtons.forEach(btn => {
-        btn.removeEventListener('click', handlePrev)
-        btn.addEventListener('click', handlePrev)
-      })
-      nextButtons.forEach(btn => {
-        btn.removeEventListener('click', handleNext)
-        btn.addEventListener('click', handleNext)
-      })
-    }, 100)
-    
-    return () => {
-      clearTimeout(timer)
-      const prevButtons = document.querySelectorAll('.custom-prev')
-      const nextButtons = document.querySelectorAll('.custom-next')
-      const desktopPrev = document.querySelector('.carousel-arrow-left')
-      const desktopNext = document.querySelector('.carousel-arrow-right')
-      
-      const handlePrev = () => {
-        if (window.splideInstance) window.splideInstance.go('<')
-      }
-      const handleNext = () => {
-        if (window.splideInstance) window.splideInstance.go('>')
-      }
-      
-      if (desktopPrev) desktopPrev.removeEventListener('click', handlePrev)
-      if (desktopNext) desktopNext.removeEventListener('click', handleNext)
-      prevButtons.forEach(btn => btn.removeEventListener('click', handlePrev))
-      nextButtons.forEach(btn => btn.removeEventListener('click', handleNext))
-    }
-  }, [splideInitialized])
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
+    const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
+    document.body.style.overflow =
+      menuOpen || isEventsModalOpen || isRosterModalOpen ? 'hidden' : ''
 
-  useEffect(() => {
-    if (isEventsModalOpen || isRosterModalOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
+    return () => {
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
-  }, [isEventsModalOpen, isRosterModalOpen])
+  }, [menuOpen, isEventsModalOpen, isRosterModalOpen])
+
+  // Splide Init
+  useEffect(() => {
+    let splide = null
+
+    async function initSplide() {
+      if (!carouselItems.length) return
+
+      const Splide = (await import('@splidejs/splide')).default
+
+      splide = new Splide('.editorial-carousel', {
+        type: 'loop',
+        perPage: 1,
+        gap: '1rem',
+        arrows: false,
+        pagination: true,
+        speed: 900,
+        drag: true,
+        autoplay: true,
+        interval: 5500,
+        pauseOnHover: false,
+        pauseOnFocus: false,
+      })
+
+      splide.mount()
+
+      window.heroSplide = splide
+      setSplideReady(true)
+    }
+
+    const timer = setTimeout(initSplide, 120)
+
+    return () => {
+      clearTimeout(timer)
+      if (splide) splide.destroy()
+    }
+  }, [carouselItems])
 
   const loadContent = async () => {
     setLoading(true)
+
     await Promise.all([
       loadActiveVerse(),
       loadUpcomingEvents(),
       loadCarouselItems(),
       loadRosters(),
     ])
+
     setLoading(false)
   }
 
   const loadActiveVerse = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('verse_library')
       .select('*')
       .eq('is_active', true)
       .maybeSingle()
-    if (!error && data) setVerse({ reference: data.reference, text: data.text, theme: data.theme || '' })
+
+    if (data) {
+      setVerse({
+        reference: data.reference,
+        text: data.text,
+        theme: data.theme || '',
+      })
+    }
   }
 
   const loadUpcomingEvents = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('events')
       .select('*')
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true })
       .order('time', { ascending: true })
-    if (!error && data) setEvents(data)
-    else setEvents([])
+
+    setEvents(data || [])
   }
 
   const loadCarouselItems = async () => {
-  const { data, error } = await supabase
-    .from('carousel_items')
-    .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true })
-    .order('created_at', { ascending: true })
-  if (!error && data && data.length > 0) setCarouselItems(data)
-  else setCarouselItems([]) // No placeholder fallback – carousel will be hidden
-}
+    const { data } = await supabase
+      .from('carousel_items')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    setCarouselItems(data || [])
+  }
 
   const loadRosters = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('roster')
       .select('*')
       .order('week_start', { ascending: true })
 
-    if (!error && data) {
-      setRosters(data)
-      const monthsSet = new Set()
-      const map = {}
+    if (!data) return
 
-      data.forEach(roster => {
-        if (!roster.week_start) return
-        const [year, month, day] = roster.week_start.split('-').map(Number)
-        const monthStr = `${year}-${String(month).padStart(2, '0')}`
+    setRosters(data)
 
-        const firstDayOfMonth = new Date(Date.UTC(year, month-1, 1))
-        const firstMondayUTC = new Date(Date.UTC(year, month-1, 1))
-        const firstDayOfWeek = firstDayOfMonth.getUTCDay()
-        const daysToMonday = firstDayOfWeek === 0 ? 1 : (8 - firstDayOfWeek) % 7
-        firstMondayUTC.setUTCDate(1 + daysToMonday)
+    const map = {}
+    const monthsSet = new Set()
 
-        const rosterDateUTC = new Date(Date.UTC(year, month-1, day))
-        const diffDays = Math.floor((rosterDateUTC - firstMondayUTC) / (1000 * 60 * 60 * 24))
-        const weekNumber = Math.floor(diffDays / 7) + 1
-        if (weekNumber >= 1 && weekNumber <= 4) {
-          const key = `${monthStr}-${weekNumber}`
-          map[key] = roster
-        }
+    data.forEach((roster) => {
+      if (!roster.week_start) return
 
-        const monthName = new Date(Date.UTC(year, month-1, 1)).toLocaleString(
-          locale === 'bm' ? 'ms-MY' : 'en-US',
-          { month: 'long', year: 'numeric' }
-        )
-        monthsSet.add(JSON.stringify({ value: monthStr, label: monthName }))
+      const [year, month, day] = roster.week_start
+        .split('-')
+        .map(Number)
+
+      const monthStr = `${year}-${String(month).padStart(2, '0')}`
+
+      const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1))
+      const firstMondayUTC = new Date(Date.UTC(year, month - 1, 1))
+
+      const firstDayOfWeek = firstDayOfMonth.getUTCDay()
+
+      const daysToMonday =
+        firstDayOfWeek === 0
+          ? 1
+          : (8 - firstDayOfWeek) % 7
+
+      firstMondayUTC.setUTCDate(1 + daysToMonday)
+
+      const rosterDateUTC = new Date(
+        Date.UTC(year, month - 1, day)
+      )
+
+      const diffDays = Math.floor(
+        (rosterDateUTC - firstMondayUTC) /
+          (1000 * 60 * 60 * 24)
+      )
+
+      const weekNumber = Math.floor(diffDays / 7) + 1
+
+      if (weekNumber >= 1 && weekNumber <= 4) {
+        map[`${monthStr}-${weekNumber}`] = roster
+      }
+
+      const monthName = new Date(
+        Date.UTC(year, month - 1, 1)
+      ).toLocaleString(locale === 'bm' ? 'ms-MY' : 'en-US', {
+        month: 'long',
+        year: 'numeric',
       })
 
-      const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
-      monthsArray.sort((a,b) => a.value.localeCompare(b.value))
+      monthsSet.add(
+        JSON.stringify({
+          value: monthStr,
+          label: monthName,
+        })
+      )
+    })
 
-      setAvailableMonths(monthsArray)
-      setRosterMap(map)
-      if (monthsArray.length > 0) {
-        setSelectedMonth(monthsArray[0].value)
-      }
+    const monthsArray = Array.from(monthsSet).map((m) =>
+      JSON.parse(m)
+    )
+
+    monthsArray.sort((a, b) =>
+      a.value.localeCompare(b.value)
+    )
+
+    setAvailableMonths(monthsArray)
+    setRosterMap(map)
+
+    if (monthsArray.length > 0) {
+      setSelectedMonth(monthsArray[0].value)
     }
   }
 
-  const getRosterForWeek = (weekNumber) => {
-    if (!selectedMonth) return null
-    const key = `${selectedMonth}-${weekNumber}`
-    return rosterMap[key] || null
-  }
-
-  const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
-
-  const openEventsModal = () => {
-    setSelectedEvent(null)
-    setIsEventsModalOpen(true)
-  }
-
-  const closeEventsModal = () => {
-    setIsEventsModalOpen(false)
-    setSelectedEvent(null)
-  }
-
-  const showEventDetails = (event) => setSelectedEvent(event)
-  const backToList = () => setSelectedEvent(null)
-
-  const openRosterModal = () => {
-    setIsRosterModalOpen(true)
-  }
-
-  const closeRosterModal = () => {
-    setIsRosterModalOpen(false)
-  }
+  const rosterForSelectedWeek =
+    rosterMap[`${selectedMonth}-${selectedWeek}`]
 
   const formatTimeForDisplay = (time24) => {
     if (!time24) return ''
+
     const [hour, minute] = time24.split(':')
     const h = parseInt(hour)
+
     const period = h >= 12 ? 'PM' : 'AM'
     const hour12 = h % 12 || 12
+
     return `${hour12}:${minute} ${period}`
   }
 
   const formatEventDate = (dateStr) => {
-    if (!dateStr) return { day: '', month: '', dayName: '' }
     const date = new Date(dateStr)
+
     return {
       day: date.getDate(),
-      month: date.toLocaleString('default', { month: 'short' }),
-      dayName: date.toLocaleString('default', { weekday: 'long' }),
+      month: date.toLocaleString('default', {
+        month: 'short',
+      }),
+      weekday: date.toLocaleString('default', {
+        weekday: 'long',
+      }),
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-[#FAF8F5] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#f6f1ea] flex items-center justify-center">
+        <div className="w-9 h-9 border-2 border-[#1d1d1d]/10 border-t-[#1d1d1d] rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="bg-[#FAF8F5] text-[#2D2926] overflow-x-hidden">
+    <div className="bg-[#f6f1ea] text-[#1e1e1e] overflow-x-hidden">
       <link
-        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;700&display=swap"
         rel="stylesheet"
       />
 
-      {/* ========== NAVBAR ========== */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
-        <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo.webp" alt="GBT" className="h-8 w-auto object-contain" />
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
-              {locale === 'en' ? 'BM' : 'EN'}
-            </button>
-            <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
-              {[0,1].map(i => (
-                <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
-              ))}
-            </button>
+      {/* NAV */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'px-4 pt-4'
+            : 'px-5 pt-5'
+        }`}
+      >
+        <div
+          className={`mx-auto max-w-7xl transition-all duration-500 ${
+            scrolled
+              ? 'bg-white/65 backdrop-blur-xl border border-white/40 shadow-[0_10px_40px_rgba(0,0,0,0.08)]'
+              : 'bg-transparent border border-transparent'
+          } rounded-[2rem]`}
+        >
+          <div className="h-[74px] px-6 flex items-center justify-between">
+            <img
+              src="/logo.webp"
+              alt="GBT"
+              className="h-10 w-auto object-contain"
+            />
+
+            <div className="hidden md:flex items-center gap-8">
+              {NAV_LINKS.map((item) =>
+                item.isRouterLink ? (
+                  <button
+                    key={item.en}
+                    onClick={() => navigate(item.href)}
+                    className="text-[14px] text-[#3a332d] hover:text-black transition font-['DM_Sans']"
+                  >
+                    {getNavText(item)}
+                  </button>
+                ) : (
+                  <a
+                    key={item.en}
+                    href={item.href}
+                    className="text-[14px] text-[#3a332d] hover:text-black transition font-['DM_Sans']"
+                  >
+                    {getNavText(item)}
+                  </a>
+                )
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleLocale}
+                className="h-11 px-5 rounded-full bg-white/70 border border-black/5 text-[12px] tracking-[0.18em] uppercase font-medium font-['DM_Sans']"
+              >
+                {locale === 'en' ? 'BM' : 'EN'}
+              </button>
+
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="w-11 h-11 rounded-full bg-[#1f1f1f] flex items-center justify-center"
+              >
+                <div className="flex flex-col gap-[4px]">
+                  <span
+                    className={`w-[18px] h-[1.5px] bg-white rounded-full transition-all ${
+                      menuOpen
+                        ? 'translate-y-[3px] rotate-45'
+                        : ''
+                    }`}
+                  />
+                  <span
+                    className={`w-[18px] h-[1.5px] bg-white rounded-full transition-all ${
+                      menuOpen
+                        ? '-translate-y-[3px] -rotate-45'
+                        : ''
+                    }`}
+                  />
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU */}
-      <div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="text-center">
-          {NAV_LINKS.map((item, i) => (
-            <div key={item.en} className={`overflow-hidden transition-all duration-500 ${menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${i*60+100}ms` }}>
-              {item.isRouterLink ? (
-                <button onClick={() => { setMenuOpen(false); navigate(item.href) }} className="block w-full py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
+      {/* MENU */}
+      <div
+        className={`fixed inset-0 z-40 bg-[#171717] transition-all duration-500 ${
+          menuOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="h-full flex flex-col items-center justify-center">
+          <div className="text-center">
+            {NAV_LINKS.map((item, i) =>
+              item.isRouterLink ? (
+                <button
+                  key={item.en}
+                  onClick={() => {
+                    navigate(item.href)
+                    setMenuOpen(false)
+                  }}
+                  style={{
+                    transitionDelay: `${i * 60}ms`,
+                  }}
+                  className={`block w-full text-center text-[clamp(2.5rem,8vw,5rem)] leading-none mb-4 font-['Lora'] text-white transition-all duration-500 ${
+                    menuOpen
+                      ? 'translate-y-0 opacity-100'
+                      : 'translate-y-10 opacity-0'
+                  }`}
+                >
                   {getNavText(item)}
                 </button>
               ) : (
-                <a href={item.href} onClick={() => setMenuOpen(false)} className="block py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
+                <a
+                  key={item.en}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    transitionDelay: `${i * 60}ms`,
+                  }}
+                  className={`block text-[clamp(2.5rem,8vw,5rem)] leading-none mb-4 font-['Lora'] text-white transition-all duration-500 ${
+                    menuOpen
+                      ? 'translate-y-0 opacity-100'
+                      : 'translate-y-10 opacity-0'
+                  }`}
+                >
                   {getNavText(item)}
                 </a>
-              )}
-            </div>
-          ))}
+              )
+            )}
+          </div>
         </div>
-        <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
       </div>
 
-      {/* ========== HERO SECTION ========== */}
+      {/* HERO */}
       <section
         id="home"
-        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-[calc(2rem+env(safe-area-inset-bottom))] overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+        className="relative min-h-screen overflow-hidden px-5 pt-[120px] pb-10"
       >
-        {/* Ambient Orbs */}
-        <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
-        <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
+        {/* Background */}
+        <div className="absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "url('/backdrop.webp')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.12,
+            }}
+          />
 
-        {/* Background Image - backdrop.webp */}
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: "url('/backdrop.webp')",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right center",
-            backgroundSize: "cover",
-            opacity: 0.12,
-          }}
-        />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_40%)]" />
+        </div>
 
-        <div className="relative z-10 w-full max-w-3xl mx-auto">
-          
-          {/* VERSE WRAPPER */}
-          <div className="hero-verse-wrapper mx-auto mb-6 min-h-[100px] flex items-center justify-center">
-            <blockquote className="w-full">
-              <p 
-                className="hero-verse-text italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif] text-center"
-                style={{
-                  overflowWrap: 'break-word',
-                  wordWrap: 'break-word',
-                }}
-              >
-                "{verse.text}"
-              </p>
-              <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
-                {verse.reference}
-              </cite>
-            </blockquote>
-          </div>
+        {/* Floating Orb */}
+        <div className="absolute top-[12%] right-[-140px] w-[340px] h-[340px] rounded-full bg-[#d8c4aa]/30 blur-3xl" />
 
-          {/* WELCOME BUTTON */}
-          <div className="hero-button-group mb-8">
-            <a
-              href="#about"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
-                <polyline points="10 17 15 12 10 7"/>
-                <line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-              {t('welcome_cta')}
-            </a>
-          </div>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Top Hero */}
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-end min-h-[75vh]">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 backdrop-blur-md px-4 py-2 mb-8">
+                <div className="w-2 h-2 rounded-full bg-[#9d7b55]" />
+                <span className="uppercase tracking-[0.2em] text-[10px] font-medium text-[#8a7560] font-['DM_Sans']">
+                  Grace Bible Church Tawau
+                </span>
+              </div>
 
-          {/* QUICK ACTION CARDS */}
-          <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-12">
-            <button
-              onClick={openEventsModal}
-              className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
-            >
-              <Calendar size={18} stroke="#7A6A5E" strokeWidth="1.5" />
-              <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
-                {t('events_button')}
-              </span>
-            </button>
-            <button
-              onClick={openRosterModal}
-              className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
-            >
-              <Users size={18} stroke="#7A6A5E" strokeWidth="1.5" />
-              <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
-                {t('roster_button')}
-              </span>
-            </button>
-          </div>
+              <h1 className="text-[clamp(4rem,12vw,9rem)] leading-[0.92] tracking-[-0.06em] text-[#171717] font-['Lora'] max-w-[11ch]">
+                A house
+                <br />
+                for grace,
+                <br />
+                truth &
+                <br />
+                worship.
+              </h1>
 
-          {/* SPLIDE CAROUSEL - FIXED with mt-auto for CTA button */}
-          {carouselItems.length > 0 && (
-            <div className="hero-carousel-outer">
-              <div className="splide-carousel splide hero-carousel-bar" aria-label="Announcements">
-                <p className="carousel-section-label">Announcements</p>
+              <div className="mt-10 max-w-xl">
+                <p className="text-[15px] md:text-[18px] leading-8 text-[#5f554d] font-['DM_Sans']">
+                  {verse.text}
+                </p>
 
-                <div className="splide__track">
-                  <ul className="splide__list">
-                    {carouselItems.map((item, idx) => (
-                      <li key={item.id || idx} className="splide__slide h-full">
-                        {/* Fixed card structure - CTA button locked at bottom */}
-                        <div className="announcement-card flex flex-col h-full text-left">
-                          {/* Top content area - grows but doesn't push button */}
-                          <div className="flex-1 flex flex-col">
-                            <span className="card-theme-pill self-start">{item.theme || 'Announcement'}</span>
-                            <h3 className="card-title mt-2">
-                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                            </h3>
-                            <p className="card-body-text mt-1 line-clamp-3">
-                              {locale === 'bm' && item.description_bm
-                                ? item.description_bm
-                                : (item.description_en || '')}
-                            </p>
-                          </div>
+                <p className="mt-5 uppercase tracking-[0.28em] text-[10px] text-[#9b846e] font-medium font-['DM_Sans']">
+                  {verse.reference}
+                </p>
+              </div>
 
-                          {/* CTA Button - locked at bottom with mt-auto */}
-                          <div className="mt-auto pt-4">
-                            <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
-                          </div>
-                          
-                          {/* Mobile arrows - absolute positioned, independent of content */}
-                          <div className="card-mobile-arrows">
-                            <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
-                              <ChevronLeft size={16} />
-                            </button>
-                            <button className="custom-next card-arrow-sm" aria-label="Next slide">
-                              <ChevronRight size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <a
+                  href="#about"
+                  className="group h-[58px] px-7 rounded-full bg-[#171717] text-white inline-flex items-center gap-3 text-[13px] uppercase tracking-[0.18em] font-medium font-['DM_Sans']"
+                >
+                  {t('welcome_cta')}
+                  <ArrowUpRight
+                    size={16}
+                    className="transition-transform duration-300 group-hover:translate-x-[2px] group-hover:-translate-y-[2px]"
+                  />
+                </a>
 
-                {/* Desktop arrows — half outside the bar */}
-                <button className="custom-prev carousel-arrow-desktop carousel-arrow-left" aria-label="Previous slide">
-                  <ChevronLeft size={20} />
+                <button
+                  onClick={() => setIsEventsModalOpen(true)}
+                  className="h-[58px] px-7 rounded-full bg-white/70 border border-black/5 backdrop-blur-md inline-flex items-center gap-3 text-[13px] uppercase tracking-[0.18em] font-medium font-['DM_Sans']"
+                >
+                  <Calendar size={16} />
+                  {t('events_button')}
                 </button>
-                <button className="custom-next carousel-arrow-desktop carousel-arrow-right" aria-label="Next slide">
-                  <ChevronRight size={20} />
+
+                <button
+                  onClick={() => setIsRosterModalOpen(true)}
+                  className="h-[58px] px-7 rounded-full bg-white/70 border border-black/5 backdrop-blur-md inline-flex items-center gap-3 text-[13px] uppercase tracking-[0.18em] font-medium font-['DM_Sans']"
+                >
+                  <Users size={16} />
+                  {t('roster_button')}
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Carousel */}
+            {carouselItems.length > 0 && (
+              <div className="relative">
+                <div className="rounded-[2.5rem] bg-[#1f1f1f] text-white p-6 md:p-8 shadow-[0_30px_90px_rgba(0,0,0,0.18)] border border-white/5">
+                  <div className="flex items-center justify-between mb-7">
+                    <div>
+                      <p className="uppercase tracking-[0.28em] text-[10px] text-[#b89c79] font-medium font-['DM_Sans']">
+                        Community Updates
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          window.heroSplide?.go('<')
+                        }
+                        className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          window.heroSplide?.go('>')
+                        }
+                        className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className="editorial-carousel splide"
+                    aria-label="Announcements"
+                  >
+                    <div className="splide__track">
+                      <ul className="splide__list">
+                        {carouselItems.map((item) => (
+                          <li
+                            key={item.id}
+                            className="splide__slide"
+                          >
+                            <div className="min-h-[360px] flex flex-col justify-between">
+                              <div>
+                                <span className="inline-flex rounded-full bg-[#c8a57f]/15 border border-[#c8a57f]/20 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#c8a57f] font-medium font-['DM_Sans']">
+                                  {item.theme || 'Announcement'}
+                                </span>
+
+                                <h3 className="mt-6 text-[clamp(2rem,4vw,3rem)] leading-[1.04] tracking-[-0.04em] font-['Lora'] max-w-[11ch]">
+                                  {locale === 'bm' &&
+                                  item.title_bm
+                                    ? item.title_bm
+                                    : item.title_en}
+                                </h3>
+
+                                <p className="mt-6 text-[15px] leading-8 text-white/70 font-['DM_Sans'] max-w-[42ch]">
+                                  {locale === 'bm' &&
+                                  item.description_bm
+                                    ? item.description_bm
+                                    : item.description_en}
+                                </p>
+                              </div>
+
+                              <button className="mt-10 self-start h-[52px] px-6 rounded-full border border-white/10 bg-white/5 backdrop-blur-md inline-flex items-center gap-3 text-[12px] uppercase tracking-[0.16em] font-medium font-['DM_Sans'] hover:bg-white hover:text-black transition">
+                                {t('learn_more') || 'Read More'}
+                                <ArrowUpRight size={14} />
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Floating Bottom Info */}
+                  <div className="mt-8 rounded-[2rem] bg-white/6 border border-white/10 backdrop-blur-md p-5 flex items-center justify-between gap-5">
+                    <div>
+                      <p className="uppercase tracking-[0.24em] text-[10px] text-[#c8a57f] mb-2 font-medium font-['DM_Sans']">
+                        Sunday Worship
+                      </p>
+
+                      <h4 className="text-[1.2rem] font-['Lora']">
+                        9:00 AM — Main Sanctuary
+                      </h4>
+                    </div>
+
+                    <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shrink-0">
+                      <ArrowUpRight size={20} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Scroll Separator */}
+          <div className="mt-14">
+            <div className="rounded-[2.5rem] overflow-hidden border border-black/5 bg-white/55 backdrop-blur-xl">
+              <div className="marquee-wrap">
+                <div className="marquee-track">
+                  {[...marqueeItems, ...marqueeItems].map(
+                    (item, idx) => (
+                      <div
+                        key={idx}
+                        className="marquee-item"
+                      >
+                        <span>{item}</span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ABOUT SECTION */}
-      <section id="about" className="px-6 py-20 md:py-28">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">{t('nav_about')}</p>
-          <h2 className="text-[clamp(1.9rem,5vw,3rem)] leading-tight tracking-[-0.02em] mb-6 text-[#2D2926] font-['Lora',serif] font-normal">{t('about_tagline')}</h2>
-          <p className="text-[#7A6E66] leading-8 text-[15px] md:text-[17px] max-w-2xl mx-auto font-light font-['DM_Sans',sans-serif]">{t('about_text')}</p>
-          <div className="flex items-center justify-center gap-3 mt-10"><div className="w-10 h-px bg-[#b49b7d]/40" /><div className="w-[5px] h-[5px] rounded-full border border-[#b49b7d]/50" /><div className="w-10 h-px bg-[#b49b7d]/40" /></div>
+      {/* ABOUT */}
+      <section
+        id="about"
+        className="relative px-5 pb-24 md:pb-36"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="rounded-[3rem] bg-[#1d1d1d] overflow-hidden relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.09),transparent_30%)]" />
+
+            <div className="relative z-10 grid lg:grid-cols-2 gap-16 p-8 md:p-16 lg:p-20">
+              <div>
+                <p className="uppercase tracking-[0.28em] text-[10px] text-[#c8a57f] mb-5 font-medium font-['DM_Sans']">
+                  About Us
+                </p>
+
+                <h2 className="text-white text-[clamp(2.5rem,6vw,5rem)] leading-[0.96] tracking-[-0.05em] font-['Lora'] max-w-[9ch]">
+                  Building
+                  <br />
+                  people
+                  <br />
+                  through
+                  <br />
+                  Christ.
+                </h2>
+              </div>
+
+              <div className="flex flex-col justify-between">
+                <p className="text-[16px] md:text-[18px] leading-9 text-white/72 font-['DM_Sans'] max-w-[36ch]">
+                  {t('about_text')}
+                </p>
+
+                <div className="mt-14 grid sm:grid-cols-2 gap-5">
+                  <div className="rounded-[2rem] bg-white/6 border border-white/10 p-6">
+                    <p className="uppercase tracking-[0.22em] text-[10px] text-[#c8a57f] mb-4 font-medium font-['DM_Sans']">
+                      Worship
+                    </p>
+
+                    <p className="text-white/75 leading-7 font-['DM_Sans']">
+                      Christ-centred gatherings rooted in
+                      scripture, prayer and worship.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[2rem] bg-white/6 border border-white/10 p-6">
+                    <p className="uppercase tracking-[0.22em] text-[10px] text-[#c8a57f] mb-4 font-medium font-['DM_Sans']">
+                      Community
+                    </p>
+
+                    <p className="text-white/75 leading-7 font-['DM_Sans']">
+                      A church family growing together
+                      through discipleship and fellowship.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
-        <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">{t('footer_church')}</p>
-        <div className="flex flex-col items-center gap-2 text-[#6B5E55] text-sm font-['DM_Sans',sans-serif]">
-          <div className="flex items-center gap-2"><MapPin size={14} /><span>{t('footer_address')}</span></div>
-          <div className="flex items-center gap-2"><Clock size={14} /><span>{t('footer_worship')}</span></div>
-          <div className="flex items-center gap-2"><Phone size={14} /><span>{t('footer_phone')}</span></div>
+      <footer className="px-5 pb-8">
+        <div className="max-w-7xl mx-auto rounded-[2.5rem] bg-white border border-black/5 px-8 py-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+            <div>
+              <p className="uppercase tracking-[0.28em] text-[10px] text-[#9f8466] mb-4 font-medium font-['DM_Sans']">
+                Grace Bible Church Tawau
+              </p>
+
+              <h3 className="text-[clamp(2rem,5vw,4rem)] leading-[1] tracking-[-0.05em] font-['Lora'] max-w-[10ch]">
+                A place to belong.
+              </h3>
+            </div>
+
+            <div className="space-y-4 text-[#5f554d] font-['DM_Sans']">
+              <div className="flex items-center gap-3">
+                <MapPin size={16} />
+                <span>{t('footer_address')}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Clock size={16} />
+                <span>{t('footer_worship')}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Phone size={16} />
+                <span>{t('footer_phone')}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="w-8 h-px bg-white/10 mx-auto my-6" />
-        <p className="text-[#7A6A5E] text-sm italic font-['Lora',serif]">{t('footer_tagline')}</p>
       </footer>
 
       {/* EVENTS MODAL */}
       {isEventsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-[#d9c9b7]/40">
-              <h2 className="text-xl font-['Lora',serif] text-[#2D2926]">{selectedEvent ? t('event_details_title') : t('events_modal_title')}</h2>
-              <button onClick={closeEventsModal} className="p-1 hover:bg-[#d9c9b7]/30 rounded-full"><X size={20} className="text-[#7A6A5E]" /></button>
+        <div className="fixed inset-0 z-[70] p-4 bg-black/50 backdrop-blur-xl flex items-center justify-center">
+          <div className="w-full max-w-3xl bg-[#f6f1ea] rounded-[2rem] overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.25)]">
+            <div className="flex items-center justify-between px-7 py-6 border-b border-black/5">
+              <h2 className="text-[1.7rem] font-['Lora']">
+                {selectedEvent
+                  ? t('event_details_title')
+                  : t('events_modal_title')}
+              </h2>
+
+              <button
+                onClick={() => {
+                  setIsEventsModalOpen(false)
+                  setSelectedEvent(null)
+                }}
+                className="w-11 h-11 rounded-full bg-black/5 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-5">
+
+            <div className="max-h-[70vh] overflow-y-auto p-7">
               {!selectedEvent ? (
-                events.length === 0 ? <p className="text-center text-[#8A7A6E] py-10">{t('no_events')}</p> :
-                <div className="space-y-3">
-                  {events.map(event => {
-                    if (!event) return null
-                    const { day, month, dayName } = formatEventDate(event.date)
-                    const title = (locale === 'bm' && event.title_bm) ? event.title_bm : (event.title_en || 'Untitled')
+                <div className="space-y-4">
+                  {events.map((event) => {
+                    const formatted =
+                      formatEventDate(event.date)
+
                     return (
-                      <button key={event.id} onClick={() => showEventDetails(event)} className="w-full text-left bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-4 flex items-center gap-4 hover:shadow-md">
-                        <div className="min-w-[60px] text-center"><div className="text-2xl font-['Lora',serif] font-medium">{day}</div><div className="uppercase text-[10px] text-[#B09882]">{month}</div></div>
-                        <div className="flex-1"><h3 className="font-['Lora',serif] font-medium">{title}</h3><p className="text-xs text-[#A08070] mt-1">{dayName} · {formatTimeForDisplay(event.time)}</p></div>
-                        <ArrowLeft size={18} className="text-[#B09882] rotate-180" />
+                      <button
+                        key={event.id}
+                        onClick={() =>
+                          setSelectedEvent(event)
+                        }
+                        className="w-full rounded-[1.8rem] bg-white border border-black/5 p-5 flex items-center justify-between gap-5 hover:-translate-y-[2px] transition"
+                      >
+                        <div className="flex items-center gap-5 text-left">
+                          <div className="w-[76px] h-[76px] rounded-[1.5rem] bg-[#1f1f1f] text-white flex flex-col items-center justify-center shrink-0">
+                            <span className="text-[1.6rem] leading-none font-['Lora']">
+                              {formatted.day}
+                            </span>
+
+                            <span className="uppercase tracking-[0.18em] text-[10px] text-white/60 mt-1 font-['DM_Sans']">
+                              {formatted.month}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h3 className="text-[1.25rem] font-['Lora']">
+                              {locale === 'bm' &&
+                              event.title_bm
+                                ? event.title_bm
+                                : event.title_en}
+                            </h3>
+
+                            <p className="mt-2 text-[#7b6d61] text-sm font-['DM_Sans']">
+                              {formatted.weekday} ·{' '}
+                              {formatTimeForDisplay(
+                                event.time
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <ArrowUpRight size={18} />
                       </button>
                     )
                   })}
                 </div>
               ) : (
                 <div>
-                  <button onClick={backToList} className="inline-flex items-center gap-2 text-sm text-[#7A6A5E] hover:text-[#2D2926] mb-4"><ArrowLeft size={16} />{t('events_modal_back')}</button>
-                  <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5 space-y-4">
-                    <h3 className="text-2xl font-['Lora',serif]">{locale === 'bm' && selectedEvent.title_bm ? selectedEvent.title_bm : (selectedEvent.title_en || 'Untitled')}</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3"><Calendar size={18} className="text-[#B09882]" /><span>{new Date(selectedEvent.date).toLocaleDateString(locale === 'bm' ? 'ms-MY' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
-                      {selectedEvent.time && <div className="flex items-center gap-3"><Clock size={18} className="text-[#B09882]" /><span>{formatTimeForDisplay(selectedEvent.time)}</span></div>}
-                      {selectedEvent.location && <div className="flex items-center gap-3"><MapPinned size={18} className="text-[#B09882]" /><span>{selectedEvent.location}</span></div>}
-                      <div className="flex items-center gap-3"><User size={18} className="text-[#B09882]" /><span>{selectedEvent.pic || selectedEvent.contact_person || 'Church Office'}</span></div>
-                      {(selectedEvent.description_en || selectedEvent.description_bm) && <div className="pt-2 border-t border-[#d9c9b7]/30"><p className="text-[#5A4E46] text-sm">{locale === 'bm' && selectedEvent.description_bm ? selectedEvent.description_bm : selectedEvent.description_en}</p></div>}
+                  <button
+                    onClick={() =>
+                      setSelectedEvent(null)
+                    }
+                    className="inline-flex items-center gap-2 mb-6 text-sm font-['DM_Sans']"
+                  >
+                    <ArrowLeft size={16} />
+                    {t('events_modal_back')}
+                  </button>
+
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-7">
+                    <h3 className="text-[2rem] leading-tight font-['Lora']">
+                      {locale === 'bm' &&
+                      selectedEvent.title_bm
+                        ? selectedEvent.title_bm
+                        : selectedEvent.title_en}
+                    </h3>
+
+                    <div className="mt-8 space-y-5 text-[#5f554d] font-['DM_Sans']">
+                      <div className="flex items-center gap-4">
+                        <Calendar size={18} />
+                        <span>
+                          {new Date(
+                            selectedEvent.date
+                          ).toLocaleDateString(
+                            locale === 'bm'
+                              ? 'ms-MY'
+                              : 'en-US',
+                            {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          )}
+                        </span>
+                      </div>
+
+                      {selectedEvent.time && (
+                        <div className="flex items-center gap-4">
+                          <Clock size={18} />
+                          <span>
+                            {formatTimeForDisplay(
+                              selectedEvent.time
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {selectedEvent.location && (
+                        <div className="flex items-center gap-4">
+                          <MapPinned size={18} />
+                          <span>
+                            {selectedEvent.location}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-4">
+                        <User size={18} />
+                        <span>
+                          {selectedEvent.pic ||
+                            selectedEvent.contact_person ||
+                            'Church Office'}
+                        </span>
+                      </div>
+
+                      {(selectedEvent.description_en ||
+                        selectedEvent.description_bm) && (
+                        <div className="pt-5 border-t border-black/5">
+                          <p className="leading-8">
+                            {locale === 'bm' &&
+                            selectedEvent.description_bm
+                              ? selectedEvent.description_bm
+                              : selectedEvent.description_en}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
-            </div>
-            <div className="p-5 border-t border-[#d9c9b7]/40 flex justify-end">
-              <button onClick={closeEventsModal} className="px-5 py-2 rounded-full bg-[#2D2926] text-[#FAF8F5] text-sm uppercase tracking-wide hover:bg-[#4A3F38]">{t('events_modal_close')}</button>
             </div>
           </div>
         </div>
@@ -591,339 +896,192 @@ export default function LandingPage() {
 
       {/* ROSTER MODAL */}
       {isRosterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-[#d9c9b7]/40">
-              <h2 className="text-xl font-['Lora',serif] text-[#2D2926]">{t('roster_modal_title')}</h2>
-              <button onClick={closeRosterModal} className="p-1 hover:bg-[#d9c9b7]/30 rounded-full"><X size={20} className="text-[#7A6A5E]" /></button>
+        <div className="fixed inset-0 z-[70] p-4 bg-black/50 backdrop-blur-xl flex items-center justify-center">
+          <div className="w-full max-w-2xl bg-[#f6f1ea] rounded-[2rem] overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.25)]">
+            <div className="flex items-center justify-between px-7 py-6 border-b border-black/5">
+              <h2 className="text-[1.7rem] font-['Lora']">
+                {t('roster_modal_title')}
+              </h2>
+
+              <button
+                onClick={() =>
+                  setIsRosterModalOpen(false)
+                }
+                className="w-11 h-11 rounded-full bg-black/5 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-5">
+
+            <div className="p-7">
               <div className="mb-6">
-                <label className="block text-xs uppercase tracking-wide text-[#B09882] mb-2 font-['DM_Sans',sans-serif]">{t('roster_month')}</label>
+                <label className="block uppercase tracking-[0.18em] text-[10px] text-[#a18467] mb-3 font-medium font-['DM_Sans']">
+                  {t('roster_month')}
+                </label>
+
                 <div className="relative">
                   <select
                     value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full appearance-none bg-white/70 border border-[#d9c9b7]/40 rounded-xl px-4 py-2 pr-10 text-[#2D2926] font-['DM_Sans',sans-serif] focus:outline-none focus:ring-1 focus:ring-[#B09882]"
+                    onChange={(e) =>
+                      setSelectedMonth(
+                        e.target.value
+                      )
+                    }
+                    className="w-full h-[58px] rounded-[1.2rem] border border-black/5 bg-white px-5 appearance-none font-['DM_Sans']"
                   >
-                    {availableMonths.length === 0 && <option disabled>{t('roster_no_data')}</option>}
-                    {availableMonths.map(month => (
-                      <option key={month.value} value={month.value}>{month.label}</option>
+                    {availableMonths.map((month) => (
+                      <option
+                        key={month.value}
+                        value={month.value}
+                      >
+                        {month.label}
+                      </option>
                     ))}
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A6A5E] pointer-events-none" />
+
+                  <ChevronDown
+                    size={18}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  />
                 </div>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-xs uppercase tracking-wide text-[#B09882] mb-2 font-['DM_Sans',sans-serif]">{t('roster_week')}</label>
-                <div className="flex gap-2">
-                  {[1,2,3,4].map(week => (
-                    <button
-                      key={week}
-                      onClick={() => setSelectedWeek(week)}
-                      className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
-                        selectedWeek === week
-                          ? 'bg-[#2D2926] text-[#FAF8F5]'
-                          : 'bg-white/70 border border-[#d9c9b7]/30 text-[#7A6A5E] hover:bg-white'
-                      }`}
-                    >
-                      {week}
-                    </button>
-                  ))}
-                </div>
+              <div className="grid grid-cols-4 gap-3 mb-7">
+                {[1, 2, 3, 4].map((week) => (
+                  <button
+                    key={week}
+                    onClick={() =>
+                      setSelectedWeek(week)
+                    }
+                    className={`h-[52px] rounded-full text-sm transition font-medium font-['DM_Sans'] ${
+                      selectedWeek === week
+                        ? 'bg-[#1f1f1f] text-white'
+                        : 'bg-white border border-black/5'
+                    }`}
+                  >
+                    Week {week}
+                  </button>
+                ))}
               </div>
 
-              <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5">
+              <div className="rounded-[2rem] bg-white border border-black/5 p-6">
                 {rosterForSelectedWeek ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <User size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_leader')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.leader || '—'}</p>
-                      </div>
+                  <div className="space-y-6">
+                    <div>
+                      <p className="uppercase tracking-[0.2em] text-[10px] text-[#a18467] mb-2 font-medium font-['DM_Sans']">
+                        {t('roster_leader')}
+                      </p>
+
+                      <h3 className="text-[1.5rem] font-['Lora']">
+                        {rosterForSelectedWeek.leader ||
+                          '—'}
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Users size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_pianist')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.pianist || '—'}</p>
-                      </div>
+
+                    <div>
+                      <p className="uppercase tracking-[0.2em] text-[10px] text-[#a18467] mb-2 font-medium font-['DM_Sans']">
+                        {t('roster_pianist')}
+                      </p>
+
+                      <h3 className="text-[1.5rem] font-['Lora']">
+                        {rosterForSelectedWeek.pianist ||
+                          '—'}
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <User size={18} className="text-[#B09882]" />
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-[#B09882] font-['DM_Sans',sans-serif]">{t('roster_reader')}</p>
-                        <p className="text-[#2D2926] font-medium">{rosterForSelectedWeek.reader || '—'}</p>
-                      </div>
+
+                    <div>
+                      <p className="uppercase tracking-[0.2em] text-[10px] text-[#a18467] mb-2 font-medium font-['DM_Sans']">
+                        {t('roster_reader')}
+                      </p>
+
+                      <h3 className="text-[1.5rem] font-['Lora']">
+                        {rosterForSelectedWeek.reader ||
+                          '—'}
+                      </h3>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-[#8A7A6E] py-6">{t('roster_no_data')}</p>
+                  <p className="text-[#7a7067] font-['DM_Sans']">
+                    {t('roster_no_data')}
+                  </p>
                 )}
               </div>
-            </div>
-            <div className="p-5 border-t border-[#d9c9b7]/40 flex justify-end">
-              <button onClick={closeRosterModal} className="px-5 py-2 rounded-full bg-[#2D2926] text-[#FAF8F5] text-sm uppercase tracking-wide hover:bg-[#4A3F38]">{t('events_modal_close')}</button>
             </div>
           </div>
         </div>
       )}
 
       <style>{`
-        html { scroll-behavior: smooth; }
-        * { box-sizing: border-box; }
-        @keyframes bob {
-          0%, 100% { transform: translateX(-50%) translateY(0); }
-          50%       { transform: translateX(-50%) translateY(6px); }
-        }
-        .animate-bob { animation: bob 2.5s ease-in-out infinite; }
-
-        /* ── CAROUSEL OUTER ── */
-        .hero-carousel-outer {
-          position: relative;
-          width: 100%;
-          margin-top: 1.5rem;
-          padding: 0 1.25rem;
+        html {
+          scroll-behavior: smooth;
         }
 
-        @media (max-width: 640px) {
-          .hero-carousel-outer {
-            padding: 0 0.5rem;
-            margin-top: 1rem;
-            margin-bottom: 0;
-          }
+        * {
+          box-sizing: border-box;
         }
 
-        /* ── BAR SHAPE ── */
-        .hero-carousel-bar {
-          background: rgba(35, 31, 28, 0.85);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(201, 168, 130, 0.3);
-          border-radius: 1.25rem;
-          padding: 1.4rem 3.75rem;
-          position: relative;
-          overflow: visible !important;
+        body {
+          background: #f6f1ea;
+        }
+
+        .splide__pagination {
+          bottom: -2.5rem !important;
+        }
+
+        .splide__pagination__page {
+          width: 7px;
+          height: 7px;
+          background: rgba(255,255,255,0.3);
+          opacity: 1;
+          margin: 0 5px;
           transition: all 0.3s ease;
         }
 
-        @media (max-width: 640px) {
-          .hero-carousel-bar {
-            border-radius: 20px;
-            padding: 1rem 1rem 0.75rem;
-            margin-bottom: 0;
-          }
-        }
-
-        .carousel-section-label {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 9px;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          color: #C9A882;
-          margin: 0 0 0.5rem;
-          text-align: left;
-        }
-
-        /* Splide pagination repositioned to top-right */
-        .hero-carousel-bar .splide__pagination {
-          position: absolute !important;
-          top: 1rem !important;
-          right: 1.25rem !important;
-          bottom: auto !important;
-          left: auto !important;
-          gap: 5px;
-          padding: 0;
-        }
-
-        @media (max-width: 640px) {
-          .hero-carousel-bar .splide__pagination {
-            top: 0.75rem !important;
-            right: 1rem !important;
-          }
-        }
-
-        .hero-carousel-bar .splide__pagination__page {
-          width: 5px;
-          height: 5px;
-          background: rgba(201, 168, 130, 0.5);
+        .splide__pagination__page.is-active {
+          width: 28px;
           border-radius: 999px;
-          border: none;
-          transition: width 0.3s, background 0.3s;
-          margin: 0 2px;
-        }
-
-        .hero-carousel-bar .splide__pagination__page.is-active {
-          width: 14px;
-          background: #C9A882;
           transform: none;
+          background: #c8a57f;
         }
 
-        /* ── SLIDE CARD ── */
-        .announcement-card {
-          position: relative;
-          text-align: left;
-          height: 100%;
-          min-height: 200px;
-        }
-
-        .splide__slide {
-          height: auto !important;
-        }
-
-        .card-theme-pill {
-          display: inline-block;
-          background: rgba(201, 168, 130, 0.2);
-          color: #C9A882;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 9px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          padding: 3px 10px;
-          border-radius: 999px;
-          margin-bottom: 0.45rem;
-        }
-
-        .card-title {
-          font-family: 'Lora', serif;
-          font-size: 1.2rem;
-          color: #FFFFFF;
-          margin: 0 0 0.35rem;
-          line-height: 1.3;
-        }
-
-        .card-body-text {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.85rem;
-          color: rgba(255, 255, 255, 0.85);
-          line-height: 1.65;
-          font-style: italic;
-          border-left: 2px solid rgba(201, 168, 130, 0.4);
-          padding-left: 0.75rem;
-          margin: 0;
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
+        .marquee-wrap {
           overflow: hidden;
+          width: 100%;
+          padding: 1.4rem 0;
         }
 
-        /* Mobile: fewer text lines */
-        @media (max-width: 640px) {
-          .card-body-text {
-            -webkit-line-clamp: 2;
-          }
-          .announcement-card {
-            min-height: 180px;
-          }
+        .marquee-track {
+          display: flex;
+          width: fit-content;
+          animation: marqueeMove 28s linear infinite;
         }
 
-        .card-cta-btn {
-          display: inline-flex;
+        .marquee-item {
+          flex-shrink: 0;
+          display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 5px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(201, 168, 130, 0.5);
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(4px);
+          gap: 1rem;
+          padding: 0 2rem;
           font-family: 'DM Sans', sans-serif;
-          font-size: 10px;
-          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #C9A882;
-          cursor: pointer;
-          transition: background 0.2s, color 0.2s, border-color 0.2s;
+          letter-spacing: 0.18em;
+          font-size: 11px;
+          color: #7f6d5f;
         }
 
-        .card-cta-btn:hover {
-          background: #C9A882;
-          color: #2D2926;
-          border-color: #C9A882;
+        .marquee-item::after {
+          content: '•';
+          margin-left: 2rem;
+          color: #c8a57f;
         }
 
-        /* Mobile arrows - absolute positioned at bottom-right */
-        .card-mobile-arrows {
-          position: absolute;
-          bottom: 0.5rem;
-          right: 0.5rem;
-          display: none;
-          gap: 6px;
-          z-index: 15;
-        }
-
-        .card-arrow-sm {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(4px);
-          border: 1px solid rgba(201, 168, 130, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #C9A882;
-          cursor: pointer;
-          transition: background 0.2s, color 0.2s;
-        }
-
-        .card-arrow-sm:hover {
-          background: #C9A882;
-          color: #2D2926;
-        }
-
-        /* Desktop arrows */
-        .carousel-arrow-desktop {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(4px);
-          border: 1px solid rgba(201, 168, 130, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #C9A882;
-          cursor: pointer;
-          transition: background 0.2s, color 0.2s, border-color 0.2s;
-          z-index: 10;
-        }
-
-        .carousel-arrow-desktop:hover {
-          background: #C9A882;
-          color: #2D2926;
-          border-color: #C9A882;
-        }
-
-        .carousel-arrow-left {
-          left: -18px;
-        }
-
-        .carousel-arrow-right {
-          right: -18px;
-        }
-
-        /* ── MOBILE OVERRIDES ── */
-        @media (max-width: 640px) {
-          .carousel-arrow-desktop {
-            display: none;
+        @keyframes marqueeMove {
+          from {
+            transform: translateX(0);
           }
-          
-          .card-mobile-arrows {
-            display: flex;
-          }
-          
-          .hero-carousel-bar .splide__track {
-            margin-bottom: 0;
-            padding-bottom: 0;
-          }
-          
-          .hero-carousel-bar .splide__list {
-            margin-bottom: 0;
-            padding-bottom: 0;
+
+          to {
+            transform: translateX(-50%);
           }
         }
       `}</style>
