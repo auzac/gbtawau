@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { en: 'About', bm: 'Tentang Kami', href: '#about' },
   { en: 'Events', bm: 'Acara', href: '#events' },
   { en: 'Roster', bm: 'Petugas', href: '#roster' },
+  { en: 'Lyrics', bm: 'Lirik', href: '/lyrics' },
   { en: 'Staff', bm: 'Kakitangan', href: '/login', isRouterLink: true },
 ]
 
