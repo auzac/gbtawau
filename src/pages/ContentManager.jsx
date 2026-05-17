@@ -20,7 +20,14 @@ import {
   Upload,
   MapPin,
   User,
-  Trash
+  Trash,
+  Megaphone,
+  Image,
+  Eye,
+  EyeOff,
+  GripVertical,
+  MoveUp,
+  MoveDown
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -40,7 +47,6 @@ function ContentManager() {
   const [verseSearchTerm, setVerseSearchTerm] = useState('')
   const [showAddVerseForm, setShowAddVerseForm] = useState(false)
   const [selectedVerseId, setSelectedVerseId] = useState(null)
-  const [isImportingVerses, setIsImportingVerses] = useState(false)
   const [newVerseForm, setNewVerseForm] = useState({ reference: '', text: '', theme: '' })
   const [activeVerse, setActiveVerseState] = useState({
     id: null,
@@ -58,6 +64,21 @@ function ContentManager() {
   // Content State
   const [events, setEvents] = useState([])
   const [roster, setRoster] = useState([])
+
+  // Announcements State (carousel_items)
+  const [announcements, setAnnouncements] = useState([])
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false)
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null)
+  const [announcementForm, setAnnouncementForm] = useState({
+    title_en: '',
+    title_bm: '',
+    description_en: '',
+    description_bm: '',
+    image_url: '',
+    link_url: '',
+    display_order: 0,
+    is_active: true
+  })
 
   // Modal States
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
@@ -105,7 +126,8 @@ function ContentManager() {
       loadVerseLibrary(),
       loadActiveVerse(),
       loadEvents(),
-      loadRoster()
+      loadRoster(),
+      loadAnnouncements()
     ])
     setIsLoading(false)
   }
@@ -177,9 +199,138 @@ function ContentManager() {
     }
   }
 
-  const showSaved = (message, isError = false) => {
-    setSavedMessage({ text: message, isError })
-    setTimeout(() => setSavedMessage(null), 2200)
+  // ─── Announcements (Carousel) Functions ─────────────────────────────────────
+  const loadAnnouncements = async () => {
+    const { data, error } = await supabase
+      .from('carousel_items')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (!error && data) {
+      setAnnouncements(data)
+    }
+  }
+
+  const handleAddAnnouncement = () => {
+    setEditingAnnouncement(null)
+    setAnnouncementForm({
+      title_en: '',
+      title_bm: '',
+      description_en: '',
+      description_bm: '',
+      image_url: '',
+      link_url: '',
+      display_order: announcements.length,
+      is_active: true
+    })
+    setIsAnnouncementModalOpen(true)
+  }
+
+  const handleEditAnnouncement = (item) => {
+    setEditingAnnouncement(item)
+    setAnnouncementForm(item)
+    setIsAnnouncementModalOpen(true)
+  }
+
+  const handleSaveAnnouncement = async () => {
+    const payload = {
+      title_en: announcementForm.title_en,
+      title_bm: announcementForm.title_bm,
+      description_en: announcementForm.description_en,
+      description_bm: announcementForm.description_bm,
+      image_url: announcementForm.image_url || null,
+      link_url: announcementForm.link_url || null,
+      display_order: announcementForm.display_order,
+      is_active: announcementForm.is_active,
+      updated_at: new Date()
+    }
+
+    if (editingAnnouncement) {
+      const { error } = await supabase
+        .from('carousel_items')
+        .update(payload)
+        .eq('id', editingAnnouncement.id)
+
+      if (!error) {
+        showSaved('Announcement updated')
+        loadAnnouncements()
+        setIsAnnouncementModalOpen(false)
+      } else {
+        showSaved('Error updating announcement', true)
+      }
+    } else {
+      const { error } = await supabase
+        .from('carousel_items')
+        .insert(payload)
+
+      if (!error) {
+        showSaved('Announcement added')
+        loadAnnouncements()
+        setIsAnnouncementModalOpen(false)
+      } else {
+        showSaved('Error adding announcement', true)
+      }
+    }
+  }
+
+  const handleDeleteAnnouncement = async (id) => {
+    if (window.confirm('Delete this announcement? It will be removed from the homepage carousel.')) {
+      const { error } = await supabase
+        .from('carousel_items')
+        .delete()
+        .eq('id', id)
+
+      if (!error) {
+        showSaved('Announcement deleted')
+        loadAnnouncements()
+      } else {
+        showSaved('Error deleting announcement', true)
+      }
+    }
+  }
+
+  const toggleAnnouncementActive = async (id, currentActive) => {
+    const { error } = await supabase
+      .from('carousel_items')
+      .update({ is_active: !currentActive, updated_at: new Date() })
+      .eq('id', id)
+
+    if (!error) {
+      showSaved(`Announcement ${!currentActive ? 'activated' : 'deactivated'}`)
+      loadAnnouncements()
+    } else {
+      showSaved('Error updating status', true)
+    }
+  }
+
+  const moveAnnouncement = async (id, direction) => {
+    const index = announcements.findIndex(a => a.id === id)
+    if (direction === 'up' && index === 0) return
+    if (direction === 'down' && index === announcements.length - 1) return
+
+    const newOrder = [...announcements]
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
+    const tempOrder = newOrder[index].display_order
+    newOrder[index].display_order = newOrder[swapIndex].display_order
+    newOrder[swapIndex].display_order = tempOrder
+
+    // Update both in Supabase
+    const { error: error1 } = await supabase
+      .from('carousel_items')
+      .update({ display_order: newOrder[index].display_order })
+      .eq('id', newOrder[index].id)
+
+    const { error: error2 } = await supabase
+      .from('carousel_items')
+      .update({ display_order: newOrder[swapIndex].display_order })
+      .eq('id', newOrder[swapIndex].id)
+
+    if (!error1 && !error2) {
+      loadAnnouncements()
+    } else {
+      showSaved('Error reordering', true)
+    }
   }
 
   // ─── Verse Library Functions ────────────────────────────────────────────────
@@ -189,7 +340,6 @@ function ContentManager() {
       return
     }
 
-    // Check if verse already exists
     const { data: existing } = await supabase
       .from('verse_library')
       .select('id')
@@ -221,13 +371,11 @@ function ContentManager() {
   }
 
   const activateVerse = async (verseId) => {
-    // Mark all as inactive
     await supabase
       .from('verse_library')
       .update({ is_active: false })
       .eq('is_active', true)
 
-    // Mark selected as active
     const { error } = await supabase
       .from('verse_library')
       .update({ is_active: true })
@@ -302,7 +450,6 @@ function ContentManager() {
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue
         
-        // Simple CSV parsing
         const row = []
         let inQuote = false
         let field = ''
@@ -494,10 +641,16 @@ function ContentManager() {
     navigate('/login')
   }
 
+  const showSaved = (message, isError = false) => {
+    setSavedMessage({ text: message, isError })
+    setTimeout(() => setSavedMessage(null), 2200)
+  }
+
   const tabs = [
     { id: 'verse', label: 'Weekly Verse', icon: BookOpen },
     { id: 'events', label: 'Events', icon: CalendarDays },
-    { id: 'roster', label: 'Worship Roster', icon: Music }
+    { id: 'roster', label: 'Worship Roster', icon: Music },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone }
   ]
 
   const selectedVerse = getSelectedVerse()
@@ -583,240 +736,79 @@ function ContentManager() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
         
-        {/* Verse Tab - Desktop: Side by Side, Mobile: Stacked */}
+        {/* Verse Tab (unchanged) */}
         {activeTab === 'verse' && (
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
-            
             {/* LEFT COLUMN: Verse Library */}
             <div className="bg-white border border-[#E7E0D7] rounded-2xl p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-serif text-[#2D2926]">Verse Library</h2>
                 <div className="flex gap-2">
-                  <button
-                    onClick={exportVersesToCSV}
-                    className="p-2 rounded-lg hover:bg-[#F5F1EB] transition"
-                    title="Export verses"
-                  >
-                    <Download size={16} className="text-[#5E5247]" />
-                  </button>
-                  <label className="p-2 rounded-lg hover:bg-[#F5F1EB] transition cursor-pointer">
-                    <Upload size={16} className="text-[#5E5247]" />
-                    <input type="file" accept=".csv" onChange={importVersesFromCSV} className="hidden" />
-                  </label>
+                  <button onClick={exportVersesToCSV} className="p-2 rounded-lg hover:bg-[#F5F1EB] transition" title="Export verses"><Download size={16} className="text-[#5E5247]" /></button>
+                  <label className="p-2 rounded-lg hover:bg-[#F5F1EB] transition cursor-pointer"><Upload size={16} className="text-[#5E5247]" /><input type="file" accept=".csv" onChange={importVersesFromCSV} className="hidden" /></label>
                 </div>
               </div>
-              
-              {/* Search Bar */}
               <div className="relative mb-4">
-                <input
-                  type="text"
-                  placeholder="Search by reference or text..."
-                  value={verseSearchTerm}
-                  onChange={(e) => setVerseSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 pl-9 rounded-xl border border-[#EAE1D4] text-sm"
-                />
+                <input type="text" placeholder="Search by reference or text..." value={verseSearchTerm} onChange={(e) => setVerseSearchTerm(e.target.value)} className="w-full px-4 py-2 pl-9 rounded-xl border border-[#EAE1D4] text-sm" />
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A7A6E]" />
-                {verseSearchTerm && (
-                  <button onClick={() => setVerseSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <X size={16} className="text-[#8A7A6E]" />
-                  </button>
-                )}
+                {verseSearchTerm && <button onClick={() => setVerseSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X size={16} className="text-[#8A7A6E]" /></button>}
               </div>
-
-              {/* Verses List */}
               <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
-                {verseLibrary.filter(v => 
-                  v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
-                  v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
-                ).length === 0 ? (
+                {verseLibrary.filter(v => v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) || v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())).length === 0 ? (
                   <p className="text-center text-[#8A7A6E] py-4 text-sm">No verses found</p>
                 ) : (
-                  verseLibrary.filter(v => 
-                    v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) ||
-                    v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())
-                  ).map(verse => (
-                    <div
-                      key={verse.id}
-                      className={`border rounded-xl p-3 transition-all ${
-                        selectedVerseId === verse.id
-                          ? 'border-[#C4A88B] bg-[#F5EFE6] ring-2 ring-[#C4A88B]/30'
-                          : verse.is_active
-                          ? 'border-[#C4A88B] bg-[#FAF8F5]'
-                          : 'border-[#EAE1D4] hover:bg-[#F5F1EB]'
-                      }`}
-                    >
+                  verseLibrary.filter(v => v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) || v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())).map(verse => (
+                    <div key={verse.id} className={`border rounded-xl p-3 transition-all ${selectedVerseId === verse.id ? 'border-[#C4A88B] bg-[#F5EFE6] ring-2 ring-[#C4A88B]/30' : verse.is_active ? 'border-[#C4A88B] bg-[#FAF8F5]' : 'border-[#EAE1D4] hover:bg-[#F5F1EB]'}`}>
                       <div className="flex justify-between items-start">
-                        <div 
-                          className="flex-1 cursor-pointer"
-                          onClick={() => setSelectedVerseId(verse.id)}
-                        >
+                        <div className="flex-1 cursor-pointer" onClick={() => setSelectedVerseId(verse.id)}>
                           <p className="font-medium text-[#2D2926] text-sm">{verse.reference}</p>
                           <p className="text-xs text-[#7A6A5E] mt-1 line-clamp-1">{verse.text}</p>
                           {verse.theme && <p className="text-[10px] text-[#B0A49A] mt-1">{verse.theme}</p>}
                         </div>
                         <div className="flex items-center gap-1 ml-2">
-                          {verse.is_active && (
-                            <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full whitespace-nowrap">Active</span>
-                          )}
-                          {!verse.is_active && (
-                            <button
-                              onClick={() => deleteVerse(verse.id, verse.reference)}
-                              className="p-1 rounded hover:bg-red-50 transition"
-                            >
-                              <Trash size={14} className="text-[#B07C68]" />
-                            </button>
-                          )}
+                          {verse.is_active && <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full">Active</span>}
+                          {!verse.is_active && <button onClick={() => deleteVerse(verse.id, verse.reference)} className="p-1 rounded hover:bg-red-50 transition"><Trash size={14} className="text-[#B07C68]" /></button>}
                         </div>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-
-              {/* Add New Verse Inline */}
               {!showAddVerseForm ? (
-                <button
-                  onClick={() => setShowAddVerseForm(true)}
-                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed border-[#EAE1D4] text-sm text-[#5E5247] hover:bg-[#F5F1EB] transition"
-                >
-                  <Plus size={14} />
-                  Add New Verse
-                </button>
+                <button onClick={() => setShowAddVerseForm(true)} className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed border-[#EAE1D4] text-sm text-[#5E5247] hover:bg-[#F5F1EB] transition"><Plus size={14} />Add New Verse</button>
               ) : (
                 <div className="border border-[#EAE1D4] rounded-xl p-3 space-y-3 bg-[#FAF8F5]">
-                  <input
-                    type="text"
-                    placeholder="Reference (e.g., Matthew 11:28)"
-                    value={newVerseForm.reference}
-                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, reference: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    autoFocus
-                  />
-                  <textarea
-                    placeholder="Verse text"
-                    rows={2}
-                    value={newVerseForm.text}
-                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, text: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm resize-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Theme (optional)"
-                    value={newVerseForm.theme}
-                    onChange={(e) => setNewVerseForm(prev => ({ ...prev, theme: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <button onClick={saveNewVerseToLibrary} className="flex-1 bg-[#2D2926] text-white py-2 rounded-lg text-sm hover:bg-[#4A3F38]">
-                      Save
-                    </button>
-                    <button onClick={() => setShowAddVerseForm(false)} className="flex-1 border border-[#EAE1D4] text-[#5E5247] py-2 rounded-lg text-sm hover:bg-white">
-                      Cancel
-                    </button>
-                  </div>
+                  <input type="text" placeholder="Reference (e.g., Matthew 11:28)" value={newVerseForm.reference} onChange={(e) => setNewVerseForm(prev => ({ ...prev, reference: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" autoFocus />
+                  <textarea placeholder="Verse text" rows={2} value={newVerseForm.text} onChange={(e) => setNewVerseForm(prev => ({ ...prev, text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" />
+                  <input type="text" placeholder="Theme (optional)" value={newVerseForm.theme} onChange={(e) => setNewVerseForm(prev => ({ ...prev, theme: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  <div className="flex gap-2"><button onClick={saveNewVerseToLibrary} className="flex-1 bg-[#2D2926] text-white py-2 rounded-lg text-sm hover:bg-[#4A3F38]">Save</button><button onClick={() => setShowAddVerseForm(false)} className="flex-1 border border-[#EAE1D4] text-[#5E5247] py-2 rounded-lg text-sm hover:bg-white">Cancel</button></div>
                 </div>
               )}
             </div>
-
-            {/* RIGHT COLUMN: Preview Panels */}
             <div className="space-y-4">
-              
-              {/* Current Active Verse (Static Preview) */}
-              <div className="bg-[#2D2926] rounded-2xl p-5 text-white">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle size={16} className="text-[#C4A88B]" />
-                  <span className="text-xs uppercase tracking-wider text-[#C4A88B]">Currently Active</span>
-                </div>
-                <p className="text-xl font-serif leading-relaxed">"{activeVerse.text}"</p>
-                <div className="mt-4 pt-3 border-t border-white/10">
-                  <p className="text-sm font-medium">{activeVerse.reference}</p>
-                  <p className="text-xs text-white/60 mt-1">{activeVerse.theme || 'No theme'}</p>
-                </div>
-              </div>
-
-              {/* Selected Verse Preview (If any) */}
-              {selectedVerse && (
-                <div className="bg-white border-2 border-[#C4A88B] rounded-2xl p-5 shadow-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle size={16} className="text-[#C4A88B]" />
-                    <span className="text-xs uppercase tracking-wider text-[#5E5247]">Preview — Will Become Active</span>
-                  </div>
-                  <p className="text-xl font-serif text-[#2D2926] leading-relaxed">"{selectedVerse.text}"</p>
-                  <div className="mt-4 pt-3 border-t border-[#EAE1D4]">
-                    <p className="text-sm font-medium text-[#2D2926]">{selectedVerse.reference}</p>
-                    <p className="text-xs text-[#8A7A6E] mt-1">{selectedVerse.theme || 'No theme'}</p>
-                  </div>
-                  <button
-                    onClick={() => activateVerse(selectedVerse.id)}
-                    className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-xl text-sm hover:bg-[#4A3F38] transition flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={14} />
-                    Activate This Verse
-                  </button>
-                </div>
-              )}
+              <div className="bg-[#2D2926] rounded-2xl p-5 text-white"><div className="flex items-center gap-2 mb-3"><CheckCircle size={16} className="text-[#C4A88B]" /><span className="text-xs uppercase tracking-wider text-[#C4A88B]">Currently Active</span></div><p className="text-xl font-serif leading-relaxed">"{activeVerse.text}"</p><div className="mt-4 pt-3 border-t border-white/10"><p className="text-sm font-medium">{activeVerse.reference}</p><p className="text-xs text-white/60 mt-1">{activeVerse.theme || 'No theme'}</p></div></div>
+              {selectedVerse && (<div className="bg-white border-2 border-[#C4A88B] rounded-2xl p-5 shadow-lg"><div className="flex items-center gap-2 mb-3"><AlertCircle size={16} className="text-[#C4A88B]" /><span className="text-xs uppercase tracking-wider text-[#5E5247]">Preview — Will Become Active</span></div><p className="text-xl font-serif text-[#2D2926] leading-relaxed">"{selectedVerse.text}"</p><div className="mt-4 pt-3 border-t border-[#EAE1D4]"><p className="text-sm font-medium text-[#2D2926]">{selectedVerse.reference}</p><p className="text-xs text-[#8A7A6E] mt-1">{selectedVerse.theme || 'No theme'}</p></div><button onClick={() => activateVerse(selectedVerse.id)} className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-xl text-sm hover:bg-[#4A3F38] transition flex items-center justify-center gap-2"><CheckCircle size={14} />Activate This Verse</button></div>)}
             </div>
           </div>
         )}
 
-        {/* Events Tab */}
+        {/* Events Tab (unchanged) */}
         {activeTab === 'events' && (
           <div className="space-y-4 sm:space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Upcoming Events</h2>
-                <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage public-facing church events</p>
-              </div>
-              <button
-                onClick={handleAddEvent}
-                className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"
-              >
-                <Plus size={15} />
-                <span className="hidden sm:inline">Add Event</span>
-              </button>
+              <div><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Upcoming Events</h2><p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage public-facing church events</p></div>
+              <button onClick={handleAddEvent} className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"><Plus size={15} /><span className="hidden sm:inline">Add Event</span></button>
             </div>
-
             <div className="grid gap-3 sm:gap-4">
-              {events.length === 0 ? (
-                <div className="bg-white border border-[#E7E0D7] rounded-2xl p-8 text-center text-[#8A7A6E]">
-                  No upcoming events. Click "Add Event" to create one.
-                </div>
-              ) : (
+              {events.length === 0 ? (<div className="bg-white border border-[#E7E0D7] rounded-2xl p-8 text-center text-[#8A7A6E]">No upcoming events. Click "Add Event" to create one.</div>) : (
                 events.map((event) => (
                   <div key={event.id} className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 hover:shadow-md transition">
                     <div className="flex justify-between gap-4 sm:gap-6">
                       <div className="flex gap-3 sm:gap-5 flex-1">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#F5F1EB] flex flex-col items-center justify-center">
-                          <span className="text-[10px] sm:text-xs text-[#8B7E72]">
-                            {new Date(event.date).toLocaleString('default', { month: 'short' })}
-                          </span>
-                          <span className="text-lg sm:text-xl font-semibold text-[#2D2926] leading-none mt-1">
-                            {new Date(event.date).getDate()}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                            <h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{event.titleEn}</h3>
-                            <ChevronRight size={14} className="text-[#B7A89A]" />
-                          </div>
-                          <p className="text-xs sm:text-sm text-[#8B7E72] mb-2 sm:mb-3">{formatTimeForDisplay(event.time)}</p>
-                          <p className="text-xs sm:text-sm text-[#5E5247] leading-relaxed">{event.descriptionEn}</p>
-                          {(event.location || event.pic) && (
-                            <div className="flex flex-wrap gap-3 mt-2 text-xs text-[#8A7A6E]">
-                              {event.location && <div className="flex items-center gap-1"><MapPin size={12} /> {event.location}</div>}
-                              {event.pic && <div className="flex items-center gap-1"><User size={12} /> {event.pic}</div>}
-                            </div>
-                          )}
-                        </div>
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#F5F1EB] flex flex-col items-center justify-center"><span className="text-[10px] sm:text-xs text-[#8B7E72]">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span><span className="text-lg sm:text-xl font-semibold text-[#2D2926] leading-none mt-1">{new Date(event.date).getDate()}</span></div>
+                        <div className="flex-1"><div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2"><h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{event.titleEn}</h3><ChevronRight size={14} className="text-[#B7A89A]" /></div><p className="text-xs sm:text-sm text-[#8B7E72] mb-2 sm:mb-3">{formatTimeForDisplay(event.time)}</p><p className="text-xs sm:text-sm text-[#5E5247] leading-relaxed">{event.descriptionEn}</p>{(event.location || event.pic) && (<div className="flex flex-wrap gap-3 mt-2 text-xs text-[#8A7A6E]">{event.location && <div className="flex items-center gap-1"><MapPin size={12} /> {event.location}</div>}{event.pic && <div className="flex items-center gap-1"><User size={12} /> {event.pic}</div>}</div>)}</div>
                       </div>
-                      <div className="flex items-start gap-1 sm:gap-2">
-                        <button onClick={() => handleEditEvent(event)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition">
-                          <Pencil size={13} className="text-[#5E5247]" />
-                        </button>
-                        <button onClick={() => handleDeleteEvent(event.id)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-red-50 transition">
-                          <Trash2 size={13} className="text-[#B07C68]" />
-                        </button>
-                      </div>
+                      <div className="flex items-start gap-1 sm:gap-2"><button onClick={() => handleEditEvent(event)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button><button onClick={() => handleDeleteEvent(event.id)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-red-50 transition"><Trash2 size={13} className="text-[#B07C68]" /></button></div>
                     </div>
                   </div>
                 ))
@@ -825,137 +817,164 @@ function ContentManager() {
           </div>
         )}
 
-        {/* Roster Tab */}
+        {/* Roster Tab (unchanged) */}
         {activeTab === 'roster' && (
           <div className="space-y-4 sm:space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Worship Roster</h2>
-                <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Weekly ministry scheduling overview</p>
-              </div>
-            </div>
-
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Worship Roster</h2><p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Weekly ministry scheduling overview</p></div></div>
             <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
               {roster.map((week) => (
                 <div key={week.id} className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 hover:shadow-md transition">
-                  <div className="flex items-start justify-between mb-4 sm:mb-6">
-                    <div>
-                      <p className="text-[10px] sm:text-xs uppercase tracking-[0.15em] text-[#A39284] mb-1 sm:mb-2">Worship Week</p>
-                      <h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{week.weekStart}</h3>
-                    </div>
-                    <div className="flex gap-1 sm:gap-2">
-                      <button
-                        onClick={() => saveRosterWeek(week)}
-                        className="flex items-center justify-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition text-xs"
-                      >
-                        <Save size={12} />
-                        <span className="hidden sm:inline">Save</span>
-                      </button>
-                      <button
-                        onClick={() => handleEditRoster(week)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"
-                      >
-                        <Pencil size={13} className="text-[#5E5247]" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]">
-                      <span className="text-xs sm:text-sm text-[#8B7E72]">Worship Leader</span>
-                      <span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.leader}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]">
-                      <span className="text-xs sm:text-sm text-[#8B7E72]">Pianist</span>
-                      <span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.pianist}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 sm:py-3">
-                      <span className="text-xs sm:text-sm text-[#8B7E72]">Scripture Reader</span>
-                      <span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.reader}</span>
-                    </div>
-                  </div>
+                  <div className="flex items-start justify-between mb-4 sm:mb-6"><div><p className="text-[10px] sm:text-xs uppercase tracking-[0.15em] text-[#A39284] mb-1 sm:mb-2">Worship Week</p><h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{week.weekStart}</h3></div><div className="flex gap-1 sm:gap-2"><button onClick={() => saveRosterWeek(week)} className="flex items-center justify-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition text-xs"><Save size={12} /><span className="hidden sm:inline">Save</span></button><button onClick={() => handleEditRoster(week)} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button></div></div>
+                  <div className="space-y-3 sm:space-y-4"><div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-xs sm:text-sm text-[#8B7E72]">Worship Leader</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.leader}</span></div><div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-xs sm:text-sm text-[#8B7E72]">Pianist</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.pianist}</span></div><div className="flex items-center justify-between py-2 sm:py-3"><span className="text-xs sm:text-sm text-[#8B7E72]">Scripture Reader</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.reader}</span></div></div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Announcements Tab (NEW) */}
+        {activeTab === 'announcements' && (
+          <div className="space-y-4 sm:space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Carousel Announcements</h2>
+                <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage slides shown on the homepage carousel</p>
+              </div>
+              <button
+                onClick={handleAddAnnouncement}
+                className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"
+              >
+                <Plus size={15} />
+                <span className="hidden sm:inline">Add Announcement</span>
+              </button>
+            </div>
+
+            <div className="bg-white border border-[#E7E0D7] rounded-2xl overflow-hidden">
+              {announcements.length === 0 ? (
+                <div className="p-8 text-center text-[#8A7A6E]">
+                  No announcements yet. Click "Add Announcement" to create one.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-[#FAF8F5] border-b border-[#E7E0D7]">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Order</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Title (EN)</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Title (BM)</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Image</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {announcements.map((item, idx) => (
+                        <tr key={item.id} className="border-b border-[#E7E0D7] hover:bg-[#FAF8F5] transition">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-[#5E5247] w-6">{item.display_order}</span>
+                              <button
+                                onClick={() => moveAnnouncement(item.id, 'up')}
+                                disabled={idx === 0}
+                                className={`p-1 rounded hover:bg-[#F5F1EB] transition ${idx === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                              >
+                                <MoveUp size={14} className="text-[#5E5247]" />
+                              </button>
+                              <button
+                                onClick={() => moveAnnouncement(item.id, 'down')}
+                                disabled={idx === announcements.length - 1}
+                                className={`p-1 rounded hover:bg-[#F5F1EB] transition ${idx === announcements.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                              >
+                                <MoveDown size={14} className="text-[#5E5247]" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm font-medium text-[#2D2926]">{item.title_en || '—'}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-[#5E5247]">{item.title_bm || '—'}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            {item.image_url ? (
+                              <div className="w-12 h-12 rounded-lg bg-[#F5F1EB] flex items-center justify-center overflow-hidden">
+                                <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-[#F5F1EB] flex items-center justify-center">
+                                <Image size={16} className="text-[#B0A49A]" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => toggleAnnouncementActive(item.id, item.is_active)}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                                item.is_active
+                                  ? 'bg-green-50 text-green-700 border border-green-200'
+                                  : 'bg-gray-50 text-gray-500 border border-gray-200'
+                              }`}
+                            >
+                              {item.is_active ? <Eye size={12} /> : <EyeOff size={12} />}
+                              {item.is_active ? 'Active' : 'Inactive'}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleEditAnnouncement(item)}
+                                className="p-2 rounded-lg hover:bg-[#F5F1EB] transition"
+                              >
+                                <Pencil size={14} className="text-[#5E5247]" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAnnouncement(item.id)}
+                                className="p-2 rounded-lg hover:bg-red-50 transition"
+                              >
+                                <Trash2 size={14} className="text-[#B07C68]" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Calendar Modal */}
+      {/* Calendar Modal (unchanged) */}
       {isCalendarModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Content Calendar</h2>
-              <button onClick={() => setIsCalendarModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
-            </div>
+            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Content Calendar</h2><button onClick={() => setIsCalendarModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
             <div className="bg-[#F5EFE6] rounded-xl p-4 mb-6">
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex gap-2">
-                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">
-                    {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, idx) => (
-                      <option key={idx} value={idx}>{month}</option>
-                    ))}
-                  </select>
-                  <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">
-                    {[2025, 2026, 2027].map(year => <option key={year} value={year}>{year}</option>)}
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4].map(week => (
-                    <button
-                      key={week}
-                      onClick={() => setSelectedWeek(week)}
-                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm font-medium transition ${
-                        selectedWeek === week
-                          ? 'bg-[#2D2926] text-white'
-                          : 'border border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'
-                      }`}
-                    >
-                      {week}
-                    </button>
-                  ))}
-                </div>
+                <div className="flex gap-2"><select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">{['January','February','March','April','May','June','July','August','September','October','November','December'].map((month, idx) => (<option key={idx} value={idx}>{month}</option>))}</select><select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">{[2025,2026,2027].map(year => <option key={year} value={year}>{year}</option>)}</select></div>
+                <div className="flex gap-2">{ [1,2,3,4].map(week => (<button key={week} onClick={() => setSelectedWeek(week)} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm font-medium transition ${selectedWeek === week ? 'bg-[#2D2926] text-white' : 'border border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'}`}>{week}</button>)) }</div>
               </div>
               <button onClick={loadCalendarPreview} className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-lg text-sm hover:bg-[#4A3F38] transition">Load Week {selectedWeek}</button>
             </div>
             {calendarPreview && (
               <div className="space-y-5">
                 <div className="text-center"><p className="text-sm font-medium text-[#2D2926]">{calendarPreview.weekRange}</p></div>
-                <div className="border rounded-xl p-4">
-                  <h3 className="text-sm font-medium mb-2">📖 Weekly Verse</h3>
-                  <p className="font-serif">{calendarPreview.verse.reference}</p>
-                  <p className="text-sm text-[#7A6A5E] mt-1">{calendarPreview.verse.text.substring(0, 100)}...</p>
-                </div>
-                <div className="border rounded-xl p-4">
-                  <h3 className="text-sm font-medium mb-2">🎵 Worship Roster</h3>
-                  {calendarPreview.roster ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                      <div><span className="text-[#8A7A6E]">Leader:</span> {calendarPreview.roster.leader}</div>
-                      <div><span className="text-[#8A7A6E]">Pianist:</span> {calendarPreview.roster.pianist}</div>
-                      <div><span className="text-[#8A7A6E]">Reader:</span> {calendarPreview.roster.reader}</div>
-                    </div>
-                  ) : <p className="text-sm text-[#8A7A6E]">No roster assigned for this week</p>}
-                </div>
-                <div className="border rounded-xl p-4">
-                  <h3 className="text-sm font-medium mb-2">📅 Events</h3>
-                  {calendarPreview.events.length > 0 ? (
-                    <div className="space-y-2">{calendarPreview.events.map(event => <div key={event.id} className="text-sm"><span className="font-medium">{event.date}</span><span className="text-[#8A7A6E] mx-2">•</span><span>{event.titleEn}</span></div>)}</div>
-                  ) : <p className="text-sm text-[#8A7A6E]">No events scheduled this week</p>}
-                </div>
+                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">📖 Weekly Verse</h3><p className="font-serif">{calendarPreview.verse.reference}</p><p className="text-sm text-[#7A6A5E] mt-1">{calendarPreview.verse.text.substring(0, 100)}...</p></div>
+                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">🎵 Worship Roster</h3>{calendarPreview.roster ? (<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm"><div><span className="text-[#8A7A6E]">Leader:</span> {calendarPreview.roster.leader}</div><div><span className="text-[#8A7A6E]">Pianist:</span> {calendarPreview.roster.pianist}</div><div><span className="text-[#8A7A6E]">Reader:</span> {calendarPreview.roster.reader}</div></div>) : <p className="text-sm text-[#8A7A6E]">No roster assigned for this week</p>}</div>
+                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">📅 Events</h3>{calendarPreview.events.length > 0 ? (<div className="space-y-2">{calendarPreview.events.map(event => <div key={event.id} className="text-sm"><span className="font-medium">{event.date}</span><span className="text-[#8A7A6E] mx-2">•</span><span>{event.titleEn}</span></div>)}</div>) : <p className="text-sm text-[#8A7A6E]">No events scheduled this week</p>}</div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Event Modal */}
+      {/* Event Modal (unchanged) */}
       {isEventModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingEvent ? 'Edit Event' : 'Add Event'}</h2>
-              <button onClick={() => setIsEventModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
-            </div>
+            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingEvent ? 'Edit Event' : 'Add Event'}</h2><button onClick={() => setIsEventModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
             <div className="space-y-4">
               <input type="date" value={eventForm.date} onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Event Title" value={eventForm.titleEn} onChange={(e) => setEventForm(prev => ({ ...prev, titleEn: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
@@ -969,14 +988,11 @@ function ContentManager() {
         </div>
       )}
 
-      {/* Roster Edit Modal */}
+      {/* Roster Edit Modal (unchanged) */}
       {isRosterModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Edit Worship Week</h2>
-              <button onClick={() => setIsRosterModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
-            </div>
+            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Edit Worship Week</h2><button onClick={() => setIsRosterModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
             <div className="space-y-4">
               <input type="text" placeholder="Week Starting (DD/MM/YYYY)" value={rosterForm.weekStart} onChange={(e) => setRosterForm(prev => ({ ...prev, weekStart: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Worship Leader" value={rosterForm.leader} onChange={(e) => setRosterForm(prev => ({ ...prev, leader: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
@@ -988,18 +1004,35 @@ function ContentManager() {
         </div>
       )}
 
+      {/* Announcement Add/Edit Modal */}
+      {isAnnouncementModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingAnnouncement ? 'Edit Announcement' : 'Add Announcement'}</h2>
+              <button onClick={() => setIsAnnouncementModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveAnnouncement(); }} className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Title (English) *</label><input type="text" required value={announcementForm.title_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Special Service" /></div>
+                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Title (Bahasa Malaysia) *</label><input type="text" required value={announcementForm.title_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Kebaktian Istimewa" /></div>
+              </div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Description (English)</label><textarea rows={2} value={announcementForm.description_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Join us for a special service..." /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Description (Bahasa Malaysia)</label><textarea rows={2} value={announcementForm.description_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Sertai kami untuk kebaktian istimewa..." /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Image URL</label><input type="url" value={announcementForm.image_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, image_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/image.jpg" /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Link URL (optional)</label><input type="url" value={announcementForm.link_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, link_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/event" /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Display Order</label><input type="number" value={announcementForm.display_order} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+              <div className="flex items-center gap-3"><label className="flex items-center gap-2"><input type="checkbox" checked={announcementForm.is_active} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, is_active: e.target.checked }))} className="w-4 h-4" /> <span className="text-sm">Active (show on homepage)</span></label></div>
+              <div className="flex justify-end gap-3 pt-2"><button type="button" onClick={() => setIsAnnouncementModalOpen(false)} className="px-4 py-2 rounded-xl border border-[#E7E0D7] text-[#5E5247] hover:bg-[#F5F1EB]">Cancel</button><button type="submit" className="px-4 py-2 rounded-xl bg-[#2D2926] text-white hover:bg-[#4A3F38]">Save</button></div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.25s ease-out; }
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
       `}</style>
     </div>
   )

@@ -222,46 +222,15 @@ export default function LandingPage() {
   }
 
   const loadCarouselItems = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('verse_library')
-        .select('*')
-      
-      if (!error && data && data.length > 0) {
-        const shuffled = [...data]
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-        }
-        const randomVerses = shuffled.slice(0, 3)
-        
-        const carouselData = randomVerses.map((vItem, index) => ({
-          id: vItem.id,
-          image_url: `/placeholder-${(index % 3) + 1}.jpg`,
-          title_en: vItem.reference,
-          title_bm: vItem.reference,
-          description_en: vItem.text,
-          description_bm: vItem.text,
-          theme: vItem.theme || 'Bible Verse'
-        }))
-        
-        setCarouselItems(carouselData)
-      } else {
-        setCarouselItems([
-          { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
-          { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
-          { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Philippians 4:13', title_bm: 'Filipi 4:13', description_en: 'I can do all things through Christ who strengthens me.', description_bm: 'Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.', theme: 'Encouragement' },
-        ])
-      }
-    } catch (error) {
-      console.error('Error loading carousel verses:', error)
-      setCarouselItems([
-        { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
-        { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
-        { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Philippians 4:13', title_bm: 'Filipi 4:13', description_en: 'I can do all things through Christ who strengthens me.', description_bm: 'Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.', theme: 'Encouragement' },
-      ])
-    }
-  }
+  const { data, error } = await supabase
+    .from('carousel_items')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (!error && data && data.length > 0) setCarouselItems(data)
+  else setCarouselItems([]) // No placeholder fallback – carousel will be hidden
+}
 
   const loadRosters = async () => {
     const { data, error } = await supabase
