@@ -720,7 +720,7 @@ useEffect(() => {
   /* Mobile: Option A - edge-to-edge with small margins for rounded corners */
   @media (max-width: 640px) {
     .hero-carousel-outer {
-      padding: 0 0.5rem;
+      padding: 0 0.0rem;
       margin-top: 1rem;
       margin-bottom: 0;
     }
