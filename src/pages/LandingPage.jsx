@@ -505,153 +505,124 @@ export default function LandingPage() {
 
       {/* ══════════════════════════════════════════════
           HERO — full-viewport, video bg (with fallback), "What's On" card
+          (Verse and button removed – now only carousel)
       ══════════════════════════════════════════════ */}
       <section id="home" className="relative min-h-screen overflow-hidden bg-black">
-  {/* Video background – unchanged */}
-  {!videoError ? (
-    <video
-      className="absolute inset-0 w-full h-full object-cover opacity-70"
-      autoPlay
-      loop
-      muted
-      playsInline
-      poster="/hero-poster.jpg"
-      onError={() => setVideoError(true)}
-    >
-      <source src="/hero.mp4" type="video/mp4" />
-    </video>
-  ) : (
-    <div
-      className="absolute inset-0 bg-cover bg-center opacity-70"
-      style={{ backgroundImage: "url('/backdrop.webp')" }}
-    />
-  )}
+        {/* Video background */}
+        {!videoError ? (
+          <video
+            className="absolute inset-0 w-full h-full object-cover opacity-70"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/hero-poster.jpg"
+            onError={() => setVideoError(true)}
+          >
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
+        ) : (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-70"
+            style={{ backgroundImage: "url('/backdrop.webp')" }}
+          />
+        )}
 
-  {/* Gradient overlays */}
-  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
-  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-  {/* Main content – flex column, no absolute positioning for carousel */}
-  <div className="relative z-10 max-w-7xl mx-auto px-5 flex flex-col min-h-screen justify-between py-12 md:py-16">
-    {/* Top section: verse and optional content (centred) */}
-    <div className="flex-1 flex flex-col items-center justify-center text-center">
-      {verse.text && (
-        <div className="max-w-xl mx-auto mb-8">
-          <p className="text-white/80 italic text-lg md:text-xl leading-relaxed"
-             style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 500 }}>
-            "{verse.text}"
-          </p>
-          <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] mt-3"
-             style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            {verse.reference}
-          </p>
-        </div>
-      )}
-
-      {/* Quick action pills – mobile only (or keep both) */}
-      <div className="flex flex-wrap justify-center gap-3 md:hidden">
-        <button onClick={openEventsModal} className="px-4 py-2 rounded-full bg-white/90 text-black text-[10px] uppercase tracking-wide">
-          {t('events_button') || 'Events'}
-        </button>
-        <button onClick={openRosterModal} className="px-4 py-2 rounded-full bg-white/90 text-black text-[10px] uppercase tracking-wide">
-          {t('roster_button') || 'Roster'}
-        </button>
-      </div>
-    </div>
-
-    {/* Bottom: Carousel – now in normal flow, not absolute */}
-    <div className="w-full pb-8 md:pb-12 mt-8">
-      {carouselItems.length > 0 && (
-        <div className="hero-carousel-wrapper">
-          <div id="whats-on-splide" className="splide whats-on-slider">
-            <div className="splide__track">
-              <ul className="splide__list">
-                {carouselItems.map((item, idx) => (
-                  <li key={item.id || idx} className="splide__slide">
-                    <div className="whats-on-card">
-                      <p className="card-label">WHAT'S ON</p>
-                      <h3 className="card-title">
-                        {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                      </h3>
-                      <p className="card-description">
-                        {locale === 'bm' && item.description_bm ? item.description_bm : item.description_en}
-                      </p>
-                      <button onClick={openEventsModal} className="card-cta">
-                        FIND OUT MORE
-                      </button>
-                      {/* Mobile arrows */}
-                      <div className="card-mobile-arrows">
-                        <button className="custom-prev card-arrow-sm">
-                          <ChevronLeft size={18} />
-                        </button>
-                        <button className="custom-next card-arrow-sm">
-                          <ChevronRight size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Desktop arrows */}
-            <div className="desktop-arrows">
-              <button className="custom-prev desktop-arrow desktop-arrow-left">
-                <ChevronLeft size={24} />
-              </button>
-              <button className="custom-next desktop-arrow desktop-arrow-right">
-                <ChevronRight size={24} />
-              </button>
-            </div>
+        {/* Main content – flex column, carousel at bottom */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 flex flex-col min-h-screen justify-end pb-12 md:pb-16">
+          {/* Only the carousel – no verse, no extra buttons */}
+          <div className="w-full">
+            {carouselItems.length > 0 && (
+              <div className="hero-carousel-wrapper">
+                <div id="whats-on-splide" className="splide whats-on-slider">
+                  <div className="splide__track">
+                    <ul className="splide__list">
+                      {carouselItems.map((item, idx) => (
+                        <li key={item.id || idx} className="splide__slide">
+                          <div className="whats-on-card">
+                            <p className="card-label">WHAT'S ON</p>
+                            <h3 className="card-title">
+                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                            </h3>
+                            <p className="card-description">
+                              {locale === 'bm' && item.description_bm ? item.description_bm : item.description_en}
+                            </p>
+                            <button onClick={openEventsModal} className="card-cta">
+                              FIND OUT MORE
+                            </button>
+                            {/* Mobile arrows */}
+                            <div className="card-mobile-arrows">
+                              <button className="custom-prev card-arrow-sm">
+                                <ChevronLeft size={18} />
+                              </button>
+                              <button className="custom-next card-arrow-sm">
+                                <ChevronRight size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* Desktop arrows */}
+                  <div className="desktop-arrows">
+                    <button className="custom-prev desktop-arrow desktop-arrow-left">
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button className="custom-next desktop-arrow desktop-arrow-right">
+                      <ChevronRight size={24} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* ══════════════════════════════════════════════
-          "THIS IS HOME" — white section
+          ABOUT SECTION – now displays verse and "Welcome Home" button
       ══════════════════════════════════════════════ */}
       <section id="about" className="bg-white rounded-t-[2rem] -mt-8 relative z-10 px-8 md:px-16 lg:px-24 py-20 md:py-28">
         <div className="max-w-screen-lg mx-auto grid md:grid-cols-2 gap-12 items-center">
+          {/* Left column – verse content */}
           <div>
+            {/* Heading – verse reference */}
             <h1 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(3rem,8vw,6rem)', fontWeight: 800, lineHeight: 1.0 }}>
-              {t('about_tagline') || 'This is Home'}
+              {verse.reference || t('about_tagline') || 'This is Home'}
             </h1>
+            {/* Description – verse text */}
             <p className="mt-8 text-base md:text-lg text-black/60 leading-relaxed max-w-md"
                style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-              {t('about_text') || 'We are a vibrant and friendly church. We love Jesus and we love people. We\'d love to see you here soon!'}
+              {verse.text || t('about_text') || 'We are a vibrant and friendly church. We love Jesus and we love people. We\'d love to see you here soon!'}
             </p>
-            {/* Quick action buttons */}
-            <div className="flex flex-wrap gap-3 mt-8">
+            {/* Welcome button (moved from hero) – opens Events modal */}
+            <div className="mt-8">
               <button
                 onClick={openEventsModal}
-                className="px-5 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] hover:bg-black/80 transition-colors"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-black text-white text-[13px] uppercase tracking-[0.18em] font-medium hover:bg-black/80 transition"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                {t('events_button') || 'Events'}
-              </button>
-              <button
-                onClick={openRosterModal}
-                className="px-5 py-2.5 rounded-full border border-black text-black text-[11px] uppercase tracking-[0.18em] hover:bg-black hover:text-white transition-colors"
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
-              >
-                {t('roster_button') || 'Roster'}
+                {t('welcome_cta') || 'Welcome Home'}
               </button>
             </div>
           </div>
 
-          {/* Right — decorative image placeholder */}
+          {/* Right column – logo_2 placeholder */}
           <div className="relative flex justify-center">
             <div className="w-full max-w-sm aspect-[4/5] rounded-[3rem] bg-[#F5EFE6] overflow-hidden shadow-xl flex items-center justify-center">
               <img
-                src="/church-photo.jpg"
-                alt="Church community"
-                className="w-full h-full object-cover"
+                src="/logo_2.webp"
+                alt="Church logo"
+                className="w-full h-full object-contain p-8"
                 onError={(e) => { e.target.style.display = 'none' }}
               />
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <p className="text-black/20 text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>Church photo</p>
+                <p className="text-black/20 text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>Logo</p>
               </div>
             </div>
           </div>
@@ -659,52 +630,52 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-    "HOW WE DO CHURCH" — full‑width, rounded, with proper padding
-══════════════════════════════════════════════ */}
-<section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
-  <div className="px-6 md:px-12 lg:px-20">
-    <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
-      {t('how_we_do') || 'How we do church'}
-    </h2>
+          "HOW WE DO CHURCH" — full‑width, rounded, with proper padding
+      ══════════════════════════════════════════════ */}
+      <section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
+        <div className="px-6 md:px-12 lg:px-20">
+          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
+            {t('how_we_do') || 'How we do church'}
+          </h2>
 
-    <div id="how-we-splide" className="splide how-we-splide">
-      <div className="splide__track" style={{ overflow: 'hidden' }}>
-        <ul className="splide__list">
-          {HOW_WE_DO.map((card, i) => (
-            <li key={i} className="splide__slide">
-              <div className="bg-white rounded-2xl p-6 md:p-8 flex flex-col h-full min-h-[280px]">
-                <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-                  {card.title}
-                </h3>
-                <p className="text-sm text-black/60 leading-relaxed flex-1"
-                   style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  {card.body}
-                </p>
-                <a
-                  href={card.href}
-                  className="mt-6 inline-block px-5 py-2 rounded-full border border-black/30 text-[10px] uppercase tracking-[0.18em] text-black hover:bg-black hover:text-white hover:border-black transition-all self-start"
-                  style={{ fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  {card.cta}
-                </a>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+          <div id="how-we-splide" className="splide how-we-splide">
+            <div className="splide__track" style={{ overflow: 'hidden' }}>
+              <ul className="splide__list">
+                {HOW_WE_DO.map((card, i) => (
+                  <li key={i} className="splide__slide">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 flex flex-col h-full min-h-[280px]">
+                      <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                        {card.title}
+                      </h3>
+                      <p className="text-sm text-black/60 leading-relaxed flex-1"
+                         style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        {card.body}
+                      </p>
+                      <a
+                        href={card.href}
+                        className="mt-6 inline-block px-5 py-2 rounded-full border border-black/30 text-[10px] uppercase tracking-[0.18em] text-black hover:bg-black hover:text-white hover:border-black transition-all self-start"
+                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                      >
+                        {card.cta}
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-      {/* Custom arrows */}
-      <div className="splide__arrows flex gap-3 mt-8 justify-center">
-        <button className="how-we-arrow how-we-arrow-prev">
-          <ChevronLeft size={20} />
-        </button>
-        <button className="how-we-arrow how-we-arrow-next">
-          <ChevronRight size={20} />
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
+            {/* Custom arrows */}
+            <div className="splide__arrows flex gap-3 mt-8 justify-center">
+              <button className="how-we-arrow how-we-arrow-prev">
+                <ChevronLeft size={20} />
+              </button>
+              <button className="how-we-arrow how-we-arrow-next">
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ══════════════════════════════════════════════
           MARQUEE — values ticker
@@ -1001,245 +972,249 @@ export default function LandingPage() {
       )}
 
       {/* ══════════════════════════════════════════════
-          STYLES (updated for new arrow classes)
+          STYLES (updated for new arrow classes + mobile description hiding)
       ══════════════════════════════════════════════ */}
       <style>{`
         html { scroll-behavior: smooth; }
-*, *::before, *::after { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; }
 
-/* ── Marquee animations (unchanged) ── */
-@keyframes marquee {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.animate-marquee {
-  display: flex;
-  animation: marquee 22s linear infinite;
-  width: max-content;
-}
+        /* ── Marquee animations (unchanged) ── */
+        @keyframes marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          display: flex;
+          animation: marquee 22s linear infinite;
+          width: max-content;
+        }
 
-@keyframes marqueeSlow {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
-.sc-marquee-outer {
-  display: flex;
-  width: 100%;
-}
-.animate-marquee-slow {
-  animation: marqueeSlow 30s linear infinite;
-}
+        @keyframes marqueeSlow {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-100%); }
+        }
+        .sc-marquee-outer {
+          display: flex;
+          width: 100%;
+        }
+        .animate-marquee-slow {
+          animation: marqueeSlow 30s linear infinite;
+        }
 
-@keyframes bounceY {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(4px); }
-}
-.animate-bounce-y { animation: bounceY 1.8s ease-in-out infinite; }
+        @keyframes bounceY {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(4px); }
+        }
+        .animate-bounce-y { animation: bounceY 1.8s ease-in-out infinite; }
 
-.splide__track { overflow: visible !important; }
+        .splide__track { overflow: visible !important; }
 
-/* ========== HERO "WHAT'S ON" CAROUSEL ========== */
-.hero-carousel-wrapper {
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
-  position: relative;
-}
+        /* ========== HERO "WHAT'S ON" CAROUSEL ========== */
+        .hero-carousel-wrapper {
+          width: 100%;
+          max-width: 560px;
+          margin: 0 auto;
+          position: relative;
+        }
 
-/* Card styles (matches screenshot) */
-.whats-on-card {
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  position: relative;
-  box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.3);
-}
+        /* Card styles (matches screenshot) */
+        .whats-on-card {
+          background: rgba(20, 20, 20, 0.85);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 1.5rem;
+          padding: 1.5rem;
+          position: relative;
+          box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.3);
+        }
 
-.card-label {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #C9A882;
-  margin-bottom: 0.75rem;
-}
+        .card-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px;
+          letter-spacing: 0.3em;
+          text-transform: uppercase;
+          color: #C9A882;
+          margin-bottom: 0.75rem;
+        }
 
-.card-title {
-  font-family: 'Darker Grotesque', sans-serif;
-  font-size: clamp(1.4rem, 5vw, 2rem);
-  font-weight: 800;
-  color: white;
-  margin-bottom: 0.5rem;
-  line-height: 1.2;
-}
+        .card-title {
+          font-family: 'Darker Grotesque', sans-serif;
+          font-size: clamp(1.4rem, 5vw, 2rem);
+          font-weight: 800;
+          color: white;
+          margin-bottom: 0.5rem;
+          line-height: 1.2;
+        }
 
-.card-description {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 1.25rem;
-}
+        .card-description {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.9rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 1.25rem;
+        }
 
-.card-cta {
-  display: inline-block;
-  background: white;
-  color: black;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 0.6rem 1.4rem;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-}
-.card-cta:hover {
-  background: #f0f0f0;
-}
+        .card-cta {
+          display: inline-block;
+          background: white;
+          color: black;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          padding: 0.6rem 1.4rem;
+          border-radius: 999px;
+          border: none;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.1s;
+        }
+        .card-cta:hover {
+          background: #f0f0f0;
+        }
 
-/* Pagination dots – inside card, top-right */
-.whats-on-slider .splide__pagination {
-  position: absolute !important;
-  top: 1.25rem !important;
-  right: 1.25rem !important;
-  bottom: auto !important;
-  left: auto !important;
-  display: flex;
-  gap: 6px;
-  padding: 0;
-  z-index: 5;
-}
-.whats-on-slider .splide__pagination__page {
-  width: 6px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-  margin: 0;
-  transition: all 0.2s;
-}
-.whats-on-slider .splide__pagination__page.is-active {
-  width: 18px;
-  background: #C9A882;
-}
+        /* Pagination dots – inside card, top-right */
+        .whats-on-slider .splide__pagination {
+          position: absolute !important;
+          top: 1.25rem !important;
+          right: 1.25rem !important;
+          bottom: auto !important;
+          left: auto !important;
+          display: flex;
+          gap: 6px;
+          padding: 0;
+          z-index: 5;
+        }
+        .whats-on-slider .splide__pagination__page {
+          width: 6px;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.4);
+          border-radius: 999px;
+          margin: 0;
+          transition: all 0.2s;
+        }
+        .whats-on-slider .splide__pagination__page.is-active {
+          width: 18px;
+          background: #C9A882;
+        }
 
-/* Desktop arrows – half inside / half outside card */
-.desktop-arrows {
-  display: none; /* hidden on mobile, shown via media query */
-}
-.desktop-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: black;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: background 0.2s, color 0.2s;
-  z-index: 10;
-}
-.desktop-arrow:hover {
-  background: black;
-  color: white;
-}
-.desktop-arrow-left {
-  left: -22px;  /* half of 44px */
-}
-.desktop-arrow-right {
-  right: -22px;
-}
+        /* Desktop arrows – half inside / half outside card */
+        .desktop-arrows {
+          display: none; /* hidden on mobile, shown via media query */
+        }
+        .desktop-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: white;
+          border: 1px solid rgba(0,0,0,0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: black;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          transition: background 0.2s, color 0.2s;
+          z-index: 10;
+        }
+        .desktop-arrow:hover {
+          background: black;
+          color: white;
+        }
+        .desktop-arrow-left {
+          left: -22px;  /* half of 44px */
+        }
+        .desktop-arrow-right {
+          right: -22px;
+        }
 
-/* Mobile arrows – inside card, bottom-right */
-.card-mobile-arrows {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  display: flex;
-  gap: 8px;
-  z-index: 10;
-}
-.card-arrow-sm {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.card-arrow-sm:hover {
-  background: rgba(255,255,255,0.2);
-}
+        /* Mobile arrows – inside card, bottom-right */
+        .card-mobile-arrows {
+          position: absolute;
+          bottom: 1rem;
+          right: 1rem;
+          display: flex;
+          gap: 8px;
+          z-index: 10;
+        }
+        .card-arrow-sm {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(255,255,255,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .card-arrow-sm:hover {
+          background: rgba(255,255,255,0.2);
+        }
 
-/* Responsive: show/hide appropriate arrows */
-@media (min-width: 768px) {
-  .desktop-arrows {
-    display: block;
-  }
-  .card-mobile-arrows {
-    display: none;
-  }
-  .whats-on-card {
-    padding: 1.5rem 2rem 1.8rem;
-  }
-}
-@media (max-width: 767px) {
-  .desktop-arrows {
-    display: none;
-  }
-  .card-mobile-arrows {
-    display: flex;
-  }
-  .whats-on-card {
-    padding: 1.2rem;
-  }
-  .whats-on-slider .splide__pagination {
-    top: 0.8rem !important;
-    right: 0.8rem !important;
-  }
-}
+        /* Responsive: show/hide appropriate arrows & hide description on mobile */
+        @media (min-width: 768px) {
+          .desktop-arrows {
+            display: block;
+          }
+          .card-mobile-arrows {
+            display: none;
+          }
+          .whats-on-card {
+            padding: 1.5rem 2rem 1.8rem;
+          }
+        }
+        @media (max-width: 767px) {
+          .desktop-arrows {
+            display: none;
+          }
+          .card-mobile-arrows {
+            display: flex;
+          }
+          .whats-on-card {
+            padding: 1rem;
+          }
+          /* Hide description on mobile to save vertical space */
+          .card-description {
+            display: none;
+          }
+          .whats-on-slider .splide__pagination {
+            top: 0.8rem !important;
+            right: 0.8rem !important;
+          }
+        }
 
-/* ========== "HOW WE DO CHURCH" CAROUSEL ========== */
-.how-we-arrow {
-  pointer-events: auto;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.how-we-arrow:hover { background: rgba(255,255,255,0.2); }
-.how-we-splide .splide__arrows {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 2rem;
-  pointer-events: none;
-}
-.splide__arrow svg { display: none; }
-.how-we-splide .splide__slide { height: auto !important; }
-.whats-on-slider .splide__slide { height: auto !important; }
+        /* ========== "HOW WE DO CHURCH" CAROUSEL ========== */
+        .how-we-arrow {
+          pointer-events: auto;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.2);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .how-we-arrow:hover { background: rgba(255,255,255,0.2); }
+        .how-we-splide .splide__arrows {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 2rem;
+          pointer-events: none;
+        }
+        .splide__arrow svg { display: none; }
+        .how-we-splide .splide__slide { height: auto !important; }
+        .whats-on-slider .splide__slide { height: auto !important; }
       `}</style>
     </div>
   )
