@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, 
@@ -6,6 +6,8 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
+
+// Import Splide styles and component
 import '@splidejs/splide/css'
 
 const NAV_LINKS = [
@@ -20,18 +22,14 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const { t, locale, toggleLocale } = useLocale()
 
-  // Existing states
+  // States
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [verse, setVerse] = useState({ reference: 'Matthew 11:28', text: 'Come to me...', theme: '' })
   const [events, setEvents] = useState([])
   const [carouselItems, setCarouselItems] = useState([])
-  const [autoplay, setAutoplay] = useState(true)
-
-  // Dynamic font size for verse
-  const [verseFontSize, setVerseFontSize] = useState(1.5)
-  const verseTextRef = useRef(null)
+  const [splideInitialized, setSplideInitialized] = useState(false)
 
   // Events modal
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false)
@@ -47,44 +45,46 @@ export default function LandingPage() {
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
-  // Dynamic font scaling for verse
-  useEffect(() => {
-    const calculateFontSize = () => {
-      if (!verseTextRef.current) return
-      const text = verse.text
-      const container = verseTextRef.current.parentElement
-      if (!container) return
-      
-      const containerWidth = container.offsetWidth
-      const tempSpan = document.createElement('span')
-      tempSpan.style.visibility = 'hidden'
-      tempSpan.style.position = 'absolute'
-      tempSpan.style.whiteSpace = 'nowrap'
-      tempSpan.style.fontFamily = getComputedStyle(verseTextRef.current).fontFamily
-      tempSpan.style.fontSize = '1rem'
-      tempSpan.innerText = text
-      document.body.appendChild(tempSpan)
-      
-      const textWidth = tempSpan.offsetWidth
-      const maxWidth = containerWidth - 40 // padding buffer
-      let newSize = 1.5 // default max size
-      
-      if (textWidth > maxWidth) {
-        newSize = Math.max(0.85, (maxWidth / textWidth) * 1.5 * 0.95)
-      }
-      
-      document.body.removeChild(tempSpan)
-      setVerseFontSize(Math.min(1.5, newSize))
-    }
-    
-    calculateFontSize()
-    window.addEventListener('resize', calculateFontSize)
-    return () => window.removeEventListener('resize', calculateFontSize)
-  }, [verse.text])
-
+  // Load all data
   useEffect(() => {
     loadContent()
   }, [])
+
+  // Initialize Splide after carouselItems are loaded
+  useEffect(() => {
+    if (carouselItems.length > 0 && !splideInitialized) {
+      const initSplide = async () => {
+        // Small delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        const Splide = (await import('@splidejs/splide')).default
+        const splide = new Splide('.splide-carousel', {
+          type: 'slide',
+          perPage: 3,
+          perMove: 1,
+          gap: '2rem',
+          focus: 0,
+          speed: 600,
+          rewind: true,
+          rewindSpeed: 400,
+          pagination: false,
+          arrows: true,
+          dragAngleThreshold: 30,
+          updateOnMove: true,
+          trimSpace: false,
+          breakpoints: {
+            991: { perPage: 2, gap: '1.5rem' },
+            767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
+          }
+        })
+        
+        splide.mount()
+        setSplideInitialized(true)
+      }
+      
+      initSplide()
+    }
+  }, [carouselItems, splideInitialized])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -105,58 +105,6 @@ export default function LandingPage() {
     }
     return () => { document.body.style.overflow = '' }
   }, [isEventsModalOpen, isRosterModalOpen])
-
-  // Initialize Splide carousel - CLEAN VERSION
-useEffect(() => {
-  let splide = null
-  
-  const initCarousel = async () => {
-    // Wait for DOM to be ready
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    const container = document.querySelector('.horizontal-church-slider')
-    if (!container || splide) return
-    
-    try {
-      const SplideModule = await import('@splidejs/splide')
-      const Splide = SplideModule.default
-      
-      splide = new Splide(container, {
-        type: 'slide',
-        perPage: 3,
-        perMove: 1,
-        gap: '2rem',
-        focus: 0,
-        speed: 600,
-        rewind: true,
-        rewindSpeed: 400,
-        pagination: false,
-        arrows: true,
-        dragAngleThreshold: 30,
-        updateOnMove: true,
-        trimSpace: false,
-        breakpoints: {
-          991: { perPage: 2, gap: '1.5rem' },
-          767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
-        }
-      })
-      
-      splide.mount()
-      console.log('Splide mounted successfully')
-    } catch (err) {
-      console.error('Splide mount error:', err)
-    }
-  }
-  
-  initCarousel()
-  
-  return () => {
-    if (splide) {
-      splide.destroy()
-      splide = null
-    }
-  }
-}, []) // Empty array - run once on mount
 
   const loadContent = async () => {
     setLoading(true)
@@ -190,29 +138,52 @@ useEffect(() => {
   }
 
   const loadCarouselItems = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('carousel_items')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: true })
-    
-    if (error && error.code === '42P01') {
-      // Table doesn't exist - silently use placeholders, no console error
-      setCarouselItems([])
-      return
+    try {
+      // Fetch random 3 verses from verse_library
+      const { data, error } = await supabase
+        .from('verse_library')
+        .select('*')
+      
+      if (!error && data && data.length > 0) {
+        // Shuffle and take first 3 random verses
+        const shuffled = [...data]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        const randomVerses = shuffled.slice(0, 3)
+        
+        // Transform verse data into carousel format
+        const carouselData = randomVerses.map((verse, index) => ({
+          id: verse.id,
+          image_url: `/placeholder-${(index % 3) + 1}.jpg`,
+          title_en: verse.reference,
+          title_bm: verse.reference,
+          description_en: verse.text,
+          description_bm: verse.text,
+          theme: verse.theme || 'Bible Verse'
+        }))
+        
+        setCarouselItems(carouselData)
+        console.log('Loaded 3 random verses for carousel:', carouselData.length)
+      } else {
+        // Fallback placeholders
+        setCarouselItems([
+          { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
+          { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
+          { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Philippians 4:13', title_bm: 'Filipi 4:13', description_en: 'I can do all things through Christ who strengthens me.', description_bm: 'Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.', theme: 'Encouragement' },
+        ])
+      }
+    } catch (error) {
+      console.error('Error loading carousel verses:', error)
+      // Use fallback placeholders
+      setCarouselItems([
+        { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
+        { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
+        { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Philippians 4:13', title_bm: 'Filipi 4:13', description_en: 'I can do all things through Christ who strengthens me.', description_bm: 'Segala perkara dapat kutanggung di dalam Dia yang memberi kekuatan kepadaku.', theme: 'Encouragement' },
+      ])
     }
-    if (!error && data && data.length > 0) {
-      setCarouselItems(data)
-    } else {
-      setCarouselItems([])
-    }
-  } catch (error) {
-    // Silent fail - use placeholders
-    setCarouselItems([])
   }
-}
 
   const loadRosters = async () => {
     const { data, error } = await supabase
@@ -259,8 +230,6 @@ useEffect(() => {
       if (monthsArray.length > 0) {
         setSelectedMonth(monthsArray[0].value)
       }
-    } else {
-      console.error('Error loading rosters:', error)
     }
   }
 
@@ -311,13 +280,6 @@ useEffect(() => {
       dayName: date.toLocaleString('default', { weekday: 'long' }),
     }
   }
-
-  // Prepare carousel slides data (Supabase data or placeholders)
-  const carouselSlides = carouselItems.length > 0 ? carouselItems : [
-    { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Special Announcement', title_bm: 'Pengumuman Istimewa', description_en: 'Join us for a special service this Sunday.', description_bm: 'Sertai kami untuk kebaktian istimewa minggu ini.' },
-    { id: 2, image_url: '/placeholder-2.jpg', title_en: 'Upcoming Event', title_bm: 'Acara Akan Datang', description_en: 'Don\'t miss our annual celebration.', description_bm: 'Jangan lepaskan sambutan tahunan kami.' },
-    { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Join Us', title_bm: 'Sertai Kami', description_en: 'Find your community and grow in faith.', description_bm: 'Cari komuniti anda dan bertumbuh dalam iman.' },
-  ]
 
   if (loading) {
     return (
@@ -373,7 +335,7 @@ useEffect(() => {
         <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
       </div>
 
-      {/* ========== HERO + CAROUSEL INTEGRATED SECTION ========== */}
+      {/* ========== HERO SECTION ========== */}
       <section
         id="home"
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
@@ -396,15 +358,12 @@ useEffect(() => {
 
         <div className="relative z-10 w-full max-w-3xl mx-auto">
           
-          {/* VERSE WRAPPER - Dynamic font size, no scrollbar */}
+          {/* VERSE WRAPPER */}
           <div className="hero-verse-wrapper mx-auto mb-6 min-h-[100px] flex items-center justify-center">
             <blockquote className="w-full">
               <p 
-                ref={verseTextRef}
-                className="hero-verse-text italic text-[#2D2926] mb-3 font-['Lora',serif] text-center"
+                className="hero-verse-text italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif] text-center"
                 style={{
-                  fontSize: `${verseFontSize}rem`,
-                  lineHeight: 1.4,
                   overflowWrap: 'break-word',
                   wordWrap: 'break-word',
                 }}
@@ -423,7 +382,7 @@ useEffect(() => {
               href="#about"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
                 <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
                 <polyline points="10 17 15 12 10 7"/>
                 <line x1="15" y1="12" x2="3" y2="12"/>
@@ -433,7 +392,7 @@ useEffect(() => {
           </div>
 
           {/* QUICK ACTION CARDS */}
-          <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-8">
+          <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-12">
             <button
               onClick={openEventsModal}
               className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
@@ -454,53 +413,55 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* SPLIDE CARD CAROUSEL - SOUL Church style */}
-          <div className="hero-carousel-container w-full mt-4">
-            <div className="splide horizontal-church-slider" aria-label="Church Highlights">
-              <div className="splide__track">
-                <ul className="splide__list">
-                  {carouselSlides.map((item, idx) => (
-                    <li key={item.id || idx} className="splide__slide church-card-slide">
-                      <div className="card-image-wrapper">
-                        <img 
-                          src={item.image_url || `/placeholder-${(idx % 3) + 1}.jpg`} 
-                          alt={locale === 'bm' ? item.title_bm : item.title_en}
-                          className="card-bg-image"
-                          onError={(e) => {
-                            e.target.src = 'https://placehold.co/800x1000/2D2926/FAF8F5?text=Church'
-                          }}
-                        />
-                        <div className="card-gradient-overlay"></div>
-                      </div>
-                      <div className="card-content-block">
-                        <div className="card-tag">{t('announcements_title')}</div>
-                        <h3 className="card-title">
-                          {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                        </h3>
-                        <p className="card-description">
-                          {locale === 'bm' && item.description_bm 
-                            ? item.description_bm 
-                            : (item.description_en || item.description)}
-                        </p>
-                        <button
-                          onClick={() => {
-                            if (item.link_url) {
-                              window.open(item.link_url, '_blank')
-                            } else {
-                              alert(locale === 'bm' ? 'Butiran akan datang' : 'Details coming soon')
-                            }
-                          }}
-                          className="mt-3 text-sm underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition text-white"
-                        >
-                          {t('learn_more')}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+          {/* SPLIDE CAROUSEL */}
+          {carouselItems.length > 0 && (
+            <div className="hero-carousel-container w-full mt-4">
+              <div className="splide-carousel splide" aria-label="Bible Verses">
+                <div className="splide__track">
+                  <ul className="splide__list">
+                    {carouselItems.map((item, idx) => (
+                      <li key={item.id || idx} className="splide__slide">
+                        <div className="church-card-slide group">
+                          <div className="card-image-wrapper">
+                            <img 
+                              src={item.image_url || `/placeholder-${(idx % 3) + 1}.jpg`} 
+                              alt={locale === 'bm' ? item.title_bm : item.title_en}
+                              className="card-bg-image"
+                              onError={(e) => {
+                                e.target.src = 'https://placehold.co/800x1000/2D2926/FAF8F5?text=Bible+Verse'
+                              }}
+                            />
+                            <div className="card-gradient-overlay"></div>
+                          </div>
+                          <div className="card-content-block">
+                            <div className="card-tag">{item.theme || 'Bible Verse'}</div>
+                            <h3 className="card-title">
+                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                            </h3>
+                            <p className="card-description">
+                              {locale === 'bm' && item.description_bm 
+                                ? item.description_bm.substring(0, 100) 
+                                : (item.description_en || '').substring(0, 100)
+                              }...
+                            </p>
+                            <button
+                              onClick={() => {
+                                const fullVerse = locale === 'bm' ? item.description_bm : item.description_en
+                                alert(fullVerse || item.description_en)
+                              }}
+                              className="mt-3 text-sm underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition text-white"
+                            >
+                              {t('learn_more')}
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -668,8 +629,8 @@ useEffect(() => {
           * { animation: none !important; transition-duration: 0.01ms !important; }
         }
 
-        /* Splide Card Carousel Styles - SOUL Church Inspired */
-        .horizontal-church-slider {
+        /* Splide Card Carousel Styles */
+        .splide-carousel {
           width: 100%;
         }
 
@@ -757,13 +718,13 @@ useEffect(() => {
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
           display: -webkit-box;
-          -webkit-line-clamp: 2;
+          -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
 
         /* Splide arrow customization */
-        .horizontal-church-slider .splide__arrow {
+        .splide-carousel .splide__arrow {
           background: rgba(255, 255, 255, 0.2);
           backdrop-filter: blur(4px);
           width: 2.5rem;
@@ -773,12 +734,12 @@ useEffect(() => {
           transition: opacity 0.3s;
         }
 
-        .horizontal-church-slider .splide__arrow:hover {
+        .splide-carousel .splide__arrow:hover {
           background: rgba(255, 255, 255, 0.4);
           opacity: 1;
         }
 
-        .horizontal-church-slider .splide__arrow svg {
+        .splide-carousel .splide__arrow svg {
           fill: #fff;
         }
 
