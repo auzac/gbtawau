@@ -455,7 +455,7 @@ export default function LandingPage() {
 
 {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
 {carouselItems.length > 0 && (
-  <div className="hero-carousel-container w-full mt-6 md:mt-8 mb-0 pb-0">
+<div className="hero-carousel-container w-full mt-4 md:mt-6" style={{ marginBottom: 0, paddingBottom: 0 }}>
     <div className="splide-carousel splide" aria-label="Announcements">
       <div className="splide__track">
         <ul className="splide__list">
@@ -479,15 +479,15 @@ export default function LandingPage() {
           ))}
         </ul>
       </div>
-      {/* Custom navigation - only on desktop */}
-      <div className="custom-navigation hidden md:block">
-        <button className="custom-prev" aria-label="Previous slide">
-          <ChevronLeft size={20} />
-        </button>
-        <button className="custom-next" aria-label="Next slide">
-          <ChevronRight size={20} />
-        </button>
-      </div>
+      {/* Custom navigation - visible on all devices */}
+<div className="custom-navigation">
+  <button className="custom-prev" aria-label="Previous slide">
+    <ChevronLeft size={20} />
+  </button>
+  <button className="custom-next" aria-label="Next slide">
+    <ChevronRight size={20} />
+  </button>
+</div>
     </div>
   </div>
 )}
@@ -663,7 +663,7 @@ export default function LandingPage() {
   width: 100%;
 }
 
-/* On mobile: edge-to-edge, NO bottom margin */
+/* On mobile: edge-to-edge, NO extra space */
 @media (max-width: 767px) {
   .hero-carousel-container {
     width: 100vw;
@@ -676,10 +676,15 @@ export default function LandingPage() {
     padding-bottom: 0;
   }
   
+  .hero-carousel-container .splide {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  
   .announcement-card {
     border-radius: 0;
     margin: 0;
-    aspect-ratio: 3 / 1.2;
+    aspect-ratio: 3 / 1.1;
   }
   
   .hero-carousel-container .splide__track {
@@ -687,28 +692,59 @@ export default function LandingPage() {
   }
   
   .card-content-block {
-    padding: 1rem 1.25rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-tag {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.25rem;
   }
   
   .card-title {
-    font-size: 1.2rem;
+    font-size: 1rem;
     margin-bottom: 0.25rem;
   }
   
   .card-description {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.3;
     -webkit-line-clamp: 2;
-    line-height: 1.4;
   }
   
-  .card-tag {
-    font-size: 0.6rem;
-    margin-bottom: 0.3rem;
-  }
-  
-  /* Hide default pagination dots completely on mobile */
+  /* Hide desktop pagination on mobile */
   .splide-carousel .splide__pagination {
     display: none;
+  }
+  
+  /* Show custom navigation on mobile - bottom left */
+  .custom-navigation {
+    display: flex;
+    position: absolute;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    top: auto;
+    right: auto;
+    transform: none;
+    gap: 0.5rem;
+    z-index: 20;
+  }
+  
+  .custom-prev,
+  .custom-next {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    position: relative;
+    left: auto;
+    right: auto;
+  }
+  
+  .custom-prev:hover,
+  .custom-next:hover {
+    left: auto;
+    right: auto;
   }
 }
 
@@ -747,6 +783,82 @@ export default function LandingPage() {
   .card-tag {
     font-size: 0.65rem;
     margin-bottom: 0.5rem;
+  }
+  
+  /* Desktop: arrows half in/out */
+  .custom-navigation {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+  
+  .custom-prev,
+  .custom-next {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    color: white;
+    position: relative;
+    left: auto;
+    right: auto;
+  }
+  
+  .custom-prev {
+    left: -1.25rem;
+  }
+  
+  .custom-next {
+    right: -1.25rem;
+  }
+  
+  /* Desktop pagination - top right corner */
+  .splide-carousel .splide__pagination {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    bottom: auto;
+    left: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    width: auto;
+  }
+  
+  .splide-carousel .splide__pagination__page {
+    background: rgba(255, 255, 255, 0.5);
+    width: 5px;
+    height: 5px;
+    margin: 0;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .splide-carousel .splide__pagination__page.is-active {
+    background: #C9A882;
+    transform: scale(1.2);
+    width: 6px;
+    height: 6px;
   }
 }
 
@@ -798,105 +910,15 @@ export default function LandingPage() {
   overflow: hidden;
 }
 
-/* Custom navigation - arrows half in, half out on desktop */
-.custom-navigation {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.custom-prev,
-.custom-next {
-  pointer-events: auto;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  color: white;
-}
-
-/* Position arrows half in, half out */
-.custom-prev {
-  position: relative;
-  left: -1.25rem;
-}
-
-.custom-next {
-  position: relative;
-  right: -1.25rem;
-}
-
-.custom-prev:hover,
-.custom-next:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
-}
-
 /* Hide default Splide arrows */
 .splide-carousel .splide__arrow {
   display: none;
 }
 
-/* Pagination - subtle at top-right corner of the card (desktop only) */
-@media (min-width: 768px) {
-  .splide-carousel .splide__pagination {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    bottom: auto;
-    left: auto;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    z-index: 20;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    width: auto;
-  }
-  
-  .splide-carousel .splide__pagination__page {
-    background: rgba(255, 255, 255, 0.5);
-    width: 5px;
-    height: 5px;
-    margin: 0;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-  }
-  
-  .splide-carousel .splide__pagination__page.is-active {
-    background: #C9A882;
-    transform: scale(1.2);
-    width: 6px;
-    height: 6px;
-  }
-}
-
-/* Mobile: hide pagination completely (removes white space) */
-@media (max-width: 767px) {
-  .splide-carousel .splide__pagination {
-    display: none;
-  }
-  
-  /* Remove any extra spacing from the carousel container */
-  .hero-carousel-container .splide {
-    margin-bottom: 0;
-  }
+/* Ensure no extra spacing anywhere */
+.hero-carousel-container .splide__track--slide > .splide__list {
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
       `}</style>
     </div>
