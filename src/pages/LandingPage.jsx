@@ -106,18 +106,22 @@ export default function LandingPage() {
     return () => { document.body.style.overflow = '' }
   }, [isEventsModalOpen, isRosterModalOpen])
 
-  // Initialize Splide carousel
+  // Initialize Splide carousel - CLEAN VERSION
 useEffect(() => {
-  let splideInstance = null
-  let timeoutId = null
+  let splide = null
   
-  const initSplide = async () => {
-    const element = document.querySelector('.horizontal-church-slider')
-    if (!element) return
+  const initCarousel = async () => {
+    // Wait for DOM to be ready
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    const container = document.querySelector('.horizontal-church-slider')
+    if (!container || splide) return
     
     try {
-      const Splide = (await import('@splidejs/splide')).default
-      splideInstance = new Splide(element, {
+      const SplideModule = await import('@splidejs/splide')
+      const Splide = SplideModule.default
+      
+      splide = new Splide(container, {
         type: 'slide',
         perPage: 3,
         perMove: 1,
@@ -136,19 +140,23 @@ useEffect(() => {
           767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
         }
       })
-      splideInstance.mount()
+      
+      splide.mount()
+      console.log('Splide mounted successfully')
     } catch (err) {
-      console.error('Splide initialization failed:', err)
+      console.error('Splide mount error:', err)
     }
   }
   
-  timeoutId = setTimeout(initSplide, 200)
+  initCarousel()
   
   return () => {
-    if (timeoutId) clearTimeout(timeoutId)
-    if (splideInstance) splideInstance.destroy()
+    if (splide) {
+      splide.destroy()
+      splide = null
+    }
   }
-}, [carouselSlides.length]) // Re-run when number of slides changes
+}, []) // Empty array - run once on mount
 
   const loadContent = async () => {
     setLoading(true)
