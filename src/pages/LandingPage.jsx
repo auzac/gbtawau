@@ -654,14 +654,6 @@ export default function LandingPage() {
 
       <style>{`
   html { scroll-behavior: smooth; }
-  * { box-sizing: border-box; }
-  @keyframes bob {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(6px); }
-  }
-  .animate-bob { animation: bob 2.5s ease-in-out infinite; }
-
-  html { scroll-behavior: smooth; }
 * { box-sizing: border-box; }
 @keyframes bob {
   0%, 100% { transform: translateX(-50%) translateY(0); }
@@ -674,33 +666,23 @@ export default function LandingPage() {
   position: relative;
   width: 100%;
   margin-top: 1.5rem;
-  padding: 0 1.25rem;          /* room for protruding arrows on desktop */
+  padding: 0 1.25rem;
 }
 
-/* On mobile: remove outer padding, keep rounded corners */
+/* Mobile: Option A - edge-to-edge with small margins for rounded corners */
 @media (max-width: 640px) {
   .hero-carousel-outer {
-    padding: 0;
+    padding: 0 0.5rem;
     margin-top: 1rem;
     margin-bottom: 0;
-  }
-  
-  .hero-carousel-bar {
-    border-radius: 20px;
-    padding: 1rem 1rem 0.75rem;
-    margin-bottom: 0;
-  }
-  
-  .hero-carousel-outer {
-    padding: 0 0.5rem;
   }
 }
 
 /* ── BAR SHAPE ── */
 .hero-carousel-bar {
-  background: rgba(35, 31, 28, 0.75);
+  background: rgba(35, 31, 28, 0.85);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(217, 201, 183, 0.3);
+  border: 1px solid rgba(201, 168, 130, 0.3);
   border-radius: 1.25rem;
   padding: 1.4rem 3.75rem;
   position: relative;
@@ -708,10 +690,10 @@ export default function LandingPage() {
   transition: all 0.3s ease;
 }
 
-/* On mobile: reduce padding, remove bottom padding to eliminate white space */
+/* Mobile: rounded corners with small side margins */
 @media (max-width: 640px) {
   .hero-carousel-bar {
-    border-radius: 0;
+    border-radius: 20px;
     padding: 1rem 1rem 0.75rem;
     margin-bottom: 0;
   }
@@ -798,7 +780,7 @@ export default function LandingPage() {
 .card-body-text {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.65;
   font-style: italic;
   border-left: 2px solid rgba(201, 168, 130, 0.4);
@@ -827,7 +809,7 @@ export default function LandingPage() {
   padding: 5px 14px;
   border-radius: 999px;
   border: 1px solid rgba(201, 168, 130, 0.5);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   font-family: 'DM Sans', sans-serif;
   font-size: 10px;
@@ -914,7 +896,7 @@ export default function LandingPage() {
     display: flex;
   }
   
-  /* Ensure no extra white space below carousel */
+  /* Remove all extra spacing below carousel */
   .hero-carousel-bar .splide__track {
     margin-bottom: 0;
     padding-bottom: 0;
