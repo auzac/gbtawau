@@ -265,49 +265,84 @@ export default function LandingPage() {
       />
 
       {/* NAVBAR (unchanged, same as before) */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
-        <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative w-4 h-4 opacity-70">
-              <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-4 bg-[#A58B75] rounded-full" />
-              <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-[#A58B75] rounded-full" />
-            </div>
-            <span className="uppercase tracking-[0.22em] text-[11px] text-[#8A7A6E] font-normal font-['DM_Sans',sans-serif]">
-              GBT
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
-              {locale === 'en' ? 'BM' : 'EN'}
-            </button>
-            <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
-              {[0,1].map(i => (
-                <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
-              ))}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* FULLSCREEN MENU (same as before) */}
-      <div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="text-center">
-          {NAV_LINKS.map((item, i) => (
-            <div key={item.en} className={`overflow-hidden transition-all duration-500 ${menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${i*60+100}ms` }}>
-              {item.isRouterLink ? (
-                <button onClick={() => { setMenuOpen(false); navigate(item.href) }} className="block w-full py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
-                  {getNavText(item)}
-                </button>
-              ) : (
-                <a href={item.href} onClick={() => setMenuOpen(false)} className="block py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
-                  {getNavText(item)}
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
+      {/* ========== NAVBAR ========== */}
+<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
+  <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="relative w-4 h-4 opacity-70">
+        <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-4 bg-[#A58B75] rounded-full" />
+        <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-[#A58B75] rounded-full" />
       </div>
+      <span className="uppercase tracking-[0.22em] text-[11px] text-[#8A7A6E] font-normal font-['DM_Sans',sans-serif]">
+        GBT
+      </span>
+    </div>
+    <div className="flex items-center gap-3">
+      <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
+        {locale === 'en' ? 'BM' : 'EN'}
+      </button>
+      <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
+        {[0,1].map(i => (
+          <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
+        ))}
+      </button>
+    </div>
+  </div>
+</nav>
+
+{/* ========== DESKTOP MENU (full‑screen overlay, hidden on mobile) ========== */}
+<div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 hidden md:flex ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+  <div className="text-center">
+    {NAV_LINKS.map((item, i) => (
+      <div key={item.en} className={`overflow-hidden transition-all duration-500 ${menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${i*60+100}ms` }}>
+        {item.isRouterLink ? (
+          <button onClick={() => { setMenuOpen(false); navigate(item.href) }} className="block w-full py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
+            {getNavText(item)}
+          </button>
+        ) : (
+          <a href={item.href} onClick={() => setMenuOpen(false)} className="block py-1 text-[#F5F0EB] hover:text-[#C9A882] transition-colors text-[clamp(2rem,8vw,3.5rem)] font-['Lora',serif] font-normal">
+            {getNavText(item)}
+          </a>
+        )}
+      </div>
+    ))}
+  </div>
+  <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
+</div>
+
+{/* ========== MOBILE DRAWER (right side, borderless, hidden on desktop) ========== */}
+<div className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${menuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+  {/* Backdrop */}
+  <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMenuOpen(false)} />
+  
+  {/* Drawer panel */}
+  <div className={`absolute top-0 right-0 h-full w-4/5 max-w-sm bg-[#2D2926] shadow-2xl flex flex-col p-6 transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    {/* Close button inside drawer */}
+    <button onClick={() => setMenuOpen(false)} className="self-end w-8 h-8 rounded-full flex items-center justify-center text-[#F5F0EB] hover:bg-white/10 transition mb-6">
+      <X size={20} />
+    </button>
+    
+    <div className="flex-1 flex flex-col gap-4">
+      {NAV_LINKS.map((item, i) => (
+        <div key={item.en} className="border-b border-white/10 pb-3">
+          {item.isRouterLink ? (
+            <button onClick={() => { setMenuOpen(false); navigate(item.href) }} className="block w-full text-left text-[#F5F0EB] text-xl font-['Lora',serif] hover:text-[#C9A882] transition py-1">
+              {getNavText(item)}
+            </button>
+          ) : (
+            <a href={item.href} onClick={() => setMenuOpen(false)} className="block text-[#F5F0EB] text-xl font-['Lora',serif] hover:text-[#C9A882] transition py-1">
+              {getNavText(item)}
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+    
+    <div className="mt-8 pt-6 border-t border-white/10">
+      <p className="text-[#6B5E55] text-xs uppercase tracking-wide font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
+    </div>
+  </div>
+</div>
 
       {/* HERO SECTION (unchanged) */}
       {/* ========== HERO SECTION ========== */}
