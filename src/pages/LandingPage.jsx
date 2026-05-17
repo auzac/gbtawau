@@ -449,42 +449,54 @@ export default function LandingPage() {
 
           {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
           {carouselItems.length > 0 && (
-            <div className="hero-carousel-container w-full mt-4 md:mt-6" style={{ marginBottom: 0, paddingBottom: 0 }}>
-              <div className="splide-carousel splide" aria-label="Announcements">
-                <div className="splide__track">
-                  <ul className="splide__list">
-                    {carouselItems.map((item, idx) => (
-                      <li key={item.id || idx} className="splide__slide">
-                        <div className="announcement-card">
-                          <div className="card-content-block">
-                            <div className="card-tag">{item.theme || 'ANNOUNCEMENT'}</div>
-                            <h3 className="card-title">
-                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                            </h3>
-                            <p className="card-description">
-                              {locale === 'bm' && item.description_bm 
-                                ? item.description_bm 
-                                : (item.description_en || '')
-                              }
-                            </p>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {/* Custom navigation - visible on all devices */}
-                <div className="custom-navigation">
-                  <button className="custom-prev" aria-label="Previous slide">
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button className="custom-next" aria-label="Next slide">
-                    <ChevronRight size={20} />
-                  </button>
+  <div className="hero-carousel-outer">
+    <div className="splide-carousel splide hero-carousel-bar" aria-label="Announcements">
+      <p className="carousel-section-label">Announcements</p>
+
+      {/* Pagination dots — top right, rendered by Splide into .splide__pagination via CSS repositioning */}
+      <div className="splide__track">
+        <ul className="splide__list">
+          {carouselItems.map((item, idx) => (
+            <li key={item.id || idx} className="splide__slide">
+              <div className="announcement-card">
+                <span className="card-theme-pill">{item.theme || 'Announcement'}</span>
+                <h3 className="card-title">
+                  {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                </h3>
+                <p className="card-body-text">
+                  {locale === 'bm' && item.description_bm
+                    ? item.description_bm
+                    : (item.description_en || '')}
+                </p>
+
+                {/* Bottom row: CTA left, arrows right (mobile) / arrows protruding (desktop) */}
+                <div className="card-bottom-row">
+                  <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
+                  <div className="card-mobile-arrows">
+                    <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button className="custom-next card-arrow-sm" aria-label="Next slide">
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Desktop arrows — half outside the bar */}
+      <button className="custom-prev carousel-arrow-desktop carousel-arrow-left" aria-label="Previous slide">
+        <ChevronLeft size={20} />
+      </button>
+      <button className="custom-next carousel-arrow-desktop carousel-arrow-right" aria-label="Next slide">
+        <ChevronRight size={20} />
+      </button>
+    </div>
+  </div>
+)}
         </div>
       </section>
 
@@ -641,67 +653,187 @@ export default function LandingPage() {
       )}
 
       <style>{`
-        html { scroll-behavior: smooth; }
-        * { box-sizing: border-box; }
-        @keyframes bob {
-          0%, 100% { transform: translateX(-50%) translateY(0); }
-          50% { transform: translateX(-50%) translateY(6px); }
-        }
-        .animate-bob { animation: bob 2.5s ease-in-out infinite; }
-        
-        .announcement-card {
-          background: rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(217, 201, 183, 0.4);
-          backdrop-filter: blur(4px);
-          border-radius: 1rem;
-          padding: 2rem;
-          margin: 0.5rem;
-          text-align: center;
-        }
-        .card-tag {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          color: #B09882;
-          text-transform: uppercase;
-          margin-bottom: 0.5rem;
-        }
-        .card-title {
-          font-family: 'Lora', serif;
-          font-size: 1.5rem;
-          color: #2D2926;
-          margin-bottom: 0.75rem;
-        }
-        .card-description {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.95rem;
-          color: #6B5E55;
-          line-height: 1.6;
-        }
-        .custom-navigation {
-          display: flex;
-          justify-content: center;
-          gap: 1.5rem;
-          margin-top: 1.5rem;
-        }
-        .custom-prev, .custom-next {
-          background: white;
-          border: 1px solid rgba(217, 201, 183, 0.5);
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #7A6A5E;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .custom-prev:hover, .custom-next:hover {
-          background: #2D2926;
-          color: #FAF8F5;
-        }
-      `}</style>
+  html { scroll-behavior: smooth; }
+  * { box-sizing: border-box; }
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(6px); }
+  }
+  .animate-bob { animation: bob 2.5s ease-in-out infinite; }
+
+  /* ── CAROUSEL OUTER ── */
+  .hero-carousel-outer {
+    position: relative;
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0 1.25rem;          /* room for protruding arrows on desktop */
+  }
+
+  /* ── BAR SHAPE ── */
+  .hero-carousel-bar {
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(217,201,183,0.45);
+    border-radius: 1.25rem;
+    padding: 1.4rem 3.75rem;     /* horizontal padding reserves arrow space */
+    position: relative;
+    overflow: visible !important; /* let arrows protrude */
+  }
+
+  /* Section label */
+  .carousel-section-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #B09882;
+    margin: 0 0 0.5rem;
+    text-align: left;
+  }
+
+  /* Splide pagination repositioned to top-right */
+  .hero-carousel-bar .splide__pagination {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1.25rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    gap: 5px;
+    padding: 0;
+  }
+  .hero-carousel-bar .splide__pagination__page {
+    width: 5px;
+    height: 5px;
+    background: rgba(176,152,130,0.35);
+    border-radius: 999px;
+    border: none;
+    transition: width 0.3s, background 0.3s;
+    margin: 0 2px;
+  }
+  .hero-carousel-bar .splide__pagination__page.is-active {
+    width: 14px;
+    background: #8A6A4A;
+    transform: none;
+  }
+
+  /* ── SLIDE CARD ── */
+  .announcement-card {
+    text-align: left;
+    min-height: 90px;
+  }
+
+  .card-theme-pill {
+    display: inline-block;
+    background: rgba(201,168,130,0.15);
+    color: #8A6A4A;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 0.45rem;
+  }
+
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 1.2rem;
+    color: #2D2926;
+    margin: 0 0 0.35rem;
+    line-height: 1.3;
+  }
+
+  .card-body-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #6B5E55;
+    line-height: 1.65;
+    font-style: italic;
+    border-left: 2px solid rgba(176,152,130,0.4);
+    padding-left: 0.75rem;
+    margin: 0;
+  }
+
+  /* Bottom row: CTA + mobile arrows */
+  .card-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .card-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(45,41,38,0.25);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4A3F38;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .card-cta-btn:hover { background: #2D2926; color: #FAF8F5; border-color: #2D2926; }
+
+  /* Mobile arrows (bottom-right, inside card) */
+  .card-mobile-arrows {
+    display: none;
+    gap: 6px;
+  }
+  .card-arrow-sm {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid rgba(217,201,183,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7A6A5E;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .card-arrow-sm:hover { background: #2D2926; color: #FAF8F5; }
+
+  /* Desktop arrows — half outside the bar, vertically centred */
+  .carousel-arrow-desktop {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid rgba(217,201,183,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7A6A5E;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    z-index: 10;
+  }
+  .carousel-arrow-desktop:hover { background: #2D2926; color: #FAF8F5; border-color: #2D2926; }
+  .carousel-arrow-left  { left: -18px; }
+  .carousel-arrow-right { right: -18px; }
+
+  /* ── MOBILE OVERRIDES ── */
+  @media (max-width: 640px) {
+    .hero-carousel-outer {
+      padding: 0;          /* full edge-to-edge */
+    }
+    .hero-carousel-bar {
+      border-radius: 1.25rem;
+      padding: 1.25rem 1.25rem 1rem;
+    }
+    .carousel-arrow-desktop { display: none; }  /* hide protruding arrows */
+    .card-mobile-arrows    { display: flex; }   /* show bottom-right arrows */
+  }
+`}</style>
     </div>
   )
 }
