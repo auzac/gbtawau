@@ -657,40 +657,40 @@ function ContentManager() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F7F5F2] flex items-center justify-center font-sans">
         <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2]">
+    <div className="min-h-screen bg-[#F7F5F2] font-sans">
       {/* Header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-[#E7E0D7]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => navigate('/staff')}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] bg-white flex items-center justify-center hover:bg-[#F4F1EC] transition"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] bg-white flex items-center justify-center hover:bg-[#F4F1EC] transition text-sans"
             >
               <ArrowLeft size={18} className="text-[#5E5247]" />
             </button>
             <div>
               <h1 className="text-lg sm:text-xl font-serif text-[#2D2926] leading-none">Content Manager</h1>
-              <p className="text-[10px] sm:text-xs text-[#8B7E72] mt-0.5 sm:mt-1">Website content administration</p>
+              <p className="text-[10px] sm:text-xs text-[#8B7E72] font-sans mt-0.5 sm:mt-1">Website content administration</p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsCalendarModalOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F4F1EC] transition text-sm text-[#5E5247]"
+              className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F4F1EC] transition text-sm font-sans text-[#5E5247]"
             >
               <CalendarDays size={16} />
               Calendar
             </button>
             <button
               onClick={handleLogout}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] bg-white flex items-center justify-center hover:bg-[#F4F1EC] transition"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] bg-white flex items-center justify-center hover:bg-[#F4F1EC] transition text-sans"
             >
               <LogOut size={16} className="text-[#5E5247]" />
             </button>
@@ -700,7 +700,7 @@ function ContentManager() {
 
       {/* Save Toast */}
       {savedMessage && (
-        <div className="fixed top-20 right-4 sm:right-6 z-50">
+        <div className="fixed top-20 right-4 sm:right-6 z-50 font-sans">
           <div className={`flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl shadow-xl text-sm animate-fade-in ${savedMessage.isError ? 'bg-red-600 text-white' : 'bg-[#2D2926] text-white'}`}>
             {savedMessage.isError ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
             {savedMessage.text}
@@ -711,7 +711,7 @@ function ContentManager() {
       {/* Tabs */}
       <div className="border-b border-[#E7E0D7] bg-[#FAF8F5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="flex gap-1 sm:gap-2 py-3 sm:py-4 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-2 py-3 sm:py-4 overflow-x-auto font-sans">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
@@ -725,7 +725,7 @@ function ContentManager() {
                   }`}
                 >
                   <Icon size={15} />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span>{tab.label}</span>
                 </button>
               )
             })}
@@ -736,24 +736,24 @@ function ContentManager() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
         
-        {/* Verse Tab (unchanged) */}
+        {/* Verse Tab */}
         {activeTab === 'verse' && (
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
             {/* LEFT COLUMN: Verse Library */}
             <div className="bg-white border border-[#E7E0D7] rounded-2xl p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-serif text-[#2D2926]">Verse Library</h2>
-                <div className="flex gap-2">
+                <div className="flex gap-2 font-sans">
                   <button onClick={exportVersesToCSV} className="p-2 rounded-lg hover:bg-[#F5F1EB] transition" title="Export verses"><Download size={16} className="text-[#5E5247]" /></button>
                   <label className="p-2 rounded-lg hover:bg-[#F5F1EB] transition cursor-pointer"><Upload size={16} className="text-[#5E5247]" /><input type="file" accept=".csv" onChange={importVersesFromCSV} className="hidden" /></label>
                 </div>
               </div>
-              <div className="relative mb-4">
+              <div className="relative mb-4 font-sans">
                 <input type="text" placeholder="Search by reference or text..." value={verseSearchTerm} onChange={(e) => setVerseSearchTerm(e.target.value)} className="w-full px-4 py-2 pl-9 rounded-xl border border-[#EAE1D4] text-sm" />
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A7A6E]" />
                 {verseSearchTerm && <button onClick={() => setVerseSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X size={16} className="text-[#8A7A6E]" /></button>}
               </div>
-              <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
+              <div className="space-y-2 max-h-80 overflow-y-auto mb-4 font-sans">
                 {verseLibrary.filter(v => v.reference.toLowerCase().includes(verseSearchTerm.toLowerCase()) || v.text.toLowerCase().includes(verseSearchTerm.toLowerCase())).length === 0 ? (
                   <p className="text-center text-[#8A7A6E] py-4 text-sm">No verses found</p>
                 ) : (
@@ -761,11 +761,11 @@ function ContentManager() {
                     <div key={verse.id} className={`border rounded-xl p-3 transition-all ${selectedVerseId === verse.id ? 'border-[#C4A88B] bg-[#F5EFE6] ring-2 ring-[#C4A88B]/30' : verse.is_active ? 'border-[#C4A88B] bg-[#FAF8F5]' : 'border-[#EAE1D4] hover:bg-[#F5F1EB]'}`}>
                       <div className="flex justify-between items-start">
                         <div className="flex-1 cursor-pointer" onClick={() => setSelectedVerseId(verse.id)}>
-                          <p className="font-medium text-[#2D2926] text-sm">{verse.reference}</p>
-                          <p className="text-xs text-[#7A6A5E] mt-1 line-clamp-1">{verse.text}</p>
-                          {verse.theme && <p className="text-[10px] text-[#B0A49A] mt-1">{verse.theme}</p>}
+                          <p className="font-medium text-[#2D2926] text-sm font-sans">{verse.reference}</p>
+                          <p className="text-xs text-[#7A6A5E] mt-1 line-clamp-1 font-sans">{verse.text}</p>
+                          {verse.theme && <p className="text-[10px] text-[#B0A49A] mt-1 font-sans">{verse.theme}</p>}
                         </div>
-                        <div className="flex items-center gap-1 ml-2">
+                        <div className="flex items-center gap-1 ml-2 font-sans">
                           {verse.is_active && <span className="text-[10px] bg-[#2D2926] text-white px-2 py-0.5 rounded-full">Active</span>}
                           {!verse.is_active && <button onClick={() => deleteVerse(verse.id, verse.reference)} className="p-1 rounded hover:bg-red-50 transition"><Trash size={14} className="text-[#B07C68]" /></button>}
                         </div>
@@ -775,9 +775,9 @@ function ContentManager() {
                 )}
               </div>
               {!showAddVerseForm ? (
-                <button onClick={() => setShowAddVerseForm(true)} className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed border-[#EAE1D4] text-sm text-[#5E5247] hover:bg-[#F5F1EB] transition"><Plus size={14} />Add New Verse</button>
+                <button onClick={() => setShowAddVerseForm(true)} className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed border-[#EAE1D4] text-sm font-sans text-[#5E5247] hover:bg-[#F5F1EB] transition"><Plus size={14} />Add New Verse</button>
               ) : (
-                <div className="border border-[#EAE1D4] rounded-xl p-3 space-y-3 bg-[#FAF8F5]">
+                <div className="border border-[#EAE1D4] rounded-xl p-3 space-y-3 bg-[#FAF8F5] font-sans">
                   <input type="text" placeholder="Reference (e.g., Matthew 11:28)" value={newVerseForm.reference} onChange={(e) => setNewVerseForm(prev => ({ ...prev, reference: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" autoFocus />
                   <textarea placeholder="Verse text" rows={2} value={newVerseForm.text} onChange={(e) => setNewVerseForm(prev => ({ ...prev, text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" />
                   <input type="text" placeholder="Theme (optional)" value={newVerseForm.theme} onChange={(e) => setNewVerseForm(prev => ({ ...prev, theme: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
@@ -786,29 +786,79 @@ function ContentManager() {
               )}
             </div>
             <div className="space-y-4">
-              <div className="bg-[#2D2926] rounded-2xl p-5 text-white"><div className="flex items-center gap-2 mb-3"><CheckCircle size={16} className="text-[#C4A88B]" /><span className="text-xs uppercase tracking-wider text-[#C4A88B]">Currently Active</span></div><p className="text-xl font-serif leading-relaxed">"{activeVerse.text}"</p><div className="mt-4 pt-3 border-t border-white/10"><p className="text-sm font-medium">{activeVerse.reference}</p><p className="text-xs text-white/60 mt-1">{activeVerse.theme || 'No theme'}</p></div></div>
-              {selectedVerse && (<div className="bg-white border-2 border-[#C4A88B] rounded-2xl p-5 shadow-lg"><div className="flex items-center gap-2 mb-3"><AlertCircle size={16} className="text-[#C4A88B]" /><span className="text-xs uppercase tracking-wider text-[#5E5247]">Preview — Will Become Active</span></div><p className="text-xl font-serif text-[#2D2926] leading-relaxed">"{selectedVerse.text}"</p><div className="mt-4 pt-3 border-t border-[#EAE1D4]"><p className="text-sm font-medium text-[#2D2926]">{selectedVerse.reference}</p><p className="text-xs text-[#8A7A6E] mt-1">{selectedVerse.theme || 'No theme'}</p></div><button onClick={() => activateVerse(selectedVerse.id)} className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-xl text-sm hover:bg-[#4A3F38] transition flex items-center justify-center gap-2"><CheckCircle size={14} />Activate This Verse</button></div>)}
+              <div className="bg-[#2D2926] rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-3 font-sans">
+                  <CheckCircle size={16} className="text-[#C4A88B]" />
+                  <span className="text-[10px] uppercase tracking-wider text-[#C4A88B]">Currently Active</span>
+                </div>
+                <p className="text-xl font-serif leading-relaxed">"{activeVerse.text}"</p>
+                <div className="mt-4 pt-3 border-t border-white/10 font-sans">
+                  <p className="text-sm font-medium">{activeVerse.reference}</p>
+                  <p className="text-xs text-white/60 mt-1">{activeVerse.theme || 'No theme'}</p>
+                </div>
+              </div>
+              {selectedVerse && (
+                <div className="bg-white border-2 border-[#C4A88B] rounded-2xl p-5 shadow-lg">
+                  <div className="flex items-center gap-2 mb-3 font-sans">
+                    <AlertCircle size={16} className="text-[#C4A88B]" />
+                    <span className="text-[10px] uppercase tracking-wider text-[#5E5247]">Preview — Will Become Active</span>
+                  </div>
+                  <p className="text-xl font-serif text-[#2D2926] leading-relaxed">"{selectedVerse.text}"</p>
+                  <div className="mt-4 pt-3 border-t border-[#EAE1D4] font-sans">
+                    <p className="text-sm font-medium text-[#2D2926]">{selectedVerse.reference}</p>
+                    <p className="text-xs text-[#8A7A6E] mt-1">{selectedVerse.theme || 'No theme'}</p>
+                  </div>
+                  <button onClick={() => activateVerse(selectedVerse.id)} className="w-full mt-4 bg-[#2D2926] text-white py-2 rounded-xl text-sm font-sans hover:bg-[#4A3F38] transition flex items-center justify-center gap-2"><CheckCircle size={14} />Activate This Verse</button>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Events Tab (unchanged) */}
+        {/* Events Tab */}
         {activeTab === 'events' && (
           <div className="space-y-4 sm:space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Upcoming Events</h2><p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage public-facing church events</p></div>
-              <button onClick={handleAddEvent} className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"><Plus size={15} /><span className="hidden sm:inline">Add Event</span></button>
+              <div>
+                <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Upcoming Events</h2>
+                <p className="text-xs sm:text-sm text-[#8B7E72] font-sans mt-0.5 sm:mt-1">Manage public-facing church events</p>
+              </div>
+              <button onClick={handleAddEvent} className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white font-sans hover:bg-[#F5F1EB] transition">
+                <Plus size={15} />
+                <span>Add Event</span>
+              </button>
             </div>
             <div className="grid gap-3 sm:gap-4">
-              {events.length === 0 ? (<div className="bg-white border border-[#E7E0D7] rounded-2xl p-8 text-center text-[#8A7A6E]">No upcoming events. Click "Add Event" to create one.</div>) : (
+              {events.length === 0 ? (
+                <div className="bg-white border border-[#E7E0D7] rounded-2xl p-8 text-center font-sans text-[#8A7A6E]">No upcoming events. Click "Add Event" to create one.</div>
+              ) : (
                 events.map((event) => (
                   <div key={event.id} className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 hover:shadow-md transition">
                     <div className="flex justify-between gap-4 sm:gap-6">
                       <div className="flex gap-3 sm:gap-5 flex-1">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#F5F1EB] flex flex-col items-center justify-center"><span className="text-[10px] sm:text-xs text-[#8B7E72]">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span><span className="text-lg sm:text-xl font-semibold text-[#2D2926] leading-none mt-1">{new Date(event.date).getDate()}</span></div>
-                        <div className="flex-1"><div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2"><h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{event.titleEn}</h3><ChevronRight size={14} className="text-[#B7A89A]" /></div><p className="text-xs sm:text-sm text-[#8B7E72] mb-2 sm:mb-3">{formatTimeForDisplay(event.time)}</p><p className="text-xs sm:text-sm text-[#5E5247] leading-relaxed">{event.descriptionEn}</p>{(event.location || event.pic) && (<div className="flex flex-wrap gap-3 mt-2 text-xs text-[#8A7A6E]">{event.location && <div className="flex items-center gap-1"><MapPin size={12} /> {event.location}</div>}{event.pic && <div className="flex items-center gap-1"><User size={12} /> {event.pic}</div>}</div>)}</div>
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#F5F1EB] flex flex-col items-center justify-center font-sans">
+                          <span className="text-[10px] sm:text-xs text-[#8B7E72]">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
+                          <span className="text-lg sm:text-xl font-semibold text-[#2D2926] leading-none mt-1">{new Date(event.date).getDate()}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                            <h3 className="text-base sm:text-lg font-serif text-[#2D2926]">{event.titleEn}</h3>
+                            <ChevronRight size={14} className="text-[#B7A89A]" />
+                          </div>
+                          <p className="text-xs sm:text-sm font-sans text-[#8B7E72] mb-2 sm:mb-3">{formatTimeForDisplay(event.time)}</p>
+                          <p className="text-xs sm:text-sm font-sans text-[#5E5247] leading-relaxed">{event.descriptionEn}</p>
+                          {(event.location || event.pic) && (
+                            <div className="flex flex-wrap gap-3 mt-2 text-xs font-sans text-[#8A7A6E]">
+                              {event.location && <div className="flex items-center gap-1"><MapPin size={12} /> {event.location}</div>}
+                              {event.pic && <div className="flex items-center gap-1"><User size={12} /> {event.pic}</div>}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-start gap-1 sm:gap-2"><button onClick={() => handleEditEvent(event)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button><button onClick={() => handleDeleteEvent(event.id)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-red-50 transition"><Trash2 size={13} className="text-[#B07C68]" /></button></div>
+                      <div className="flex items-start gap-1 sm:gap-2 font-sans">
+                        <button onClick={() => handleEditEvent(event)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button>
+                        <button onClick={() => handleDeleteEvent(event.id)} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-red-50 transition"><Trash2 size={13} className="text-[#B07C68]" /></button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -817,57 +867,75 @@ function ContentManager() {
           </div>
         )}
 
-        {/* Roster Tab (unchanged) */}
+        {/* Roster Tab */}
         {activeTab === 'roster' && (
           <div className="space-y-4 sm:space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Worship Roster</h2><p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Weekly ministry scheduling overview</p></div></div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Worship Roster</h2>
+                <p className="text-xs sm:text-sm text-[#8B7E72] font-sans mt-0.5 sm:mt-1">Weekly ministry scheduling overview</p>
+              </div>
+            </div>
             <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
               {roster.map((week) => (
                 <div key={week.id} className="bg-white border border-[#E7E0D7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 hover:shadow-md transition">
-                  <div className="flex items-start justify-between mb-4 sm:mb-6"><div><p className="text-[10px] sm:text-xs uppercase tracking-[0.15em] text-[#A39284] mb-1 sm:mb-2">Worship Week</p><h3 className="text-base sm:text-lg font-medium text-[#2D2926]">{week.weekStart}</h3></div><div className="flex gap-1 sm:gap-2"><button onClick={() => saveRosterWeek(week)} className="flex items-center justify-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition text-xs"><Save size={12} /><span className="hidden sm:inline">Save</span></button><button onClick={() => handleEditRoster(week)} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button></div></div>
-                  <div className="space-y-3 sm:space-y-4"><div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-xs sm:text-sm text-[#8B7E72]">Worship Leader</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.leader}</span></div><div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-xs sm:text-sm text-[#8B7E72]">Pianist</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.pianist}</span></div><div className="flex items-center justify-between py-2 sm:py-3"><span className="text-xs sm:text-sm text-[#8B7E72]">Scripture Reader</span><span className="text-xs sm:text-sm font-medium text-[#2D2926]">{week.reader}</span></div></div>
+                  <div className="flex items-start justify-between mb-4 sm:mb-6">
+                    <div>
+                      <p className="text-[10px] sm:text-xs uppercase tracking-[0.15em] font-sans text-[#A39284] mb-1 sm:mb-2">Worship Week</p>
+                      <h3 className="text-base sm:text-lg font-serif text-[#2D2926]">{week.weekStart}</h3>
+                    </div>
+                    <div className="flex gap-1 sm:gap-2 font-sans">
+                      <button onClick={() => saveRosterWeek(week)} className="flex items-center justify-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition text-xs"><Save size={12} /><span>Save</span></button>
+                      <button onClick={() => handleEditRoster(week)} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-[#E7E0D7] flex items-center justify-center hover:bg-[#F5F1EB] transition"><Pencil size={13} className="text-[#5E5247]" /></button>
+                    </div>
+                  </div>
+                  <div className="space-y-3 sm:space-y-4 font-sans text-xs sm:text-sm">
+                    <div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-[#8B7E72]">Worship Leader</span><span className="font-medium text-[#2D2926]">{week.leader}</span></div>
+                    <div className="flex items-center justify-between py-2 sm:py-3 border-b border-[#F0EAE2]"><span className="text-[#8B7E72]">Pianist</span><span className="font-medium text-[#2D2926]">{week.pianist}</span></div>
+                    <div className="flex items-center justify-between py-2 sm:py-3"><span className="text-[#8B7E72]">Scripture Reader</span><span className="font-medium text-[#2D2926]">{week.reader}</span></div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Announcements Tab (NEW) */}
+        {/* Announcements Tab */}
         {activeTab === 'announcements' && (
           <div className="space-y-4 sm:space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Carousel Announcements</h2>
-                <p className="text-xs sm:text-sm text-[#8B7E72] mt-0.5 sm:mt-1">Manage slides shown on the homepage carousel</p>
+                <p className="text-xs sm:text-sm text-[#8B7E72] font-sans mt-0.5 sm:mt-1">Manage slides shown on the homepage carousel</p>
               </div>
               <button
                 onClick={handleAddAnnouncement}
-                className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white hover:bg-[#F5F1EB] transition"
+                className="flex items-center justify-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-2xl border border-[#E7E0D7] bg-white font-sans hover:bg-[#F5F1EB] transition"
               >
                 <Plus size={15} />
-                <span className="hidden sm:inline">Add Announcement</span>
+                <span>Add Announcement</span>
               </button>
             </div>
 
             <div className="bg-white border border-[#E7E0D7] rounded-2xl overflow-hidden">
               {announcements.length === 0 ? (
-                <div className="p-8 text-center text-[#8A7A6E]">
+                <div className="p-8 text-center font-sans text-[#8A7A6E]">
                   No announcements yet. Click "Add Announcement" to create one.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto font-sans">
                   <table className="w-full">
                     <thead className="bg-[#FAF8F5] border-b border-[#E7E0D7]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Order</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Title (EN)</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Title (BM)</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Image</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-[#8B7E72] uppercase tracking-wider">Actions</th>
+                        <th className="px-4 py-3 text-left text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Order</th>
+                        <th className="px-4 py-3 text-left text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Title (EN)</th>
+                        <th className="px-4 py-3 text-left text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Title (BM)</th>
+                        <th className="px-4 py-3 text-left text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Image</th>
+                        <th className="px-4 py-3 text-left text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-right text-xs font-serif text-[#8B7E72] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="font-sans">
                       {announcements.map((item, idx) => (
                         <tr key={item.id} className="border-b border-[#E7E0D7] hover:bg-[#FAF8F5] transition">
                           <td className="px-4 py-3">
@@ -890,10 +958,10 @@ function ContentManager() {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-sm font-medium text-[#2D2926]">{item.title_en || '—'}</p>
+                            <p className="text-sm font-serif text-[#2D2926]">{item.title_en || '—'}</p>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-sm text-[#5E5247]">{item.title_bm || '—'}</p>
+                            <p className="text-sm font-serif text-[#5E5247]">{item.title_bm || '—'}</p>
                           </td>
                           <td className="px-4 py-3">
                             {item.image_url ? (
@@ -916,7 +984,7 @@ function ContentManager() {
                               }`}
                             >
                               {item.is_active ? <Eye size={12} /> : <EyeOff size={12} />}
-                              {item.is_active ? 'Active' : 'Inactive'}
+                              <span>{item.is_active ? 'Active' : 'Inactive'}</span>
                             </button>
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -946,12 +1014,15 @@ function ContentManager() {
         )}
       </main>
 
-      {/* Calendar Modal (unchanged) */}
+      {/* Calendar Modal */}
       {isCalendarModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Content Calendar</h2><button onClick={() => setIsCalendarModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
-            <div className="bg-[#F5EFE6] rounded-xl p-4 mb-6">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Content Calendar</h2>
+              <button onClick={() => setIsCalendarModalOpen(false)} className="text-[#8A7A6E] font-sans hover:text-[#2D2926] text-2xl leading-none">×</button>
+            </div>
+            <div className="bg-[#F5EFE6] rounded-xl p-4 mb-6 font-sans">
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="flex gap-2"><select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">{['January','February','March','April','May','June','July','August','September','October','November','December'].map((month, idx) => (<option key={idx} value={idx}>{month}</option>))}</select><select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="px-3 py-2 border border-[#EAE1D4] rounded-lg text-sm bg-white">{[2025,2026,2027].map(year => <option key={year} value={year}>{year}</option>)}</select></div>
                 <div className="flex gap-2">{ [1,2,3,4].map(week => (<button key={week} onClick={() => setSelectedWeek(week)} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm font-medium transition ${selectedWeek === week ? 'bg-[#2D2926] text-white' : 'border border-[#EAE1D4] text-[#7A6A5E] hover:bg-[#F5EFE6]'}`}>{week}</button>)) }</div>
@@ -960,22 +1031,35 @@ function ContentManager() {
             </div>
             {calendarPreview && (
               <div className="space-y-5">
-                <div className="text-center"><p className="text-sm font-medium text-[#2D2926]">{calendarPreview.weekRange}</p></div>
-                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">📖 Weekly Verse</h3><p className="font-serif">{calendarPreview.verse.reference}</p><p className="text-sm text-[#7A6A5E] mt-1">{calendarPreview.verse.text.substring(0, 100)}...</p></div>
-                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">🎵 Worship Roster</h3>{calendarPreview.roster ? (<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm"><div><span className="text-[#8A7A6E]">Leader:</span> {calendarPreview.roster.leader}</div><div><span className="text-[#8A7A6E]">Pianist:</span> {calendarPreview.roster.pianist}</div><div><span className="text-[#8A7A6E]">Reader:</span> {calendarPreview.roster.reader}</div></div>) : <p className="text-sm text-[#8A7A6E]">No roster assigned for this week</p>}</div>
-                <div className="border rounded-xl p-4"><h3 className="text-sm font-medium mb-2">📅 Events</h3>{calendarPreview.events.length > 0 ? (<div className="space-y-2">{calendarPreview.events.map(event => <div key={event.id} className="text-sm"><span className="font-medium">{event.date}</span><span className="text-[#8A7A6E] mx-2">•</span><span>{event.titleEn}</span></div>)}</div>) : <p className="text-sm text-[#8A7A6E]">No events scheduled this week</p>}</div>
+                <div className="text-center font-sans"><p className="text-sm font-medium text-[#2D2926]">{calendarPreview.weekRange}</p></div>
+                <div className="border rounded-xl p-4">
+                  <h3 className="text-sm font-serif mb-2">📖 Weekly Verse</h3>
+                  <p className="font-serif">{calendarPreview.verse.reference}</p>
+                  <p className="text-sm font-sans text-[#7A6A5E] mt-1">{calendarPreview.verse.text.substring(0, 100)}...</p>
+                </div>
+                <div className="border rounded-xl p-4">
+                  <h3 className="text-sm font-serif mb-2">🎵 Worship Roster</h3>
+                  {calendarPreview.roster ? (<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm font-sans"><div><span className="text-[#8A7A6E]">Leader:</span> {calendarPreview.roster.leader}</div><div><span className="text-[#8A7A6E]">Pianist:</span> {calendarPreview.roster.pianist}</div><div><span className="text-[#8A7A6E]">Reader:</span> {calendarPreview.roster.reader}</div></div>) : <p className="text-sm font-sans text-[#8A7A6E]">No roster assigned for this week</p>}
+                </div>
+                <div className="border rounded-xl p-4">
+                  <h3 className="text-sm font-serif mb-2">📅 Events</h3>
+                  {calendarPreview.events.length > 0 ? (<div className="space-y-2 font-sans">{calendarPreview.events.map(event => <div key={event.id} className="text-sm"><span className="font-medium">{event.date}</span><span className="text-[#8A7A6E] mx-2">•</span><span>{event.titleEn}</span></div>)}</div>) : <p className="text-sm font-sans text-[#8A7A6E]">No events scheduled this week</p>}
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Event Modal (unchanged) */}
+      {/* Event Modal */}
       {isEventModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingEvent ? 'Edit Event' : 'Add Event'}</h2><button onClick={() => setIsEventModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
-            <div className="space-y-4">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingEvent ? 'Edit Event' : 'Add Event'}</h2>
+              <button onClick={() => setIsEventModalOpen(false)} className="text-[#8A7A6E] font-sans hover:text-[#2D2926] text-2xl leading-none">×</button>
+            </div>
+            <div className="space-y-4 font-sans">
               <input type="date" value={eventForm.date} onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Event Title" value={eventForm.titleEn} onChange={(e) => setEventForm(prev => ({ ...prev, titleEn: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="time" value={eventForm.time} onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
@@ -988,12 +1072,15 @@ function ContentManager() {
         </div>
       )}
 
-      {/* Roster Edit Modal (unchanged) */}
+      {/* Roster Edit Modal */}
       {isRosterModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-5"><h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Edit Worship Week</h2><button onClick={() => setIsRosterModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button></div>
-            <div className="space-y-4">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">Edit Worship Week</h2>
+              <button onClick={() => setIsRosterModalOpen(false)} className="text-[#8A7A6E] font-sans hover:text-[#2D2926] text-2xl leading-none">×</button>
+            </div>
+            <div className="space-y-4 font-sans">
               <input type="text" placeholder="Week Starting (DD/MM/YYYY)" value={rosterForm.weekStart} onChange={(e) => setRosterForm(prev => ({ ...prev, weekStart: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Worship Leader" value={rosterForm.leader} onChange={(e) => setRosterForm(prev => ({ ...prev, leader: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
               <input type="text" placeholder="Pianist / Keyboardist" value={rosterForm.pianist} onChange={(e) => setRosterForm(prev => ({ ...prev, pianist: e.target.value }))} className="w-full px-4 py-2 border rounded-xl text-sm" />
@@ -1010,18 +1097,18 @@ function ContentManager() {
           <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg sm:text-xl font-serif text-[#2D2926]">{editingAnnouncement ? 'Edit Announcement' : 'Add Announcement'}</h2>
-              <button onClick={() => setIsAnnouncementModalOpen(false)} className="text-[#8A7A6E] hover:text-[#2D2926] text-2xl leading-none">×</button>
+              <button onClick={() => setIsAnnouncementModalOpen(false)} className="text-[#8A7A6E] font-sans hover:text-[#2D2926] text-2xl leading-none">×</button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); handleSaveAnnouncement(); }} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveAnnouncement(); }} className="space-y-4 font-sans">
               <div className="grid sm:grid-cols-2 gap-4">
-                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Title (English) *</label><input type="text" required value={announcementForm.title_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Special Service" /></div>
-                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Title (Bahasa Malaysia) *</label><input type="text" required value={announcementForm.title_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Kebaktian Istimewa" /></div>
+                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Title (English) *</label><input type="text" required value={announcementForm.title_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Special Service" /></div>
+                <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Title (Bahasa Malaysia) *</label><input type="text" required value={announcementForm.title_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Kebaktian Istimewa" /></div>
               </div>
-              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Description (English)</label><textarea rows={2} value={announcementForm.description_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Join us for a special service..." /></div>
-              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Description (Bahasa Malaysia)</label><textarea rows={2} value={announcementForm.description_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Sertai kami untuk kebaktian istimewa..." /></div>
-              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Image URL</label><input type="url" value={announcementForm.image_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, image_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/image.jpg" /></div>
-              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Link URL (optional)</label><input type="url" value={announcementForm.link_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, link_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/event" /></div>
-              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] mb-1">Display Order</label><input type="number" value={announcementForm.display_order} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Description (English)</label><textarea rows={2} value={announcementForm.description_en} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_en: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Join us for a special service..." /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Description (Bahasa Malaysia)</label><textarea rows={2} value={announcementForm.description_bm} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, description_bm: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" placeholder="Sertai kami untuk kebaktian istimewa..." /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Image URL</label><input type="url" value={announcementForm.image_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, image_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/image.jpg" /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Link URL (optional)</label><input type="url" value={announcementForm.link_url} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, link_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://example.com/event" /></div>
+              <div><label className="block text-xs font-semibold uppercase text-[#8B7E72] font-sans mb-1">Display Order</label><input type="number" value={announcementForm.display_order} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
               <div className="flex items-center gap-3"><label className="flex items-center gap-2"><input type="checkbox" checked={announcementForm.is_active} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, is_active: e.target.checked }))} className="w-4 h-4" /> <span className="text-sm">Active (show on homepage)</span></label></div>
               <div className="flex justify-end gap-3 pt-2"><button type="button" onClick={() => setIsAnnouncementModalOpen(false)} className="px-4 py-2 rounded-xl border border-[#E7E0D7] text-[#5E5247] hover:bg-[#F5F1EB]">Cancel</button><button type="submit" className="px-4 py-2 rounded-xl bg-[#2D2926] text-white hover:bg-[#4A3F38]">Save</button></div>
             </form>
