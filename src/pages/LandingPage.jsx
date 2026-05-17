@@ -426,17 +426,17 @@ useEffect(() => {
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
-        {/* Large Cross Logo Background */}
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: "url('/logo_2.webp')",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right center",
-            backgroundSize: "auto 60%",
-            opacity: 0.07,
-          }}
-        />
+{/* Background Image - backdrop.webp */}
+<div
+  className="absolute inset-0 pointer-events-none z-0"
+  style={{
+    backgroundImage: "url('/backdrop.webp')",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right center",
+    backgroundSize: "cover",      // Alternative: covers entire area
+    opacity: 0.12,
+  }}
+/>
 
         <div className="relative z-10 w-full max-w-3xl mx-auto">
           
