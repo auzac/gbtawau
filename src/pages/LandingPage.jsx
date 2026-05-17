@@ -455,7 +455,7 @@ export default function LandingPage() {
 
 {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
 {carouselItems.length > 0 && (
-  <div className="hero-carousel-container w-full mt-6 md:mt-8">
+  <div className="hero-carousel-container w-full mt-6 md:mt-8 mb-0">
     <div className="splide-carousel splide" aria-label="Announcements">
       <div className="splide__track">
         <ul className="splide__list">
@@ -663,7 +663,7 @@ export default function LandingPage() {
   width: 100%;
 }
 
-/* On mobile: edge-to-edge */
+/* On mobile: edge-to-edge, tighter spacing */
 @media (max-width: 767px) {
   .hero-carousel-container {
     width: 100vw;
@@ -672,38 +672,85 @@ export default function LandingPage() {
     right: 50%;
     margin-left: -50vw;
     margin-right: -50vw;
+    margin-bottom: 0;
   }
   
   .announcement-card {
     border-radius: 0;
     margin: 0;
+    aspect-ratio: 3 / 1.2;
   }
   
   .hero-carousel-container .splide__track {
     border-radius: 0;
   }
-}
-
-/* On desktop: rounded corners */
-@media (min-width: 768px) {
-  .hero-carousel-container {
-    padding: 0 1rem;
+  
+  .card-content-block {
+    padding: 1rem 1.25rem;
   }
   
-  .announcement-card {
-    border-radius: 24px;
+  .card-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-description {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .card-tag {
+    font-size: 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  /* Move pagination dots up to reduce bottom space */
+  .splide-carousel .splide__pagination {
+    bottom: 0.25rem;
+  }
+}
+
+/* On desktop: rounded corners, smaller height */
+@media (min-width: 768px) {
+  .hero-carousel-container {
+    padding: 0 2rem;
+    max-width: 900px;
     margin: 0 auto;
   }
   
+  .announcement-card {
+    border-radius: 20px;
+    margin: 0 auto;
+    aspect-ratio: 3 / 0.8;
+  }
+  
   .hero-carousel-container .splide__track {
-    border-radius: 24px;
+    border-radius: 20px;
+  }
+  
+  .card-content-block {
+    padding: 1.5rem 2rem;
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-description {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .card-tag {
+    font-size: 0.65rem;
+    margin-bottom: 0.5rem;
   }
 }
 
 .announcement-card {
   position: relative;
   background: linear-gradient(135deg, #2D2926 0%, #1a1a1a 100%);
-  aspect-ratio: 3 / 2;
   overflow: hidden;
   cursor: grab;
 }
@@ -716,7 +763,6 @@ export default function LandingPage() {
   position: relative;
   width: 100%;
   height: 100%;
-  padding: 2rem 1.5rem;
   box-sizing: border-box;
   z-index: 2;
   color: #ffffff;
@@ -728,52 +774,45 @@ export default function LandingPage() {
 
 .card-tag {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.7rem;
   letter-spacing: 0.2em;
   color: #C9A882;
-  margin-bottom: 0.75rem;
   text-transform: uppercase;
   font-weight: 500;
 }
 
 .card-title {
   font-family: 'Lora', serif;
-  font-size: 1.8rem;
   font-weight: 600;
-  margin: 0 0 0.75rem 0;
   line-height: 1.2;
 }
 
 .card-description {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  line-height: 1.5;
   color: rgba(255, 255, 255, 0.85);
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .card-description {
-    -webkit-line-clamp: 4;
-  }
-}
-
-/* Custom navigation (bottom-right corner) */
+/* Custom navigation - arrows half in, half out on desktop */
 .custom-navigation {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
   z-index: 10;
+  pointer-events: none;
 }
 
 .custom-prev,
 .custom-next {
+  pointer-events: auto;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
   width: 2.5rem;
@@ -788,10 +827,29 @@ export default function LandingPage() {
   color: white;
 }
 
+/* Position arrows half in, half out */
+.custom-prev {
+  position: relative;
+  left: -1.25rem;
+}
+
+.custom-next {
+  position: relative;
+  right: -1.25rem;
+}
+
 .custom-prev:hover,
 .custom-next:hover {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
+}
+
+.custom-prev:hover {
+  left: -1.35rem;
+}
+
+.custom-next:hover {
+  right: -1.35rem;
 }
 
 /* Hide default Splide arrows */
@@ -801,7 +859,6 @@ export default function LandingPage() {
 
 /* Dots styling */
 .splide-carousel .splide__pagination {
-  bottom: 0.75rem;
   position: absolute;
   left: 0;
   right: 0;
@@ -827,19 +884,24 @@ export default function LandingPage() {
   height: 8px;
 }
 
+/* Mobile dots position */
 @media (max-width: 767px) {
   .splide-carousel .splide__pagination {
-    bottom: 0.5rem;
+    bottom: 0.25rem;
+    position: relative;
+    margin-top: 0.5rem;
   }
-  .card-content-block {
-    padding: 1.5rem 1.25rem;
+  
+  /* Hide custom arrows on mobile */
+  .custom-navigation {
+    display: none;
   }
-  .card-title {
-    font-size: 1.4rem;
-  }
-  .card-description {
-    font-size: 0.85rem;
-    -webkit-line-clamp: 3;
+}
+
+/* Desktop dots position */
+@media (min-width: 768px) {
+  .splide-carousel .splide__pagination {
+    bottom: -1.5rem;
   }
 }
       `}</style>
