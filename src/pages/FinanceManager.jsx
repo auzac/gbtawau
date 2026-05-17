@@ -1,347 +1,3 @@
-
-Claude finished the response
-
-import React, { useState, useEffect } from 'react' import { useNavigate } from 'react-router-dom' import { ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, Calendar, User, MapPinned, ArrowLeft, Users, ChevronDown } from 'lucide-react' import { supabase } from '../lib/supabase' import
-
-pasted
-
-modernize the carousel on this jsx file. I dont like how its currently stylized. so i want the pagination to be inline inside the carousel box subtle on top right. on desktop the arrows should be middle aligned, circular arrow just at the edge of the carousel box half outside and half in, on mobile it should be on the bottom right. a call to action button should be on the bottom left. this all should be housed in a dynamic container that is rectangle and rounded edges , looks more like a bar but slightly taller (not too thin) on desktop, but mobile view should have it fully end to edge still with rounded corners.  this carousel section should be labelled as announcements.
-
-i pasted the current JSX. do not change the font used in this code. if there are any pleasing aesthetic improvement you can do, then propose first before committing.
-
-12:33 PM
-Before I commit to the redesign, let me propose the aesthetic direction for a few details:
-
-Proposed improvements beyond your spec:
-
-Card background — Frosted linen texture (bg-white/60 with a warm grain feel) instead of the current flat white, so it feels cohesive with the 
-#FAF8F5 page background.
-Tag pill — Instead of plain uppercase text, a small pill badge with a warm amber tint (bg-[#C9A882]/15 text-[#8A6A4A]) to make the theme label feel intentional.
-Verse text — Slightly larger and italic with a subtle left-accent line (a 2px warm border) to give it a "quote card" feel rather than just a description paragraph.
-CTA button (bottom left) — A minimal ghost-style pill: dark border, transparent fill, hover fills dark — matches the existing nav button language.
-Pagination dots (top right) — Active dot slightly wider (pill shape) in warm brown, inactive dots small and muted — very subtle, no harsh contrast.
-Desktop arrows — Half-protruding circular buttons with a drop shadow, sitting at vertical center of the bar, using the existing 
-#2D2926 dark on hover.
-Shall I proceed with all of these, or would you like to tweak anything before I write the code?
-
-proceed and generate.
-
-12:34 PM
-Here's the redesigned carousel section. I'll replace the relevant carousel block and its styles in the JSX:
-
-
-
-That's the preview. Here's exactly what changed and what to drop into your JSX — only the carousel block and its <style> section are touched, everything else is untouched.
-
-Replace the carousel block (from {carouselItems.length > 0 && ( to its closing )}) with:
-
-jsx
-{carouselItems.length > 0 && (
-  <div className="hero-carousel-outer">
-    <div className="splide-carousel splide hero-carousel-bar" aria-label="Announcements">
-      <p className="carousel-section-label">Announcements</p>
-
-      {/* Pagination dots — top right, rendered by Splide into .splide__pagination via CSS repositioning */}
-      <div className="splide__track">
-        <ul className="splide__list">
-          {carouselItems.map((item, idx) => (
-            <li key={item.id || idx} className="splide__slide">
-              <div className="announcement-card">
-                <span className="card-theme-pill">{item.theme || 'Announcement'}</span>
-                <h3 className="card-title">
-                  {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                </h3>
-                <p className="card-body-text">
-                  {locale === 'bm' && item.description_bm
-                    ? item.description_bm
-                    : (item.description_en || '')}
-                </p>
-
-                {/* Bottom row: CTA left, arrows right (mobile) / arrows protruding (desktop) */}
-                <div className="card-bottom-row">
-                  <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
-                  <div className="card-mobile-arrows">
-                    <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button className="custom-next card-arrow-sm" aria-label="Next slide">
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Desktop arrows — half outside the bar */}
-      <button className="custom-prev carousel-arrow-desktop carousel-arrow-left" aria-label="Previous slide">
-        <ChevronLeft size={20} />
-      </button>
-      <button className="custom-next carousel-arrow-desktop carousel-arrow-right" aria-label="Next slide">
-        <ChevronRight size={20} />
-      </button>
-    </div>
-  </div>
-)}
-Then replace the entire <style> block at the bottom with this (keeping your existing rules, swapping out the carousel ones):
-
-jsx
-<style>{`
-  html { scroll-behavior: smooth; }
-  * { box-sizing: border-box; }
-  @keyframes bob {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(6px); }
-  }
-  .animate-bob { animation: bob 2.5s ease-in-out infinite; }
-
-  /* ── CAROUSEL OUTER ── */
-  .hero-carousel-outer {
-    position: relative;
-    width: 100%;
-    margin-top: 1.5rem;
-    padding: 0 1.25rem;          /* room for protruding arrows on desktop */
-  }
-
-  /* ── BAR SHAPE ── */
-  .hero-carousel-bar {
-    background: rgba(255,255,255,0.72);
-    border: 1px solid rgba(217,201,183,0.45);
-    border-radius: 1.25rem;
-    padding: 1.4rem 3.75rem;     /* horizontal padding reserves arrow space */
-    position: relative;
-    overflow: visible !important; /* let arrows protrude */
-  }
-
-  /* Section label */
-  .carousel-section-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: #B09882;
-    margin: 0 0 0.5rem;
-    text-align: left;
-  }
-
-  /* Splide pagination repositioned to top-right */
-  .hero-carousel-bar .splide__pagination {
-    position: absolute !important;
-    top: 1rem !important;
-    right: 1.25rem !important;
-    bottom: auto !important;
-    left: auto !important;
-    gap: 5px;
-    padding: 0;
-  }
-  .hero-carousel-bar .splide__pagination__page {
-    width: 5px;
-    height: 5px;
-    background: rgba(176,152,130,0.35);
-    border-radius: 999px;
-    border: none;
-    transition: width 0.3s, background 0.3s;
-    margin: 0 2px;
-  }
-  .hero-carousel-bar .splide__pagination__page.is-active {
-    width: 14px;
-    background: #8A6A4A;
-    transform: none;
-  }
-
-  /* ── SLIDE CARD ── */
-  .announcement-card {
-    text-align: left;
-    min-height: 90px;
-  }
-
-  .card-theme-pill {
-    display: inline-block;
-    background: rgba(201,168,130,0.15);
-    color: #8A6A4A;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border-radius: 999px;
-    margin-bottom: 0.45rem;
-  }
-
-  .card-title {
-    font-family: 'Lora', serif;
-    font-size: 1.2rem;
-    color: #2D2926;
-    margin: 0 0 0.35rem;
-    line-height: 1.3;
-  }
-
-  .card-body-text {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    color: #6B5E55;
-    line-height: 1.65;
-    font-style: italic;
-    border-left: 2px solid rgba(176,152,130,0.4);
-    padding-left: 0.75rem;
-    margin: 0;
-  }
-
-  /* Bottom row: CTA + mobile arrows */
-  .card-bottom-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-
-  .card-cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(45,41,38,0.25);
-    background: transparent;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #4A3F38;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-  }
-  .card-cta-btn:hover { background: #2D2926; color: #FAF8F5; border-color: #2D2926; }
-
-  /* Mobile arrows (bottom-right, inside card) */
-  .card-mobile-arrows {
-    display: none;
-    gap: 6px;
-  }
-  .card-arrow-sm {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: white;
-    border: 1px solid rgba(217,201,183,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #7A6A5E;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
-  .card-arrow-sm:hover { background: #2D2926; color: #FAF8F5; }
-
-  /* Desktop arrows — half outside the bar, vertically centred */
-  .carousel-arrow-desktop {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: white;
-    border: 1px solid rgba(217,201,183,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #7A6A5E;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-    z-index: 10;
-  }
-  .carousel-arrow-desktop:hover { background: #2D2926; color: #FAF8F5; border-color: #2D2926; }
-  .carousel-arrow-left  { left: -18px; }
-  .carousel-arrow-right { right: -18px; }
-
-  /* ── MOBILE OVERRIDES ── */
-  @media (max-width: 640px) {
-    .hero-carousel-outer {
-      padding: 0;          /* full edge-to-edge */
-    }
-    .hero-carousel-bar {
-      border-radius: 1.25rem;
-      padding: 1.25rem 1.25rem 1rem;
-    }
-    .carousel-arrow-desktop { display: none; }  /* hide protruding arrows */
-    .card-mobile-arrows    { display: flex; }   /* show bottom-right arrows */
-  }
-`}</style>
-Two small things to keep in mind:
-
-The Splide pagination: true option is already set in your existing config — the CSS above simply repositions Splide's own dots to the top-right corner, so no JS change needed.
-If you want the CTA to do something (open the events modal, link somewhere), swap the <button className="card-cta-btn"> for whatever action makes sense — I left it as a plain button for you to wire up.
-
-// src/pages/FinanceManager.jsx import React, { useState, useEffect, useMemo } from 'react' import { useNavigate } from 'react-router-dom' import { useAuth } from '../contexts/AuthContext' import { supabase } from '../lib/supabase' import { ArrowLeft, LogOut, DollarSign, Calendar, CheckCircl
-
-pasted
-
-my current finance manager, there might be some issue on mobile display (try to make it more intuitive knowing we are limited in space - i.e.,  smaller record payment button?) use font styling from my previous codes also to maintain style. Improve how you think a finance board should look like:
-
-2:26 PM
-Let me study the code before proposing changes.
-
-Here are the key issues I spotted and improvements I'll make before generating:
-
-Mobile problems in current code:
-
-Member cards are too tall — name, contact, status, last paid, and a full-width "Record Payment" button stacked vertically is heavy
-The "Record Payment" button at full width with padding is a large tap target that dominates the card
-Stats are a 2-col grid of large dark cards — dense on a small screen
-No visual hierarchy between paid vs pending members
-Finance board improvements:
-
-Stats bar becomes a horizontal scrollable strip on mobile (compact pill-style), not a 2×2 grid
-Member rows become a tighter two-line layout: name + contact on the left, status badge + a small icon-only + button on the right — far less vertical bulk
-Paid members get a subtle green tint on the row/card to immediately signal completion without reading
-Pending members get a soft amber tint
-Desktop gets a proper sidebar with a donut-style progress ring showing paid % instead of plain stat cards
-Payment method icons (cash/bank/online) in the modal for a more polished feel
-Lora for names, DM Sans for everything else — matching your existing codebase
-Here's the full rewrite:
-
-
-Created a file, read a file
-Created a file, read a file
-Here's a summary of every meaningful change:
-
-Mobile
-
-The 2×2 dark stat grid is gone — replaced with a horizontally scrollable pill strip that takes up one line and doesn't dominate the screen
-Member rows are now compact single-line cards: initials circle on the left, name + status info in the middle, and a small circular + icon button on the right for pending members — paid members just show a green checkmark, no button needed
-The + button is 32px — a deliberate tap target that doesn't flood the row
-Pending members sort to the top automatically so the action items are always visible without scrolling
-Desktop
-
-The sidebar gets a donut ring showing the paid percentage visually, with a three-column breakdown underneath (Paid / Pending / Total)
-A separate dark "Collected" card shows the RM total for the selected year
-Year switcher is in the sidebar, keeping the filter bar clean
-Table rows have a subtle green tint on paid members for instant at-a-glance scanning
-Payment modal
-
-Payment method is now four icon pill buttons (Cash, Transfer, Online, Cheque) — one tap, no dropdown
-Amount and date sit side-by-side in a two-column grid
-Receipt and Notes also side-by-side to save vertical height on mobile
-Shared
-
-Lora for names and headings, DM Sans for all UI text — matching your existing pages
-Status badges use bordered pills (green / amber) consistent with the colour language already in the codebase
-Initials circles on both mobile cards and the desktop table give the list a more human, less spreadsheet-y feel
-
-Financemanager
-Code · JSX 
-
-
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-Financemanager · JSX
-Copy
-
 // src/pages/FinanceManager.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -352,7 +8,7 @@ import {
   Search, Download, X, Users, TrendingUp, Banknote,
   CreditCard, Smartphone, FileText, ChevronRight
 } from 'lucide-react'
- 
+
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   bg:          '#FAF8F5',
@@ -372,7 +28,7 @@ const C = {
   pendText:    '#B45309',
   pendBorder:  '#FDDCAA',
 }
- 
+
 // ─── Shared style atoms ───────────────────────────────────────────────────────
 const font = { serif: "'Lora', serif", sans: "'DM Sans', sans-serif" }
 const inputStyle = {
@@ -391,7 +47,7 @@ const tdStyle = {
   padding: '13px 16px', fontSize: '13px',
   color: C.textMid, fontFamily: font.sans, verticalAlign: 'middle',
 }
- 
+
 // ─── Payment method config ────────────────────────────────────────────────────
 const METHODS = [
   { value: 'Cash',          label: 'Cash',          Icon: Banknote    },
@@ -399,7 +55,7 @@ const METHODS = [
   { value: 'Online',        label: 'Online',        Icon: Smartphone  },
   { value: 'Cheque',        label: 'Cheque',        Icon: FileText    },
 ]
- 
+
 // ─── DonutRing (desktop sidebar) ─────────────────────────────────────────────
 function DonutRing({ pct }) {
   const r = 44, cx = 56, cy = 56
@@ -420,7 +76,7 @@ function DonutRing({ pct }) {
     </svg>
   )
 }
- 
+
 // ─── MobileStat strip item ────────────────────────────────────────────────────
 function MiniStat({ label, value, hi }) {
   return (
@@ -430,7 +86,7 @@ function MiniStat({ label, value, hi }) {
     </div>
   )
 }
- 
+
 // ─── Desktop StatCard ─────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub }) {
   return (
@@ -444,12 +100,12 @@ function StatCard({ icon: Icon, label, value, sub }) {
     </div>
   )
 }
- 
+
 // ─── FieldLabel ───────────────────────────────────────────────────────────────
 const FieldLabel = ({ children }) => (
   <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: C.textMuted, marginBottom: '6px', fontFamily: font.sans }}>{children}</label>
 )
- 
+
 // ─── ModalShell ───────────────────────────────────────────────────────────────
 function ModalShell({ title, onClose, isMobile, children }) {
   const overlayStyle = {
@@ -485,12 +141,12 @@ function ModalShell({ title, onClose, isMobile, children }) {
     </div>
   )
 }
- 
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FinanceManager() {
   const navigate  = useNavigate()
   const { signOut } = useAuth()
- 
+
   const [loading,            setLoading]            = useState(true)
   const [members,            setMembers]            = useState([])
   const [renewals,           setRenewals]           = useState([])
@@ -505,14 +161,14 @@ export default function FinanceManager() {
   })
   const [savedMessage, setSavedMessage] = useState(null)
   const [isMobile,     setIsMobile]     = useState(false)
- 
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
- 
+
   const loadData = async () => {
     setLoading(true)
     const [{ data: md, error: me }, { data: rd, error: re }] = await Promise.all([
@@ -523,17 +179,17 @@ export default function FinanceManager() {
     if (!re) setRenewals(rd || [])
     setLoading(false)
   }
- 
+
   useEffect(() => { loadData() }, [])
- 
+
   const showSaved = (text, isError = false) => {
     setSavedMessage({ text, isError })
     setTimeout(() => setSavedMessage(null), 2500)
   }
- 
+
   const hasPaidForYear  = (id, yr) => renewals.some(r => r.member_id === id && r.renewal_year === yr)
   const getLastRenewal  = (id)     => renewals.filter(r => r.member_id === id).sort((a, b) => b.renewal_year - a.renewal_year)[0] ?? null
- 
+
   const stats = useMemo(() => {
     const total   = members.length
     const paid    = members.filter(m => hasPaidForYear(m.id, selectedYear)).length
@@ -542,7 +198,7 @@ export default function FinanceManager() {
     const pct     = total ? Math.round((paid / total) * 100) : 0
     return { total, paid, pending, amount, pct }
   }, [members, renewals, selectedYear])
- 
+
   const filteredMembers = useMemo(() => {
     let list = members
     if (searchTerm) {
@@ -558,13 +214,13 @@ export default function FinanceManager() {
       return ap - bp || a.name.localeCompare(b.name)
     })
   }, [members, searchTerm, statusFilter, selectedYear, renewals])
- 
+
   const openPaymentModal = (member) => {
     setSelectedMember(member)
     setPaymentForm({ amount: '', paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Cash', receiptNumber: '', notes: '' })
     setIsPaymentModalOpen(true)
   }
- 
+
   const handlePaymentSubmit = async (e) => {
     e.preventDefault()
     const amount = parseFloat(paymentForm.amount)
@@ -584,7 +240,7 @@ export default function FinanceManager() {
       setIsPaymentModalOpen(false)
     }
   }
- 
+
   const exportCSV = () => {
     const rows = filteredMembers.map(m => {
       const paid = hasPaidForYear(m.id, selectedYear)
@@ -599,9 +255,9 @@ export default function FinanceManager() {
     a.click(); URL.revokeObjectURL(url)
     showSaved('Exported')
   }
- 
+
   const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
- 
+
   // ── Loading screen ──────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -609,12 +265,12 @@ export default function FinanceManager() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
- 
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
- 
+
       {/* Toast */}
       {savedMessage && (
         <div style={{ position: 'fixed', top: '72px', left: '50%', transform: 'translateX(-50%)', zIndex: 200, animation: 'slideDown 0.2s ease-out', whiteSpace: 'nowrap' }}>
@@ -624,7 +280,7 @@ export default function FinanceManager() {
           </div>
         </div>
       )}
- 
+
       {/* ── Header ── */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -649,7 +305,7 @@ export default function FinanceManager() {
           </div>
         </div>
       </header>
- 
+
       {/* ── Mobile stat strip ── */}
       {isMobile && (
         <div style={{ overflowX: 'auto', padding: '14px 16px 2px', display: 'flex', gap: '10px', scrollbarWidth: 'none' }}>
@@ -660,9 +316,9 @@ export default function FinanceManager() {
           <MiniStat label="Rate"    value={`${stats.pct}%`} />
         </div>
       )}
- 
+
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '28px', display: 'flex', gap: '28px', alignItems: 'flex-start' }}>
- 
+
         {/* ── Desktop sidebar ── */}
         {!isMobile && (
           <aside style={{ width: '260px', flexShrink: 0, position: 'sticky', top: '84px' }}>
@@ -686,13 +342,13 @@ export default function FinanceManager() {
                 </div>
               </div>
             </div>
- 
+
             {/* Collected card */}
             <div style={{ background: C.text, borderRadius: '18px', padding: '18px', marginBottom: '16px' }}>
               <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#78716C', fontFamily: font.sans, marginBottom: '6px' }}>Collected · {selectedYear}</div>
               <div style={{ fontSize: '26px', fontWeight: 600, color: '#fff', fontFamily: font.serif, fontVariantNumeric: 'tabular-nums' }}>RM {stats.amount.toFixed(2)}</div>
             </div>
- 
+
             {/* Year picker */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: C.textMuted, fontFamily: font.sans, marginBottom: '6px' }}>Year</div>
@@ -704,16 +360,16 @@ export default function FinanceManager() {
                 ))}
               </div>
             </div>
- 
+
             <button onClick={exportCSV} style={{ width: '100%', padding: '11px', borderRadius: '12px', border: `1.5px solid ${C.border}`, background: C.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontSize: '13px', fontWeight: 600, color: C.textMid, fontFamily: font.sans }}>
               <Download size={14} /> Export CSV
             </button>
           </aside>
         )}
- 
+
         {/* ── Main panel ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
- 
+
           {/* Filter bar */}
           <div style={{ background: C.surface, borderRadius: '16px', border: `1.5px solid ${C.border}`, padding: '12px 14px', marginBottom: '14px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             {/* Year picker on mobile */}
@@ -742,7 +398,7 @@ export default function FinanceManager() {
             {/* Count badge */}
             <span style={{ fontSize: '12px', color: C.textMuted, fontFamily: font.sans, whiteSpace: 'nowrap' }}>{filteredMembers.length} members</span>
           </div>
- 
+
           {/* ── Member list ── */}
           {filteredMembers.length === 0 ? (
             <div style={{ padding: '56px 24px', textAlign: 'center', color: C.textMuted, fontFamily: font.sans, fontSize: '14px' }}>No members match your filters.</div>
@@ -841,7 +497,7 @@ export default function FinanceManager() {
           )}
         </div>
       </div>
- 
+
       {/* ── Payment Modal ── */}
       {isPaymentModalOpen && selectedMember && (
         <ModalShell title={`Record Renewal`} onClose={() => setIsPaymentModalOpen(false)} isMobile={isMobile}>
@@ -855,7 +511,7 @@ export default function FinanceManager() {
               <div style={{ fontSize: '11px', color: C.textMuted, fontFamily: font.sans }}>Renewal year · {selectedYear}</div>
             </div>
           </div>
- 
+
           <form onSubmit={handlePaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
@@ -867,7 +523,7 @@ export default function FinanceManager() {
                 <input type="date" value={paymentForm.paymentDate} onChange={e => setPaymentForm(p => ({ ...p, paymentDate: e.target.value }))} required style={inputStyle} />
               </div>
             </div>
- 
+
             {/* Method selector — icon pills */}
             <div>
               <FieldLabel>Payment Method</FieldLabel>
@@ -883,7 +539,7 @@ export default function FinanceManager() {
                 })}
               </div>
             </div>
- 
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <FieldLabel>Receipt No.</FieldLabel>
@@ -894,7 +550,7 @@ export default function FinanceManager() {
                 <input type="text" value={paymentForm.notes} onChange={e => setPaymentForm(p => ({ ...p, notes: e.target.value }))} style={inputStyle} placeholder="Optional" />
               </div>
             </div>
- 
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '6px' }}>
               <button type="button" onClick={() => setIsPaymentModalOpen(false)} style={{ padding: '12px', borderRadius: '12px', border: `1.5px solid ${C.border}`, background: C.surface, color: C.textMid, fontSize: '14px', fontWeight: 600, fontFamily: font.sans, cursor: 'pointer' }}>Cancel</button>
               <button type="submit" style={{ padding: '12px', borderRadius: '12px', border: 'none', background: C.text, color: '#fff', fontSize: '14px', fontWeight: 600, fontFamily: font.sans, cursor: 'pointer' }}>Record Payment</button>
@@ -902,7 +558,7 @@ export default function FinanceManager() {
           </form>
         </ModalShell>
       )}
- 
+
       <style>{`
         @keyframes spin      { to { transform: rotate(360deg); } }
         @keyframes slideDown { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
@@ -912,4 +568,3 @@ export default function FinanceManager() {
     </div>
   )
 }
- 
