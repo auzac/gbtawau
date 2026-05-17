@@ -179,13 +179,11 @@ export default function LandingPage() {
 
   const loadCarouselItems = async () => {
     try {
-      // Fetch random 3 verses from verse_library
       const { data, error } = await supabase
         .from('verse_library')
         .select('*')
       
       if (!error && data && data.length > 0) {
-        // Shuffle and take first 3 random verses
         const shuffled = [...data]
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -193,7 +191,6 @@ export default function LandingPage() {
         }
         const randomVerses = shuffled.slice(0, 3)
         
-        // Transform verse data into carousel format
         const carouselData = randomVerses.map((verse, index) => ({
           id: verse.id,
           image_url: `/placeholder-${(index % 3) + 1}.jpg`,
@@ -207,7 +204,6 @@ export default function LandingPage() {
         setCarouselItems(carouselData)
         console.log('Loaded 3 random verses for carousel:', carouselData.length)
       } else {
-        // Fallback placeholders
         setCarouselItems([
           { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
           { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
@@ -216,7 +212,6 @@ export default function LandingPage() {
       }
     } catch (error) {
       console.error('Error loading carousel verses:', error)
-      // Use fallback placeholders
       setCarouselItems([
         { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
         { id: 2, image_url: '/placeholder-2.jpg', title_en: 'John 3:16', title_bm: 'Yohanes 3:16', description_en: 'For God so loved the world that He gave His only Son.', description_bm: 'Karena begitu besar kasih Allah akan dunia ini, sehingga Ia mengaruniakan Anak-Nya yang tunggal.', theme: 'Gospel' },
@@ -453,44 +448,44 @@ export default function LandingPage() {
             </button>
           </div>
 
-{/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
-{carouselItems.length > 0 && (
-<div className="hero-carousel-container w-full mt-4 md:mt-6" style={{ marginBottom: 0, paddingBottom: 0 }}>
-    <div className="splide-carousel splide" aria-label="Announcements">
-      <div className="splide__track">
-        <ul className="splide__list">
-          {carouselItems.map((item, idx) => (
-            <li key={item.id || idx} className="splide__slide">
-              <div className="announcement-card">
-                <div className="card-content-block">
-                  <div className="card-tag">{item.theme || 'ANNOUNCEMENT'}</div>
-                  <h3 className="card-title">
-                    {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                  </h3>
-                  <p className="card-description">
-                    {locale === 'bm' && item.description_bm 
-                      ? item.description_bm 
-                      : (item.description_en || '')
-                    }
-                  </p>
+          {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
+          {carouselItems.length > 0 && (
+            <div className="hero-carousel-container w-full mt-4 md:mt-6" style={{ marginBottom: 0, paddingBottom: 0 }}>
+              <div className="splide-carousel splide" aria-label="Announcements">
+                <div className="splide__track">
+                  <ul className="splide__list">
+                    {carouselItems.map((item, idx) => (
+                      <li key={item.id || idx} className="splide__slide">
+                        <div className="announcement-card">
+                          <div className="card-content-block">
+                            <div className="card-tag">{item.theme || 'ANNOUNCEMENT'}</div>
+                            <h3 className="card-title">
+                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                            </h3>
+                            <p className="card-description">
+                              {locale === 'bm' && item.description_bm 
+                                ? item.description_bm 
+                                : (item.description_en || '')
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {/* Custom navigation - visible on all devices */}
+                <div className="custom-navigation">
+                  <button className="custom-prev" aria-label="Previous slide">
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button className="custom-next" aria-label="Next slide">
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
               </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {/* Custom navigation - visible on all devices */}
-<div className="custom-navigation">
-  <button className="custom-prev" aria-label="Previous slide">
-    <ChevronLeft size={20} />
-  </button>
-  <button className="custom-next" aria-label="Next slide">
-    <ChevronRight size={20} />
-  </button>
-</div>
-    </div>
-  </div>
-)}
+            </div>
+          )}
         </div>
       </section>
 
@@ -654,272 +649,163 @@ export default function LandingPage() {
           50% { transform: translateX(-50%) translateY(6px); }
         }
         .animate-bob { animation: bob 2.5s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          * { animation: none !important; transition-duration: 0.01ms !important; }
+        
+        /* ==========================================================================
+           FIXED CAROUSEL STYLING DEFINITIONS
+           ========================================================================== */
+        
+        /* Base configuration targeting Splide container layout issues */
+        .splide-carousel {
+          overflow: hidden;
+          width: 100%;
+          max-width: 100%;
         }
 
-/* Announcement Card Carousel Styles */
-.hero-carousel-container {
-  width: 100%;
-}
+        .splide__track {
+          overflow: hidden;
+          width: 100%;
+        }
 
-/* On mobile: edge-to-edge, NO extra space */
-@media (max-width: 767px) {
-  .hero-carousel-container {
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-  
-  .hero-carousel-container .splide {
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-  
-  .announcement-card {
-    border-radius: 0;
-    margin: 0;
-    aspect-ratio: 3 / 1.1;
-  }
-  
-  .hero-carousel-container .splide__track {
-    border-radius: 0;
-  }
-  
-  .card-content-block {
-    padding: 0.75rem 1rem;
-  }
-  
-  .card-tag {
-    font-size: 0.55rem;
-    letter-spacing: 0.15em;
-    margin-bottom: 0.25rem;
-  }
-  
-  .card-title {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .card-description {
-    font-size: 0.7rem;
-    line-height: 1.3;
-    -webkit-line-clamp: 2;
-  }
-  
-  /* Hide desktop pagination on mobile */
-  .splide-carousel .splide__pagination {
-    display: none;
-  }
-  
-  /* Show custom navigation on mobile - bottom left */
-  .custom-navigation {
-    display: flex;
-    position: absolute;
-    bottom: 0.75rem;
-    left: 0.75rem;
-    top: auto;
-    right: auto;
-    transform: none;
-    gap: 0.5rem;
-    z-index: 20;
-  }
-  
-  .custom-prev,
-  .custom-next {
-    width: 2rem;
-    height: 2rem;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    position: relative;
-    left: auto;
-    right: auto;
-  }
-  
-  .custom-prev:hover,
-  .custom-next:hover {
-    left: auto;
-    right: auto;
-  }
-}
+        /* Prevent empty internal element layout heights below mobile typography */
+        .splide__list {
+          display: flex !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          height: auto !important;
+        }
 
-/* On desktop: rounded corners, smaller height */
-@media (min-width: 768px) {
-  .hero-carousel-container {
-    padding: 0 2rem;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  
-  .announcement-card {
-    border-radius: 20px;
-    margin: 0 auto;
-    aspect-ratio: 3 / 0.8;
-  }
-  
-  .hero-carousel-container .splide__track {
-    border-radius: 20px;
-  }
-  
-  .card-content-block {
-    padding: 1.5rem 2rem;
-  }
-  
-  .card-title {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .card-description {
-    font-size: 0.9rem;
-    -webkit-line-clamp: 2;
-  }
-  
-  .card-tag {
-    font-size: 0.65rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  /* Desktop: arrows half in/out */
-  .custom-navigation {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    transform: translateY(-50%);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 10;
-    pointer-events: none;
-  }
-  
-  .custom-prev,
-  .custom-next {
-    pointer-events: auto;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    color: white;
-    position: relative;
-    left: auto;
-    right: auto;
-  }
-  
-  .custom-prev {
-    left: -1.25rem;
-  }
-  
-  .custom-next {
-    right: -1.25rem;
-  }
-  
-  /* Desktop pagination - top right corner */
-  .splide-carousel .splide__pagination {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    bottom: auto;
-    left: auto;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    z-index: 20;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    width: auto;
-  }
-  
-  .splide-carousel .splide__pagination__page {
-    background: rgba(255, 255, 255, 0.5);
-    width: 5px;
-    height: 5px;
-    margin: 0;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-  }
-  
-  .splide-carousel .splide__pagination__page.is-active {
-    background: #C9A882;
-    transform: scale(1.2);
-    width: 6px;
-    height: 6px;
-  }
-}
+        .splide__slide {
+          width: 100%;
+          flex-shrink: 0;
+          height: auto !important;
+        }
 
-.announcement-card {
-  position: relative;
-  background: linear-gradient(135deg, #2D2926 0%, #1a1a1a 100%);
-  overflow: hidden;
-  cursor: grab;
-}
+        /* Announcement Content Structure */
+        .announcement-card {
+          width: 100%;
+          background: #ffffff;
+          border: 1px solid rgba(217, 201, 183, 0.4);
+          border-radius: 1.25rem;
+          padding: 2rem 1.5rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+          box-sizing: border-box;
+          text-align: center;
+          margin: 0 auto;
+        }
 
-.announcement-card:active {
-  cursor: grabbing;
-}
+        .card-content-block {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
 
-.card-content-block {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  z-index: 2;
-  color: #ffffff;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+        .card-tag {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: #b09882;
+          margin-bottom: 0.75rem;
+        }
 
-.card-tag {
-  font-family: 'DM Sans', sans-serif;
-  letter-spacing: 0.2em;
-  color: #C9A882;
-  text-transform: uppercase;
-  font-weight: 500;
-}
+        .card-title {
+          font-family: 'Lora', serif;
+          font-size: 1.35rem;
+          font-weight: 500;
+          color: #2d2926;
+          margin-bottom: 0.75rem;
+          line-height: 1.4;
+        }
 
-.card-title {
-  font-family: 'Lora', serif;
-  font-weight: 600;
-  line-height: 1.2;
-}
+        .card-description {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: #7a6e66;
+          max-width: 540px;
+          margin: 0 auto;
+        }
 
-.card-description {
-  font-family: 'DM Sans', sans-serif;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+        /* Fixed Navigation Buttons: Removed Transparency completely */
+        .custom-navigation {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+          margin-top: 1.25rem;
+          position: relative;
+          z-index: 10;
+        }
 
-/* Hide default Splide arrows */
-.splide-carousel .splide__arrow {
-  display: none;
-}
+        .custom-prev, .custom-next {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 9999px;
+          border: 1px solid rgba(217, 201, 183, 0.6);
+          background-color: #ffffff !important; /* Forces white color structural fallback */
+          color: #2d2926;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+        }
 
-/* Ensure no extra spacing anywhere */
-.hero-carousel-container .splide__track--slide > .splide__list {
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
+        .custom-prev:hover, .custom-next:hover {
+          background-color: #2d2926 !important;
+          color: #faf8f5;
+          border-color: #2d2926;
+        }
+
+        /* Default Splide Pagination Dot Override Fixes */
+        .splide__pagination {
+          position: relative !important;
+          top: auto !important;
+          bottom: auto !important;
+          margin-top: 1rem !important;
+          padding: 0 !important;
+          line-height: 1;
+        }
+
+        .splide__pagination__page {
+          background: rgba(45, 41, 38, 0.2) !important;
+          border: none !important;
+          margin: 0 4px !important;
+          width: 6px !important;
+          height: 6px !important;
+          transition: transform 0.2s ease, background-color 0.2s ease !important;
+        }
+
+        .splide__pagination__page.is-active {
+          background: #2d2926 !important;
+          transform: scale(1.2);
+        }
+
+        /* Mobile Layout Adaptations (Fixes the White Gap Issue) */
+        @media (max-width: 768px) {
+          .announcement-card {
+            padding: 1.5rem 1.25rem;
+            border-radius: 1rem;
+          }
+          
+          .card-title {
+            font-size: 1.15rem;
+          }
+          
+          .card-description {
+            font-size: 0.85rem;
+            line-height: 1.5;
+          }
+          
+          /* Ensures container layout wraps height securely on tiny screens */
+          .hero-carousel-container {
+            padding-bottom: 0px !important;
+            margin-bottom: 0px !important;
+            height: auto !important;
+          }
+        }
       `}</style>
     </div>
   )
