@@ -1,12 +1,12 @@
-// LandingPage.jsx
-// Soul Church–inspired redesign
+// src/pages/LandingPage.jsx
+// Soul Church–inspired redesign – FIXED carousel arrows + video fallback + no emoji
 // Preserves: all Supabase hooks, Events modal, Roster modal, useLocale, routing
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   X, Calendar, User, MapPinned, ArrowLeft, Users, ChevronDown,
-  Clock, MapPin, Phone, ChevronLeft, ChevronRight
+  Clock, MapPin, Phone, ChevronLeft, ChevronRight, Heart
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
@@ -66,6 +66,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen]   = useState(false)
   const [scrolled, setScrolled]   = useState(false)
   const [loading, setLoading]     = useState(true)
+  const [videoError, setVideoError] = useState(false)  // fallback to static image
 
   // Data state
   const [verse, setVerse]               = useState({ reference: '', text: '', theme: '' })
@@ -90,7 +91,7 @@ export default function LandingPage() {
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
 
-  // ── Data loading ──────────────────────────────────────────────────────────────
+  // ── Data loading (unchanged) ─────────────────────────────────────────────────
 
   useEffect(() => {
     loadContent()
@@ -203,8 +204,8 @@ export default function LandingPage() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen, isEventsModalOpen, isRosterModalOpen])
 
-  // ── "What's On" Splide (hero thumbnail) ───────────────────────────────────────
-  // Initialises after carouselItems are loaded and DOM is ready
+  // ── "What's On" Splide (hero thumbnail) – FIXED arrows ────────────────────────
+  // Now uses `arrows: false` and manually attaches click handlers to custom buttons
   useEffect(() => {
     if (carouselItems.length === 0) return
     let splide = null
@@ -221,24 +222,50 @@ export default function LandingPage() {
           type: 'slide',
           speed: 900,
           rewind: true,
-          pagination: false,
-          arrows: true,
+          pagination: false,     // we use our own dots
+          arrows: false,         // we use custom arrow buttons
           gap: 0,
           waitForTransition: false,
           updateOnMove: true,
         })
         splide.mount()
         whatsOnSplideRef.current = splide
+
+        // Attach event listeners for custom arrows
+        const prevBtn = document.querySelector('.whats-on-arrow-prev')
+        const nextBtn = document.querySelector('.whats-on-arrow-next')
+        const handlePrev = () => splide.go('<')
+        const handleNext = () => splide.go('>')
+        if (prevBtn) {
+          prevBtn.removeEventListener('click', handlePrev)
+          prevBtn.addEventListener('click', handlePrev)
+        }
+        if (nextBtn) {
+          nextBtn.removeEventListener('click', handleNext)
+          nextBtn.addEventListener('click', handleNext)
+        }
       } catch (e) {
         console.error('WhatsOn Splide error:', e)
       }
     }
 
     init()
-    return () => { if (whatsOnSplideRef.current) { whatsOnSplideRef.current.destroy(); whatsOnSplideRef.current = null } }
+    return () => {
+      if (whatsOnSplideRef.current) {
+        whatsOnSplideRef.current.destroy()
+        whatsOnSplideRef.current = null
+      }
+      // Cleanup listeners
+      const prevBtn = document.querySelector('.whats-on-arrow-prev')
+      const nextBtn = document.querySelector('.whats-on-arrow-next')
+      const handlePrev = () => {}
+      const handleNext = () => {}
+      if (prevBtn) prevBtn.removeEventListener('click', handlePrev)
+      if (nextBtn) nextBtn.removeEventListener('click', handleNext)
+    }
   }, [carouselItems.length])
 
-  // ── "How We Do Church" Splide ─────────────────────────────────────────────────
+  // ── "How We Do Church" Splide (unchanged, arrows working) ─────────────────────
   useEffect(() => {
     let splide = null
     const init = async () => {
@@ -255,7 +282,7 @@ export default function LandingPage() {
           speed: 600,
           rewind: true,
           pagination: false,
-          arrows: true,
+          arrows: false,         // we use custom buttons
           trimSpace: false,
           breakpoints: {
             1024: { perPage: 2 },
@@ -264,12 +291,31 @@ export default function LandingPage() {
         })
         splide.mount()
         howWeSplideRef.current = splide
+
+        // Attach custom arrow handlers
+        const prevBtn = document.querySelector('.how-we-arrow-prev')
+        const nextBtn = document.querySelector('.how-we-arrow-next')
+        const handlePrev = () => splide.go('<')
+        const handleNext = () => splide.go('>')
+        if (prevBtn) {
+          prevBtn.removeEventListener('click', handlePrev)
+          prevBtn.addEventListener('click', handlePrev)
+        }
+        if (nextBtn) {
+          nextBtn.removeEventListener('click', handleNext)
+          nextBtn.addEventListener('click', handleNext)
+        }
       } catch (e) {
         console.error('HowWe Splide error:', e)
       }
     }
     init()
-    return () => { if (howWeSplideRef.current) { howWeSplideRef.current.destroy(); howWeSplideRef.current = null } }
+    return () => {
+      if (howWeSplideRef.current) {
+        howWeSplideRef.current.destroy()
+        howWeSplideRef.current = null
+      }
+    }
   }, [])
 
   // ── Modal helpers ─────────────────────────────────────────────────────────────
@@ -460,21 +506,28 @@ export default function LandingPage() {
       </div>
 
       {/* ══════════════════════════════════════════════
-          HERO — full-viewport, video bg, "What's On" card
+          HERO — full-viewport, video bg (with fallback), "What's On" card
       ══════════════════════════════════════════════ */}
       <section id="home" className="relative min-h-screen overflow-hidden bg-black pb-11">
-        {/* Video background — replace src with your video URL */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
-          autoPlay
-          loop
-          muted
-          playsInline
-          poster="/hero-poster.jpg"
-        >
-          {/* Replace with your actual video sources */}
-          <source src="/hero.mp4" type="video/mp4" />
-        </video>
+        {/* Video background – fallback to static backdrop.webp on error or missing */}
+        {!videoError ? (
+          <video
+            className="absolute inset-0 w-full h-full object-cover opacity-70"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/hero-poster.jpg"
+            onError={() => setVideoError(true)}
+          >
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
+        ) : (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-70"
+            style={{ backgroundImage: "url('/backdrop.webp')" }}
+          />
+        )}
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
@@ -489,7 +542,7 @@ export default function LandingPage() {
               What's On
             </p>
 
-            {/* Card container */}
+            {/* Splide container */}
             <div id="whats-on-splide" className="splide whats-on-slider">
               <div className="splide__track">
                 <ul className="splide__list">
@@ -526,18 +579,18 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              {/* Custom arrows */}
+              {/* Custom arrows – now with unique class names for JS attachment */}
               <div className="splide__arrows">
-                <button className="splide__arrow splide__arrow--prev whats-on-arrow">
+                <button className="whats-on-arrow whats-on-arrow-prev">
                   <ChevronLeft size={18} />
                 </button>
-                <button className="splide__arrow splide__arrow--next whats-on-arrow">
+                <button className="whats-on-arrow whats-on-arrow-next">
                   <ChevronRight size={18} />
                 </button>
               </div>
             </div>
 
-            {/* Pagination dots */}
+            {/* Pagination dots (manual) */}
             <div className="flex gap-1.5 mt-3 justify-end pr-1">
               {carouselItems.map((_, i) => (
                 <button
@@ -615,7 +668,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right — decorative image placeholder (swap with real photo) */}
+          {/* Right — decorative image placeholder */}
           <div className="relative flex justify-center">
             <div className="w-full max-w-sm aspect-[4/5] rounded-[3rem] bg-[#F5EFE6] overflow-hidden shadow-xl flex items-center justify-center">
               <img
@@ -666,12 +719,12 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Arrows */}
+          {/* Custom arrows with unique classes */}
           <div className="splide__arrows flex gap-3 mt-8">
-            <button className="splide__arrow splide__arrow--prev how-we-arrow">
+            <button className="how-we-arrow how-we-arrow-prev">
               <ChevronLeft size={20} />
             </button>
-            <button className="splide__arrow splide__arrow--next how-we-arrow">
+            <button className="how-we-arrow how-we-arrow-next">
               <ChevronRight size={20} />
             </button>
           </div>
@@ -700,7 +753,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          GIVING PLACEHOLDER
+          GIVING SECTION — replaces emoji with Heart icon
       ══════════════════════════════════════════════ */}
       <section id="giving" className="bg-[#F5EFE6] px-8 md:px-16 lg:px-24 py-20 md:py-28">
         <div className="max-w-screen-lg mx-auto">
@@ -732,16 +785,16 @@ export default function LandingPage() {
                 </a>
               </div>
             </div>
-            {/* Decorative blob */}
-            <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-[40%_60%_50%_50%/40%_50%_60%_50%] bg-[#F5EFE6] flex items-center justify-center text-5xl select-none">
-              🙏
+            {/* Replaced emoji with Heart icon from lucide-react */}
+            <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-[40%_60%_50%_50%/40%_50%_60%_50%] bg-[#F5EFE6] flex items-center justify-center">
+              <Heart size={64} className="text-black/60" />
             </div>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════
-          FOOTER
+          FOOTER (unchanged)
       ══════════════════════════════════════════════ */}
       <footer id="footer" className="bg-white border-t border-black/5 px-8 md:px-16 lg:px-24 pt-16 pb-20">
         <div className="max-w-screen-lg mx-auto">
@@ -814,9 +867,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* ══════════════════════════════════════════════
-          EVENTS MODAL (unchanged logic)
-      ══════════════════════════════════════════════ */}
+      {/* ===== EVENTS MODAL (unchanged) ===== */}
       {isEventsModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -893,9 +944,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════
-          ROSTER MODAL (unchanged logic)
-      ══════════════════════════════════════════════ */}
+      {/* ===== ROSTER MODAL (unchanged) ===== */}
       {isRosterModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -977,13 +1026,12 @@ export default function LandingPage() {
       )}
 
       {/* ══════════════════════════════════════════════
-          STYLES
+          STYLES (updated for new arrow classes)
       ══════════════════════════════════════════════ */}
       <style>{`
         html { scroll-behavior: smooth; }
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* ── Bottom bar marquee (fast) ── */
         @keyframes marquee {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -994,7 +1042,6 @@ export default function LandingPage() {
           width: max-content;
         }
 
-        /* ── Values marquee (slow) ── */
         @keyframes marqueeSlow {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-100%); }
@@ -1007,17 +1054,31 @@ export default function LandingPage() {
           animation: marqueeSlow 30s linear infinite;
         }
 
-        /* ── Bounce Y arrow ── */
         @keyframes bounceY {
           0%, 100% { transform: translateY(0); }
           50%       { transform: translateY(4px); }
         }
         .animate-bounce-y { animation: bounceY 1.8s ease-in-out infinite; }
 
-        /* ── Splide: hide default styles we override ── */
         .splide__track { overflow: visible !important; }
 
-        /* ── "What's On" slider arrows ── */
+        /* Custom styles for "What's On" arrows */
+        .whats-on-arrow {
+          pointer-events: auto;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: white;
+          border: 1px solid rgba(0,0,0,0.1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: black;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .whats-on-arrow:hover { background: black; color: white; }
         .whats-on-slider .splide__arrows {
           position: absolute;
           top: 50%;
@@ -1029,35 +1090,10 @@ export default function LandingPage() {
           justify-content: space-between;
           padding: 0 -1.5rem;
         }
-        .whats-on-arrow {
-          pointer-events: auto;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: white;
-          border: 1px solid rgba(0,0,0,0.1);
-          display: flex !important;
-          align-items: center;
-          justify-content: center;
-          color: black;
-          cursor: pointer;
-          position: static !important;
-          transform: none !important;
-          opacity: 1 !important;
-          transition: background 0.2s, color 0.2s;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        }
-        .whats-on-arrow:hover { background: black; color: white; }
         .whats-on-slider .splide__arrow--prev { margin-left: -1.5rem; }
         .whats-on-slider .splide__arrow--next { margin-right: -1.5rem; }
-        
-        /* ── "How We Do" slider arrows ── */
-        .how-we-splide .splide__arrows {
-          display: flex;
-          gap: 0.75rem;
-          margin-top: 2rem;
-          pointer-events: none;
-        }
+
+        /* How we do church arrows */
         .how-we-arrow {
           pointer-events: auto;
           width: 44px;
@@ -1065,24 +1101,21 @@ export default function LandingPage() {
           border-radius: 50%;
           background: rgba(255,255,255,0.1);
           border: 1px solid rgba(255,255,255,0.2);
-          display: flex !important;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
           color: white;
           cursor: pointer;
-          position: static !important;
-          transform: none !important;
-          opacity: 1 !important;
           transition: background 0.2s;
         }
         .how-we-arrow:hover { background: rgba(255,255,255,0.2); }
-        .how-we-splide .splide__arrow:disabled { opacity: 0.3 !important; }
-
-        /* Splide default arrow reset */
-        .splide__arrow { background: none !important; }
+        .how-we-splide .splide__arrows {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 2rem;
+          pointer-events: none;
+        }
         .splide__arrow svg { display: none; }
-
-        /* Carousel slide height fix */
         .how-we-splide .splide__slide { height: auto !important; }
         .whats-on-slider .splide__slide { height: auto !important; }
       `}</style>
