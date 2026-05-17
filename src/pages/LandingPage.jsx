@@ -517,18 +517,18 @@ useEffect(() => {
                     : (item.description_en || '')}
                 </p>
 
-                {/* Bottom row: CTA left, arrows right (mobile) / arrows protruding (desktop) */}
-                <div className="card-bottom-row">
-                  <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
-                  <div className="card-mobile-arrows">
-                    <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button className="custom-next card-arrow-sm" aria-label="Next slide">
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
+<div className="card-bottom-row">
+  <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
+</div>
+{/* Mobile arrows - fixed position, moved outside card-bottom-row */}
+<div className="card-mobile-arrows">
+  <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
+    <ChevronLeft size={16} />
+  </button>
+  <button className="custom-next card-arrow-sm" aria-label="Next slide">
+    <ChevronRight size={16} />
+  </button>
+</div>
               </div>
             </li>
           ))}
@@ -700,266 +700,271 @@ useEffect(() => {
         </div>
       )}
 
-      <style>{`
+<style>{`
   html { scroll-behavior: smooth; }
-* { box-sizing: border-box; }
-@keyframes bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%       { transform: translateX(-50%) translateY(6px); }
-}
-.animate-bob { animation: bob 2.5s ease-in-out infinite; }
+  * { box-sizing: border-box; }
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(6px); }
+  }
+  .animate-bob { animation: bob 2.5s ease-in-out infinite; }
 
-/* ── CAROUSEL OUTER ── */
-.hero-carousel-outer {
-  position: relative;
-  width: 100%;
-  margin-top: 1.5rem;
-  padding: 0 1.25rem;
-}
-
-/* Mobile: Option A - edge-to-edge with small margins for rounded corners */
-@media (max-width: 640px) {
+  /* ── CAROUSEL OUTER ── */
   .hero-carousel-outer {
-    padding: 0 0.5rem;
-    margin-top: 1rem;
-    margin-bottom: 0;
+    position: relative;
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0 1.25rem;
   }
-}
 
-/* ── BAR SHAPE ── */
-.hero-carousel-bar {
-  background: rgba(35, 31, 28, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(201, 168, 130, 0.3);
-  border-radius: 1.25rem;
-  padding: 1.4rem 3.75rem;
-  position: relative;
-  overflow: visible !important;
-  transition: all 0.3s ease;
-}
+  /* Mobile: Option A - edge-to-edge with small margins for rounded corners */
+  @media (max-width: 640px) {
+    .hero-carousel-outer {
+      padding: 0 0.5rem;
+      margin-top: 1rem;
+      margin-bottom: 0;
+    }
+  }
 
-/* Mobile: rounded corners with small side margins */
-@media (max-width: 640px) {
+  /* ── BAR SHAPE ── */
   .hero-carousel-bar {
-    border-radius: 20px;
-    padding: 1rem 1rem 0.75rem;
-    margin-bottom: 0;
+    background: rgba(35, 31, 28, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(201, 168, 130, 0.3);
+    border-radius: 1.25rem;
+    padding: 1.4rem 3.75rem;
+    position: relative;
+    overflow: visible !important;
+    transition: all 0.3s ease;
   }
-}
 
-/* Section label */
-.carousel-section-label {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #C9A882;
-  margin: 0 0 0.5rem;
-  text-align: left;
-}
+  /* Mobile: rounded corners with small side margins */
+  @media (max-width: 640px) {
+    .hero-carousel-bar {
+      border-radius: 20px;
+      padding: 1rem 1rem 0.75rem;
+      margin-bottom: 0;
+    }
+  }
 
-/* Splide pagination repositioned to top-right */
-.hero-carousel-bar .splide__pagination {
-  position: absolute !important;
-  top: 1rem !important;
-  right: 1.25rem !important;
-  bottom: auto !important;
-  left: auto !important;
-  gap: 5px;
-  padding: 0;
-}
+  /* Section label */
+  .carousel-section-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #C9A882;
+    margin: 0 0 0.5rem;
+    text-align: left;
+  }
 
-@media (max-width: 640px) {
+  /* Splide pagination repositioned to top-right */
   .hero-carousel-bar .splide__pagination {
-    top: 0.75rem !important;
-    right: 1rem !important;
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1.25rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    gap: 5px;
+    padding: 0;
   }
-}
 
-.hero-carousel-bar .splide__pagination__page {
-  width: 5px;
-  height: 5px;
-  background: rgba(201, 168, 130, 0.5);
-  border-radius: 999px;
-  border: none;
-  transition: width 0.3s, background 0.3s;
-  margin: 0 2px;
-}
+  @media (max-width: 640px) {
+    .hero-carousel-bar .splide__pagination {
+      top: 0.75rem !important;
+      right: 1rem !important;
+    }
+  }
 
-.hero-carousel-bar .splide__pagination__page.is-active {
-  width: 14px;
-  background: #C9A882;
-  transform: none;
-}
+  .hero-carousel-bar .splide__pagination__page {
+    width: 5px;
+    height: 5px;
+    background: rgba(201, 168, 130, 0.5);
+    border-radius: 999px;
+    border: none;
+    transition: width 0.3s, background 0.3s;
+    margin: 0 2px;
+  }
 
-/* ── SLIDE CARD ── */
-.announcement-card {
-  text-align: left;
-  min-height: 90px;
-}
+  .hero-carousel-bar .splide__pagination__page.is-active {
+    width: 14px;
+    background: #C9A882;
+    transform: none;
+  }
 
-@media (max-width: 640px) {
+  /* ── SLIDE CARD ── */
   .announcement-card {
-    min-height: auto;
+    position: relative;
+    text-align: left;
+    min-height: 90px;
   }
-}
 
-.card-theme-pill {
-  display: inline-block;
-  background: rgba(201, 168, 130, 0.2);
-  color: #C9A882;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  margin-bottom: 0.45rem;
-}
+  @media (max-width: 640px) {
+    .announcement-card {
+      min-height: auto;
+    }
+  }
 
-.card-title {
-  font-family: 'Lora', serif;
-  font-size: 1.2rem;
-  color: #FFFFFF;
-  margin: 0 0 0.35rem;
-  line-height: 1.3;
-}
+  .card-theme-pill {
+    display: inline-block;
+    background: rgba(201, 168, 130, 0.2);
+    color: #C9A882;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 0.45rem;
+  }
 
-.card-body-text {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.65;
-  font-style: italic;
-  border-left: 2px solid rgba(201, 168, 130, 0.4);
-  padding-left: 0.75rem;
-  margin: 0;
-}
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 1.2rem;
+    color: #FFFFFF;
+    margin: 0 0 0.35rem;
+    line-height: 1.3;
+  }
 
-/* Bottom row: CTA + mobile arrows */
-.card-bottom-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 1rem;
-}
+  .card-body-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.65;
+    font-style: italic;
+    border-left: 2px solid rgba(201, 168, 130, 0.4);
+    padding-left: 0.75rem;
+    margin: 0;
+  }
 
-@media (max-width: 640px) {
+  /* Bottom row: CTA button only */
   .card-bottom-row {
-    margin-top: 0.75rem;
-  }
-}
-
-.card-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(201, 168, 130, 0.5);
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #C9A882;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.card-cta-btn:hover {
-  background: #C9A882;
-  color: #2D2926;
-  border-color: #C9A882;
-}
-
-/* Mobile arrows (bottom-right, inside card) */
-.card-mobile-arrows {
-  display: none;
-  gap: 6px;
-}
-
-.card-arrow-sm {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(201, 168, 130, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #C9A882;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.card-arrow-sm:hover {
-  background: #C9A882;
-  color: #2D2926;
-}
-
-/* Desktop arrows — half outside the bar, vertically centred */
-.carousel-arrow-desktop {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(201, 168, 130, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #C9A882;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-  z-index: 10;
-}
-
-.carousel-arrow-desktop:hover {
-  background: #C9A882;
-  color: #2D2926;
-  border-color: #C9A882;
-}
-
-.carousel-arrow-left {
-  left: -18px;
-}
-
-.carousel-arrow-right {
-  right: -18px;
-}
-
-/* ── MOBILE OVERRIDES ── */
-@media (max-width: 640px) {
-  .carousel-arrow-desktop {
-    display: none;
-  }
-  
-  .card-mobile-arrows {
     display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 1rem;
   }
-  
-  /* Remove all extra spacing below carousel */
-  .hero-carousel-bar .splide__track {
-    margin-bottom: 0;
-    padding-bottom: 0;
+
+  @media (max-width: 640px) {
+    .card-bottom-row {
+      margin-top: 0.75rem;
+    }
   }
-  
-  .hero-carousel-bar .splide__list {
-    margin-bottom: 0;
-    padding-bottom: 0;
+
+  .card-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(201, 168, 130, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #C9A882;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
   }
-  
-  .splide__slide {
-    margin-bottom: 0;
-    padding-bottom: 0;
+
+  .card-cta-btn:hover {
+    background: #C9A882;
+    color: #2D2926;
+    border-color: #C9A882;
   }
-}
+
+  /* Mobile arrows - absolute positioned at bottom-right of announcement-card */
+  .card-mobile-arrows {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.5rem;
+    display: none;
+    gap: 6px;
+    z-index: 15;
+  }
+
+  .card-arrow-sm {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(201, 168, 130, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #C9A882;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .card-arrow-sm:hover {
+    background: #C9A882;
+    color: #2D2926;
+  }
+
+  /* Desktop arrows — half outside the bar, vertically centred */
+  .carousel-arrow-desktop {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(201, 168, 130, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #C9A882;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    z-index: 10;
+  }
+
+  .carousel-arrow-desktop:hover {
+    background: #C9A882;
+    color: #2D2926;
+    border-color: #C9A882;
+  }
+
+  .carousel-arrow-left {
+    left: -18px;
+  }
+
+  .carousel-arrow-right {
+    right: -18px;
+  }
+
+  /* ── MOBILE OVERRIDES ── */
+  @media (max-width: 640px) {
+    .carousel-arrow-desktop {
+      display: none;
+    }
+    
+    .card-mobile-arrows {
+      display: flex;
+    }
+    
+    /* Remove all extra spacing below carousel */
+    .hero-carousel-bar .splide__track {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .hero-carousel-bar .splide__list {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .splide__slide {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
 `}</style>
     </div>
   )
