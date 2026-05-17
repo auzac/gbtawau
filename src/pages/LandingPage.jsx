@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ChevronLeft, ChevronRight, MapPin, Clock, Phone, X, 
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
+import '@splidejs/splide/css'
 
 const NAV_LINKS = [
   { en: 'Home', bm: 'Utama', href: '#home' },
@@ -26,8 +27,11 @@ export default function LandingPage() {
   const [verse, setVerse] = useState({ reference: 'Matthew 11:28', text: 'Come to me...', theme: '' })
   const [events, setEvents] = useState([])
   const [carouselItems, setCarouselItems] = useState([])
-  const [currentSlide, setCurrentSlide] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
+
+  // Dynamic font size for verse
+  const [verseFontSize, setVerseFontSize] = useState(1.5)
+  const verseTextRef = useRef(null)
 
   // Events modal
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false)
@@ -36,12 +40,47 @@ export default function LandingPage() {
   // Roster modal
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false)
   const [rosters, setRosters] = useState([])
-  const [rosterMap, setRosterMap] = useState({})        // key: "2026-06-1" => roster object
+  const [rosterMap, setRosterMap] = useState({})
   const [availableMonths, setAvailableMonths] = useState([])
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedWeek, setSelectedWeek] = useState(1)
 
   const getNavText = (item) => (locale === 'bm' ? item.bm : item.en)
+
+  // Dynamic font scaling for verse
+  useEffect(() => {
+    const calculateFontSize = () => {
+      if (!verseTextRef.current) return
+      const text = verse.text
+      const container = verseTextRef.current.parentElement
+      if (!container) return
+      
+      const containerWidth = container.offsetWidth
+      const tempSpan = document.createElement('span')
+      tempSpan.style.visibility = 'hidden'
+      tempSpan.style.position = 'absolute'
+      tempSpan.style.whiteSpace = 'nowrap'
+      tempSpan.style.fontFamily = getComputedStyle(verseTextRef.current).fontFamily
+      tempSpan.style.fontSize = '1rem'
+      tempSpan.innerText = text
+      document.body.appendChild(tempSpan)
+      
+      const textWidth = tempSpan.offsetWidth
+      const maxWidth = containerWidth - 40 // padding buffer
+      let newSize = 1.5 // default max size
+      
+      if (textWidth > maxWidth) {
+        newSize = Math.max(0.85, (maxWidth / textWidth) * 1.5 * 0.95)
+      }
+      
+      document.body.removeChild(tempSpan)
+      setVerseFontSize(Math.min(1.5, newSize))
+    }
+    
+    calculateFontSize()
+    window.addEventListener('resize', calculateFontSize)
+    return () => window.removeEventListener('resize', calculateFontSize)
+  }, [verse.text])
 
   useEffect(() => {
     loadContent()
@@ -59,14 +98,6 @@ export default function LandingPage() {
   }, [menuOpen])
 
   useEffect(() => {
-    if (!autoplay || carouselItems.length === 0) return
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselItems.length)
-    }, 6000)
-    return () => clearInterval(interval)
-  }, [autoplay, carouselItems.length])
-
-  useEffect(() => {
     if (isEventsModalOpen || isRosterModalOpen) {
       document.body.style.overflow = 'hidden'
     } else {
@@ -74,6 +105,36 @@ export default function LandingPage() {
     }
     return () => { document.body.style.overflow = '' }
   }, [isEventsModalOpen, isRosterModalOpen])
+
+  // Initialize Splide carousel
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@splidejs/splide').then(({ default: Splide }) => {
+        const splide = new Splide('.horizontal-church-slider', {
+          type: 'slide',
+          perPage: 3,
+          perMove: 1,
+          gap: '2rem',
+          focus: 0,
+          speed: 600,
+          rewind: true,
+          rewindSpeed: 400,
+          pagination: false,
+          arrows: true,
+          dragAngleThreshold: 30,
+          updateOnMove: true,
+          trimSpace: false,
+          breakpoints: {
+            991: { perPage: 2, gap: '1.5rem' },
+            767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
+          }
+        })
+        splide.mount()
+        
+        return () => splide.destroy()
+      })
+    }
+  }, [carouselItems]) // re-initialize when items change
 
   const loadContent = async () => {
     setLoading(true)
@@ -115,13 +176,12 @@ export default function LandingPage() {
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: true })
       if (error && error.code === '42P01') {
-        console.log('Carousel table not found yet, skipping.')
+        console.log('Carousel table not found yet, using placeholders.')
         setCarouselItems([])
         return
       }
       if (!error && data && data.length > 0) {
         setCarouselItems(data)
-        setCurrentSlide(0)
       } else {
         setCarouselItems([])
       }
@@ -137,8 +197,6 @@ export default function LandingPage() {
       .select('*')
       .order('week_start', { ascending: true })
 
-    console.log('Raw roster data:', data)
-
     if (!error && data) {
       setRosters(data)
       const monthsSet = new Set()
@@ -149,7 +207,6 @@ export default function LandingPage() {
         const [year, month, day] = roster.week_start.split('-').map(Number)
         const monthStr = `${year}-${String(month).padStart(2, '0')}`
 
-        // Determine week number (1-4) based on first Monday of the month
         const firstDayOfMonth = new Date(Date.UTC(year, month-1, 1))
         const firstMondayUTC = new Date(Date.UTC(year, month-1, 1))
         const firstDayOfWeek = firstDayOfMonth.getUTCDay()
@@ -173,8 +230,6 @@ export default function LandingPage() {
 
       const monthsArray = Array.from(monthsSet).map(m => JSON.parse(m))
       monthsArray.sort((a,b) => a.value.localeCompare(b.value))
-      console.log('Available months:', monthsArray)
-      console.log('Roster map:', map)
 
       setAvailableMonths(monthsArray)
       setRosterMap(map)
@@ -193,21 +248,6 @@ export default function LandingPage() {
   }
 
   const rosterForSelectedWeek = getRosterForWeek(selectedWeek)
-
-  // Handlers (unchanged)
-  const goToPrevSlide = () => {
-    if (carouselItems.length === 0) return
-    setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
-    setAutoplay(false)
-    setTimeout(() => setAutoplay(true), 10000)
-  }
-
-  const goToNextSlide = () => {
-    if (carouselItems.length === 0) return
-    setCurrentSlide((prev) => (prev + 1) % carouselItems.length)
-    setAutoplay(false)
-    setTimeout(() => setAutoplay(true), 10000)
-  }
 
   const openEventsModal = () => {
     setSelectedEvent(null)
@@ -249,6 +289,13 @@ export default function LandingPage() {
     }
   }
 
+  // Prepare carousel slides data (Supabase data or placeholders)
+  const carouselSlides = carouselItems.length > 0 ? carouselItems : [
+    { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Special Announcement', title_bm: 'Pengumuman Istimewa', description_en: 'Join us for a special service this Sunday.', description_bm: 'Sertai kami untuk kebaktian istimewa minggu ini.' },
+    { id: 2, image_url: '/placeholder-2.jpg', title_en: 'Upcoming Event', title_bm: 'Acara Akan Datang', description_en: 'Don\'t miss our annual celebration.', description_bm: 'Jangan lepaskan sambutan tahunan kami.' },
+    { id: 3, image_url: '/placeholder-3.jpg', title_en: 'Join Us', title_bm: 'Sertai Kami', description_en: 'Find your community and grow in faith.', description_bm: 'Cari komuniti anda dan bertumbuh dalam iman.' },
+  ]
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
@@ -264,30 +311,26 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-{/* ========== NAVBAR (logo replaces text) ========== */}
-<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
-  <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <img
-        src="/logo.webp"
-        alt="GBT"
-        className="h-8 w-auto object-contain"
-      />
-    </div>
-    <div className="flex items-center gap-3">
-      <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
-        {locale === 'en' ? 'BM' : 'EN'}
-      </button>
-      <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
-        {[0,1].map(i => (
-          <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
-        ))}
-      </button>
-    </div>
-  </div>
-</nav>
+      {/* ========== NAVBAR ========== */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
+        <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo.webp" alt="GBT" className="h-8 w-auto object-contain" />
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
+              {locale === 'en' ? 'BM' : 'EN'}
+            </button>
+            <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
+              {[0,1].map(i => (
+                <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
+              ))}
+            </button>
+          </div>
+        </div>
+      </nav>
 
-      {/* FULLSCREEN MENU (same as before) */}
+      {/* FULLSCREEN MENU */}
       <div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-center">
           {NAV_LINKS.map((item, i) => (
@@ -307,201 +350,138 @@ export default function LandingPage() {
         <p className="mt-12 uppercase tracking-[0.25em] text-[11px] text-[#6B5E55] font-['DM_Sans',sans-serif]">Jalan Kuhara, 91000 Tawau, Sabah</p>
       </div>
 
-      {/* HERO SECTION (unchanged) */}
-      {/* ========== HERO SECTION ========== */}
-{/* ========== HERO + CAROUSEL INTEGRATED SECTION ========== */}
-{/* ========== HERO + CAROUSEL INTEGRATED SECTION (with stable verse container) ========== */}
-<section
-  id="home"
-  className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
->
-  {/* Ambient Orbs */}
-  <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
-  <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
+      {/* ========== HERO + CAROUSEL INTEGRATED SECTION ========== */}
+      <section
+        id="home"
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+      >
+        {/* Ambient Orbs */}
+        <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
+        <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
-  {/* Large Cross Logo Background */}
-  <div
-    className="absolute inset-0 pointer-events-none z-0"
-    style={{
-      backgroundImage: "url('/logo_2.webp')",
-      backgroundRepeat: "no-repeat",
-      backgroundPosition: "right center",
-      backgroundSize: "auto 60%",
-      opacity: 0.07,
-    }}
-  />
-
-  <div className="relative z-10 w-full max-w-3xl mx-auto">
-    
-    {/* VERSE WRAPPER - Fixed height container to prevent layout shift */}
-    <div 
-      className="hero-verse-wrapper mx-auto mb-6"
-      style={{
-        minHeight: '120px',
-        maxHeight: '160px',
-        overflowY: 'auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-      }}
-    >
-      <blockquote className="w-full">
-        <p 
-          className="hero-verse-text italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif]"
+        {/* Large Cross Logo Background */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0"
           style={{
-            overflowWrap: 'break-word',
-            wordWrap: 'break-word',
+            backgroundImage: "url('/logo_2.webp')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right center",
+            backgroundSize: "auto 60%",
+            opacity: 0.07,
           }}
-        >
-          "{verse.text}"
-        </p>
-        <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
-          {verse.reference}
-        </cite>
-      </blockquote>
-    </div>
+        />
 
-    {/* WELCOME BUTTON - Decoupled, always in same position */}
-    <div className="hero-button-group mb-8">
-      <a
-        href="#about"
-        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        {t('welcome_cta')}
-      </a>
-    </div>
+        <div className="relative z-10 w-full max-w-3xl mx-auto">
+          
+          {/* VERSE WRAPPER - Dynamic font size, no scrollbar */}
+          <div className="hero-verse-wrapper mx-auto mb-6 min-h-[100px] flex items-center justify-center">
+            <blockquote className="w-full">
+              <p 
+                ref={verseTextRef}
+                className="hero-verse-text italic text-[#2D2926] mb-3 font-['Lora',serif] text-center"
+                style={{
+                  fontSize: `${verseFontSize}rem`,
+                  lineHeight: 1.4,
+                  overflowWrap: 'break-word',
+                  wordWrap: 'break-word',
+                }}
+              >
+                "{verse.text}"
+              </p>
+              <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
+                {verse.reference}
+              </cite>
+            </blockquote>
+          </div>
 
-    {/* QUICK ACTION CARDS - Decoupled */}
-    <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-8">
-      <button
-        onClick={openEventsModal}
-        className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
-      >
-        <Calendar size={18} stroke="#7A6A5E" strokeWidth="1.5" />
-        <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
-          {t('events_button')}
-        </span>
-      </button>
-      <button
-        onClick={openRosterModal}
-        className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
-      >
-        <Users size={18} stroke="#7A6A5E" strokeWidth="1.5" />
-        <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
-          {t('roster_button')}
-        </span>
-      </button>
-    </div>
-
-    {/* CAROUSEL - Anchored below all buttons */}
-    <div className="hero-carousel-container w-full mt-4">
-      <div
-        className="relative w-full rounded-xl overflow-hidden shadow-md"
-        onMouseEnter={() => setAutoplay(false)}
-        onMouseLeave={() => setAutoplay(true)}
-      >
-        <div className="relative aspect-video max-h-[320px]">
-          <img
-            src={carouselItems.length > 0 && carouselItems[currentSlide] 
-              ? carouselItems[currentSlide].image_url 
-              : `/placeholder-${(currentSlide % 3) + 1}.jpg`
-            }
-            alt={carouselItems.length > 0 && carouselItems[currentSlide] 
-              ? carouselItems[currentSlide][`title_${locale}`] 
-              : `Placeholder ${(currentSlide % 3) + 1}`
-            }
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = 'https://placehold.co/1200x600/2D2926/FAF8F5?text=Announcement'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4 text-white text-left">
-            <h3 className="text-lg md:text-xl font-semibold font-['Lora',serif] mb-1">
-              {carouselItems.length > 0 && carouselItems[currentSlide]
-                ? carouselItems[currentSlide][`title_${locale}`]
-                : (locale === 'bm' 
-                    ? ['Pengumuman Istimewa', 'Acara Akan Datang', 'Sertai Kami'][currentSlide % 3]
-                    : ['Special Announcement', 'Upcoming Event', 'Join Us'][currentSlide % 3]
-                  )
-              }
-            </h3>
-            <p className="text-xs md:text-sm opacity-90 line-clamp-2">
-              {carouselItems.length > 0 && carouselItems[currentSlide]?.description_en
-                ? (locale === 'bm' && carouselItems[currentSlide].description_bm 
-                    ? carouselItems[currentSlide].description_bm 
-                    : carouselItems[currentSlide].description_en)
-                : (locale === 'bm'
-                    ? 'Jangan lepaskan peluang ini untuk bersama-sama kita.'
-                    : 'Don\'t miss this opportunity to join us.'
-                  )
-              }
-            </p>
-            <button
-              onClick={() => {
-                if (carouselItems.length > 0 && carouselItems[currentSlide]?.link_url) {
-                  window.open(carouselItems[currentSlide].link_url, '_blank')
-                } else {
-                  alert(locale === 'bm' ? 'Butiran akan datang' : 'Details coming soon')
-                }
-              }}
-              className="mt-2 text-xs underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition"
+          {/* WELCOME BUTTON */}
+          <div className="hero-button-group mb-8">
+            <a
+              href="#about"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
             >
-              {t('learn_more')}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              {t('welcome_cta')}
+            </a>
+          </div>
+
+          {/* QUICK ACTION CARDS */}
+          <div className="hero-button-group flex flex-wrap justify-center gap-3 mb-8">
+            <button
+              onClick={openEventsModal}
+              className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+            >
+              <Calendar size={18} stroke="#7A6A5E" strokeWidth="1.5" />
+              <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+                {t('events_button')}
+              </span>
+            </button>
+            <button
+              onClick={openRosterModal}
+              className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+            >
+              <Users size={18} stroke="#7A6A5E" strokeWidth="1.5" />
+              <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+                {t('roster_button')}
+              </span>
             </button>
           </div>
-        </div>
 
-        {/* Navigation Arrows & Dots */}
-        {(carouselItems.length > 0 || true) && (
-          <>
-            <button
-              onClick={goToPrevSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1 transition"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft size={20} className="text-white" />
-            </button>
-            <button
-              onClick={goToNextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1 transition"
-              aria-label="Next slide"
-            >
-              <ChevronRight size={20} className="text-white" />
-            </button>
-            
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {[0, 1, 2].map((idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setCurrentSlide(idx)
-                    setAutoplay(false)
-                    setTimeout(() => setAutoplay(true), 10000)
-                  }}
-                  className={`w-1.5 h-1.5 rounded-full transition-all ${
-                    idx === currentSlide ? 'bg-white w-4' : 'bg-white/50'
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
+          {/* SPLIDE CARD CAROUSEL - SOUL Church style */}
+          <div className="hero-carousel-container w-full mt-4">
+            <div className="splide horizontal-church-slider" aria-label="Church Highlights">
+              <div className="splide__track">
+                <ul className="splide__list">
+                  {carouselSlides.map((item, idx) => (
+                    <li key={item.id || idx} className="splide__slide church-card-slide">
+                      <div className="card-image-wrapper">
+                        <img 
+                          src={item.image_url || `/placeholder-${(idx % 3) + 1}.jpg`} 
+                          alt={locale === 'bm' ? item.title_bm : item.title_en}
+                          className="card-bg-image"
+                          onError={(e) => {
+                            e.target.src = 'https://placehold.co/800x1000/2D2926/FAF8F5?text=Church'
+                          }}
+                        />
+                        <div className="card-gradient-overlay"></div>
+                      </div>
+                      <div className="card-content-block">
+                        <div className="card-tag">{t('announcements_title')}</div>
+                        <h3 className="card-title">
+                          {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                        </h3>
+                        <p className="card-description">
+                          {locale === 'bm' && item.description_bm 
+                            ? item.description_bm 
+                            : (item.description_en || item.description)}
+                        </p>
+                        <button
+                          onClick={() => {
+                            if (item.link_url) {
+                              window.open(item.link_url, '_blank')
+                            } else {
+                              alert(locale === 'bm' ? 'Butiran akan datang' : 'Details coming soon')
+                            }
+                          }}
+                          className="mt-3 text-sm underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition text-white"
+                        >
+                          {t('learn_more')}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-</section>
+          </div>
+        </div>
+      </section>
 
-{/* ========== REMOVE the old separate CAROUSEL SECTION ========== */}
-{/* The old carousel section is now deleted – integrated into hero above */}
-
-      {/* ABOUT SECTION (unchanged) */}
+      {/* ABOUT SECTION */}
       <section id="about" className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
           <p className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] mb-6 font-['DM_Sans',sans-serif]">{t('nav_about')}</p>
@@ -511,7 +491,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER (unchanged) */}
+      {/* FOOTER */}
       <footer id="footer" className="bg-[#2D2926] px-6 py-10 text-center">
         <p className="uppercase tracking-[0.28em] text-[10px] text-[#6B5E55] mb-2 font-['DM_Sans',sans-serif]">{t('footer_church')}</p>
         <div className="flex flex-col items-center gap-2 text-[#6B5E55] text-sm font-['DM_Sans',sans-serif]">
@@ -523,7 +503,7 @@ export default function LandingPage() {
         <p className="text-[#7A6A5E] text-sm italic font-['Lora',serif]">{t('footer_tagline')}</p>
       </footer>
 
-      {/* EVENTS MODAL (unchanged) */}
+      {/* EVENTS MODAL */}
       {isEventsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
@@ -571,19 +551,15 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* ROSTER MODAL (updated to use rosterMap) */}
+      {/* ROSTER MODAL */}
       {isRosterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[#FAF8F5] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
-            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-[#d9c9b7]/40">
               <h2 className="text-xl font-['Lora',serif] text-[#2D2926]">{t('roster_modal_title')}</h2>
               <button onClick={closeRosterModal} className="p-1 hover:bg-[#d9c9b7]/30 rounded-full"><X size={20} className="text-[#7A6A5E]" /></button>
             </div>
-
-            {/* Content */}
             <div className="flex-1 overflow-y-auto p-5">
-              {/* Month dropdown */}
               <div className="mb-6">
                 <label className="block text-xs uppercase tracking-wide text-[#B09882] mb-2 font-['DM_Sans',sans-serif]">{t('roster_month')}</label>
                 <div className="relative">
@@ -601,7 +577,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Week tabs */}
               <div className="mb-6">
                 <label className="block text-xs uppercase tracking-wide text-[#B09882] mb-2 font-['DM_Sans',sans-serif]">{t('roster_week')}</label>
                 <div className="flex gap-2">
@@ -621,7 +596,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Roster details */}
               <div className="bg-white/70 border border-[#d9c9b7]/30 rounded-xl p-5">
                 {rosterForSelectedWeek ? (
                   <div className="space-y-4">
@@ -652,8 +626,6 @@ export default function LandingPage() {
                 )}
               </div>
             </div>
-
-            {/* Footer */}
             <div className="p-5 border-t border-[#d9c9b7]/40 flex justify-end">
               <button onClick={closeRosterModal} className="px-5 py-2 rounded-full bg-[#2D2926] text-[#FAF8F5] text-sm uppercase tracking-wide hover:bg-[#4A3F38]">{t('events_modal_close')}</button>
             </div>
@@ -671,6 +643,133 @@ export default function LandingPage() {
         .animate-bob { animation: bob 2.5s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           * { animation: none !important; transition-duration: 0.01ms !important; }
+        }
+
+        /* Splide Card Carousel Styles - SOUL Church Inspired */
+        .horizontal-church-slider {
+          width: 100%;
+        }
+
+        .church-card-slide {
+          position: relative;
+          border-radius: 16px;
+          overflow: hidden;
+          background-color: #1a1a1a;
+          aspect-ratio: 4 / 5;
+          cursor: grab;
+        }
+
+        .church-card-slide:active {
+          cursor: grabbing;
+        }
+
+        .card-image-wrapper {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          overflow: hidden;
+        }
+
+        .card-bg-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .church-card-slide:hover .card-bg-image {
+          transform: scale(1.06);
+        }
+
+        .card-gradient-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0.5) 60%,
+            rgba(0, 0, 0, 0.85) 100%
+          );
+          z-index: 1;
+        }
+
+        .card-content-block {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          padding: 1.5rem 1.5rem 2rem;
+          box-sizing: border-box;
+          z-index: 2;
+          color: #ffffff;
+          text-align: left;
+        }
+
+        .card-tag {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.7rem;
+          letter-spacing: 0.15em;
+          color: #C9A882;
+          margin-bottom: 0.5rem;
+          text-transform: uppercase;
+        }
+
+        .card-title {
+          font-family: 'Lora', serif;
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin: 0 0 0.5rem 0;
+          line-height: 1.2;
+        }
+
+        .card-description {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.85rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.8);
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        /* Splide arrow customization */
+        .horizontal-church-slider .splide__arrow {
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(4px);
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 50%;
+          opacity: 0.7;
+          transition: opacity 0.3s;
+        }
+
+        .horizontal-church-slider .splide__arrow:hover {
+          background: rgba(255, 255, 255, 0.4);
+          opacity: 1;
+        }
+
+        .horizontal-church-slider .splide__arrow svg {
+          fill: #fff;
+        }
+
+        /* Responsive card text adjustments */
+        @media (max-width: 768px) {
+          .card-content-block {
+            padding: 1rem 1rem 1.5rem;
+          }
+          .card-title {
+            font-size: 1.2rem;
+          }
+          .card-description {
+            font-size: 0.75rem;
+          }
         }
       `}</style>
     </div>
