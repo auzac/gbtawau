@@ -1,5 +1,4 @@
 // src/pages/LyricsSession.jsx
-
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -12,7 +11,10 @@ import {
   Music2,
   LogIn,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  RefreshCw,
+  X
 } from 'lucide-react'
 
 const C = {
@@ -43,29 +45,23 @@ export default function LyricsSession() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSongIds, setSelectedSongIds] = useState(new Set())
 
-  // Create form
-  const [sessionCode, setSessionCode] = useState('')
-  const [expiryOption, setExpiryOption] = useState('2h')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Create modal
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [createCode, setCreateCode] = useState('')
+  const [expiryHours, setExpiryHours] = useState(2)
+  const [isCreating, setIsCreating] = useState(false)
 
-  // Join form & session data
+  // Join & session data
   const [joinCode, setJoinCode] = useState(code || '')
   const [sessionData, setSessionData] = useState(null)
   const [isLoadingSession, setIsLoadingSession] = useState(false)
   const [activeSongIndex, setActiveSongIndex] = useState(0)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const [showCreate, setShowCreate] = useState(true)
+  const [activeSessions, setActiveSessions] = useState([])
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const expiryOptions = [
-    { value: '2h', label: '2 hours', hours: 2 },
-    { value: '12h', label: '12 hours', hours: 12 },
-    { value: '1d', label: '1 day', hours: 24 },
-    { value: '7d', label: '7 days', hours: 168 },
-    { value: 'never', label: 'Never', hours: null }
-  ]
-
-  // Load songs
+  // Load songs on mount
   useEffect(() => {
     const loadSongs = async () => {
       setLoadingSongs(true)
@@ -73,13 +69,7 @@ export default function LyricsSession() {
         .from('songs')
         .select('id, title, lyrics')
         .order('title')
-
-      if (error) {
-        console.error('Error loading songs:', error)
-        setError('Failed to load song library')
-      } else {
-        setSongs(data || [])
-      }
+      if (!error) setSongs(data || [])
       setLoadingSongs(false)
     }
     loadSongs()
@@ -91,126 +81,68 @@ export default function LyricsSession() {
       setJoinCode(code)
       loadSession(code)
     } else {
-      // Clear session when no code (e.g., navigating back to create)
       setSessionData(null)
       setActiveSongIndex(0)
     }
   }, [code])
 
-  const filteredSongs = !searchTerm.trim()
-    ? songs
-    : songs.filter(song =>
-        song.title.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-
-  const getExpiresAt = () => {
-    const opt = expiryOptions.find(o => o.value === expiryOption)
-    if (!opt.hours) return null
-    const d = new Date()
-    d.setHours(d.getHours() + opt.hours)
-    return d.toISOString()
+  // Generate a random unused 4‑digit code
+  const generateRandomCode = async () => {
+    let newCode = Math.floor(1000 + Math.random() * 9000).toString()
+    let exists = true
+    while (exists) {
+      const { data } = await supabase
+        .from('public_sessions')
+        .select('session_code')
+        .eq('session_code', newCode)
+        .maybeSingle()
+      if (!data) {
+        exists = false
+      } else {
+        newCode = Math.floor(1000 + Math.random() * 9000).toString()
+      }
+    }
+    return newCode
   }
 
-  const loadSession = async targetCode => {
-  if (!targetCode) return
-  setIsLoadingSession(true)
-  setError('')
-  setSessionData(null)
-
-  try {
-    const { data: session, error: sessionErr } = await supabase
-      .from('public_sessions')
-      .select('*')
-      .eq('session_code', targetCode)
-      .maybeSingle()
-
-    if (sessionErr || !session) {
-      setError('Session not found. Please check the code.')
-      setIsLoadingSession(false)
-      return
-    }
-
-    if (session.expires_at && new Date(session.expires_at) < new Date()) {
-      setError('This session has expired.')
-      setIsLoadingSession(false)
-      return
-    }
-
-    // Fetch the song IDs in this session
-    const { data: sessionSongs, error: linkErr } = await supabase
-      .from('session_songs')
-      .select('song_id')
-      .eq('session_id', session.id)
-
-    if (linkErr) throw linkErr
-
-    if (!sessionSongs || sessionSongs.length === 0) {
-      setSessionData({ ...session, songs: [] })
-      setIsLoadingSession(false)
-      return
-    }
-
-    const songIds = sessionSongs.map(s => s.song_id)
-
-    // Fetch the actual songs by their IDs
-    const { data: songsData, error: songsErr } = await supabase
-      .from('songs')
-      .select('id, title, lyrics')
-      .in('id', songIds)
-
-    if (songsErr) throw songsErr
-
-    setSessionData({
-      ...session,
-      songs: songsData || []
-    })
-    setActiveSongIndex(0)
-  } catch (err) {
-    console.error(err)
-    setError('Failed to load session.')
-  } finally {
-    setIsLoadingSession(false)
-  }
-}
-
-  const handleJoin = () => {
-    const trimmed = joinCode.trim()
-    if (!/^\d{4}$/.test(trimmed)) {
-      setError('Please enter a valid 4-digit session code.')
-      return
-    }
-    navigate(`/lyrics/join/${trimmed}`)
+  const openCreateModal = async () => {
+    const randomCode = await generateRandomCode()
+    setCreateCode(randomCode)
+    setExpiryHours(2)
+    setSelectedSongIds(new Set())
+    setSearchTerm('')
+    setShowCreateModal(true)
   }
 
   const handleCreateSession = async () => {
-    const trimmed = sessionCode.trim()
-    if (!/^\d{4}$/.test(trimmed)) {
-      setError('Session code must be exactly 4 digits.')
-      return
-    }
     if (selectedSongIds.size === 0) {
-      setError('Select at least one song.')
+      setError('Select at least one song')
       return
     }
-
-    setIsSubmitting(true)
+    setIsCreating(true)
     setError('')
 
     try {
-      const expiresAt = getExpiresAt()
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + expiryHours)
       const { data: session, error: sessionErr } = await supabase
         .from('public_sessions')
-        .insert({ session_code: trimmed, expires_at: expiresAt })
+        .insert({
+          session_code: createCode,
+          expires_at: expiresAt.toISOString()
+        })
         .select()
         .single()
 
       if (sessionErr) {
         if (sessionErr.code === '23505') {
-          setError('Session code already taken. Choose another 4-digit code.')
+          setError('Code already taken, try again')
+          const newCode = await generateRandomCode()
+          setCreateCode(newCode)
         } else {
           throw sessionErr
         }
-        setIsSubmitting(false)
+        setIsCreating(false)
         return
       }
 
@@ -218,25 +150,91 @@ export default function LyricsSession() {
         session_id: session.id,
         song_id: songId
       }))
-
       const { error: insertErr } = await supabase
         .from('session_songs')
         .insert(rows)
-
       if (insertErr) throw insertErr
 
-      // Clear form after successful creation (optional)
-      setSessionCode('')
-      setSelectedSongIds(new Set())
-      setSearchTerm('')
-
-      navigate(`/lyrics/join/${trimmed}`)
+      setShowCreateModal(false)
+      navigate(`/lyrics/join/${createCode}`)
     } catch (err) {
       console.error(err)
-      setError('Failed to create session. Please try again.')
+      setError('Failed to create session')
     } finally {
-      setIsSubmitting(false)
+      setIsCreating(false)
     }
+  }
+
+  const loadSession = async targetCode => {
+    if (!targetCode) return
+    setIsLoadingSession(true)
+    setError('')
+    setSessionData(null)
+
+    try {
+      const { data: session, error: sessionErr } = await supabase
+        .from('public_sessions')
+        .select('*')
+        .eq('session_code', targetCode)
+        .maybeSingle()
+
+      if (sessionErr || !session) {
+        setError('Session not found')
+        setIsLoadingSession(false)
+        return
+      }
+
+      if (session.expires_at && new Date(session.expires_at) < new Date()) {
+        setError('This session has expired')
+        setIsLoadingSession(false)
+        return
+      }
+
+      const { data: sessionSongs, error: linkErr } = await supabase
+        .from('session_songs')
+        .select('song_id')
+        .eq('session_id', session.id)
+
+      if (linkErr) throw linkErr
+
+      if (!sessionSongs || sessionSongs.length === 0) {
+        setSessionData({ ...session, songs: [] })
+        setIsLoadingSession(false)
+        return
+      }
+
+      const songIds = sessionSongs.map(s => s.song_id)
+      const { data: songsData, error: songsErr } = await supabase
+        .from('songs')
+        .select('id, title, lyrics')
+        .in('id', songIds)
+
+      if (songsErr) throw songsErr
+
+      setSessionData({
+        ...session,
+        songs: songsData || []
+      })
+      setActiveSongIndex(0)
+    } catch (err) {
+      console.error(err)
+      setError('Failed to load session')
+    } finally {
+      setIsLoadingSession(false)
+    }
+  }
+
+  const refreshActiveSessions = async () => {
+    setIsRefreshing(true)
+    const now = new Date().toISOString()
+    const { data, error } = await supabase
+      .from('public_sessions')
+      .select('session_code, expires_at, created_at')
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (!error) setActiveSessions(data || [])
+    setIsRefreshing(false)
   }
 
   const copyLink = () => {
@@ -247,53 +245,90 @@ export default function LyricsSession() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const filteredSongs = !searchTerm.trim()
+    ? songs
+    : songs.filter(song => song.title.toLowerCase().includes(searchTerm.toLowerCase()))
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, padding: '24px', fontFamily: font.sans }}>
-      {/* Google Fonts – already included in index.html or can stay here */}
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Lora:wght@500;600;700&display=swap" rel="stylesheet" />
 
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        {/* HEADER */}
-        <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ margin: 0, fontSize: '42px', fontFamily: font.serif, color: C.text }}>Lyrics Session</h1>
-          <p style={{ marginTop: '10px', color: C.textMuted, fontSize: '16px' }}>
-            Create and share worship lyric sessions instantly.
-          </p>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '42px', fontFamily: font.serif, color: C.text }}>Lyrics Session</h1>
+            <p style={{ marginTop: '8px', color: C.textMuted }}>Create and share worship lyrics instantly</p>
+          </div>
+          <button
+            onClick={refreshActiveSessions}
+            style={{
+              background: 'none',
+              border: `1.5px solid ${C.border}`,
+              borderRadius: '40px',
+              padding: '10px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontFamily: font.sans,
+              background: C.surface
+            }}
+          >
+            <RefreshCw size={16} /> {isRefreshing ? 'Refreshing...' : 'Refresh sessions'}
+          </button>
         </div>
 
-        {/* JOIN SESSION */}
-        <div style={{ background: C.surface, borderRadius: '28px', padding: '28px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        {/* Join Section */}
+        <div style={{ background: C.surface, borderRadius: '28px', padding: '24px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <LogIn size={20} color={C.accentDark} />
-            <h2 style={{ margin: 0, fontSize: '28px', fontFamily: font.serif, color: C.text }}>Join Session</h2>
+            <h2 style={{ margin: 0, fontSize: '24px', fontFamily: font.serif, color: C.text }}>Join Session</h2>
+            <button
+              onClick={openCreateModal}
+              style={{
+                marginLeft: 'auto',
+                background: C.accentDark,
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white'
+              }}
+            >
+              <Plus size={20} />
+            </button>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <input
               type="text"
-              placeholder="Enter 4-digit code"
+              placeholder="4‑digit code"
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
               style={{
                 flex: 1,
-                minWidth: '180px',
-                padding: '16px',
+                minWidth: '160px',
+                padding: '14px',
                 borderRadius: '18px',
                 border: `1.5px solid ${C.border}`,
-                fontSize: '20px',
+                fontSize: '18px',
                 textAlign: 'center',
                 letterSpacing: '4px',
                 fontFamily: font.sans
               }}
             />
             <button
-              onClick={handleJoin}
+              onClick={() => loadSession(joinCode)}
               style={{
                 border: 'none',
                 background: C.accentDark,
                 color: '#fff',
                 borderRadius: '18px',
                 padding: '0 28px',
-                height: '64px',
+                height: '54px',
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontFamily: font.sans
@@ -302,217 +337,82 @@ export default function LyricsSession() {
               Join
             </button>
           </div>
-        </div>
 
-        {/* CREATE SESSION (collapsible) */}
-        <div style={{ background: C.surface, borderRadius: '28px', border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: '24px' }}>
-          <button
-            onClick={() => setShowCreate(!showCreate)}
-            style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              padding: '24px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Music2 size={20} color={C.accentDark} />
-              <h2 style={{ margin: 0, fontSize: '28px', fontFamily: font.serif, color: C.text }}>Create Session</h2>
-            </div>
-            {showCreate ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
-
-          {showCreate && (
-            <div style={{ padding: '0 24px 24px' }}>
-              {/* Session Code */}
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: C.text }}>Session Code</label>
-                <input
-                  type="text"
-                  value={sessionCode}
-                  onChange={e => setSessionCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="1234"
-                  style={{
-                    width: '100%',
-                    padding: '16px',
-                    borderRadius: '18px',
-                    border: `1.5px solid ${C.border}`,
-                    fontSize: '20px',
-                    textAlign: 'center',
-                    letterSpacing: '4px',
-                    fontFamily: font.sans
-                  }}
-                />
-              </div>
-
-              {/* Search */}
-              <div style={{ position: 'relative', marginBottom: '18px' }}>
-                <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: C.textMuted }} />
-                <input
-                  type="text"
-                  placeholder="Search songs..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '16px 16px 16px 44px',
-                    borderRadius: '999px',
-                    border: `1.5px solid ${C.border}`,
-                    fontFamily: font.sans
-                  }}
-                />
-              </div>
-
-              {/* Song List */}
-              <div style={{ maxHeight: '360px', overflowY: 'auto', marginBottom: '20px' }}>
-                {loadingSongs ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: C.textMuted }}>Loading songs...</div>
-                ) : filteredSongs.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: C.textMuted }}>
-                    {searchTerm ? 'No matching songs.' : 'No songs available yet.'}
-                  </div>
-                ) : (
-                  filteredSongs.map(song => (
-                    <label
-                      key={song.id}
-                      style={{
-                        display: 'flex',
-                        gap: '14px',
-                        padding: '14px',
-                        borderRadius: '16px',
-                        cursor: 'pointer',
-                        transition: '0.2s',
-                        alignItems: 'flex-start'
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSongIds.has(song.id)}
-                        onChange={e => {
-                          const next = new Set(selectedSongIds)
-                          if (e.target.checked) next.add(song.id)
-                          else next.delete(song.id)
-                          setSelectedSongIds(next)
-                        }}
-                        style={{ marginTop: '4px' }}
-                      />
-                      <div>
-                        <div style={{ fontWeight: 700, color: C.text }}>{song.title}</div>
-                        <div style={{ fontSize: '13px', color: C.textMuted, marginTop: '4px', lineHeight: 1.5 }}>
-                          {song.lyrics.replace(/\n/g, ' ').slice(0, 90)}...
-                        </div>
-                      </div>
-                    </label>
-                  ))
-                )}
-              </div>
-
-              {/* Expiry */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: C.text }}>Session Expiry</label>
-                <select
-                  value={expiryOption}
-                  onChange={e => setExpiryOption(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '16px',
-                    border: `1.5px solid ${C.border}`,
-                    fontFamily: font.sans
-                  }}
-                >
-                  {expiryOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Submit */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <span style={{ color: C.textMuted }}>{selectedSongIds.size} song(s) selected</span>
-                <button
-                  onClick={handleCreateSession}
-                  disabled={isSubmitting || !sessionCode || selectedSongIds.size === 0}
-                  style={{
-                    border: 'none',
-                    background: isSubmitting || !sessionCode || selectedSongIds.size === 0 ? C.disabledBg : C.accentDark,
-                    color: isSubmitting || !sessionCode || selectedSongIds.size === 0 ? C.disabledText : '#fff',
-                    borderRadius: '999px',
-                    padding: '14px 28px',
-                    cursor: isSubmitting || !sessionCode || selectedSongIds.size === 0 ? 'not-allowed' : 'pointer',
-                    fontWeight: 700,
-                    fontFamily: font.sans
-                  }}
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Session'}
-                </button>
+          {/* Active sessions list */}
+          {activeSessions.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <p style={{ fontSize: '13px', color: C.textMuted, marginBottom: '8px' }}>Active sessions:</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {activeSessions.map(s => (
+                  <button
+                    key={s.session_code}
+                    onClick={() => {
+                      setJoinCode(s.session_code)
+                      loadSession(s.session_code)
+                    }}
+                    style={{
+                      background: '#F5EFE6',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: '40px',
+                      padding: '6px 14px',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      fontFamily: font.sans,
+                      fontWeight: 500
+                    }}
+                  >
+                    {s.session_code}
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* Global Error Display */}
+        {/* Global error */}
         {error && (
-          <div style={{ background: C.redBg, color: C.redText, padding: '16px', borderRadius: '18px', marginBottom: '20px' }}>
+          <div style={{ background: C.redBg, color: C.redText, padding: '14px', borderRadius: '18px', marginBottom: '20px' }}>
             {error}
           </div>
         )}
 
-        {/* Loading Session State */}
-        {isLoadingSession && (
-          <div style={{ textAlign: 'center', padding: '30px', color: C.textMuted }}>Loading session...</div>
-        )}
+        {/* Loading session */}
+        {isLoadingSession && <div style={{ textAlign: 'center', padding: '30px', color: C.textMuted }}>Loading session...</div>}
 
-        {/* Session View */}
+        {/* Lyrics Reader (carousel) */}
         {sessionData && sessionData.songs.length > 0 && (
           <div style={{ background: C.surface, borderRadius: '28px', border: `1px solid ${C.border}`, overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '32px', fontFamily: font.serif, color: C.text }}>Session {joinCode}</h2>
-                <p style={{ marginTop: '8px', color: C.textMuted }}>Song {activeSongIndex + 1} of {sessionData.songs.length}</p>
+                <h2 style={{ margin: 0, fontSize: '28px', fontFamily: font.serif, color: C.text }}>Session {joinCode}</h2>
+                <p style={{ marginTop: '4px', color: C.textMuted }}>Song {activeSongIndex + 1} of {sessionData.songs.length}</p>
               </div>
               <button
                 onClick={copyLink}
-                style={{
-                  border: `1px solid ${C.border}`,
-                  background: C.surface,
-                  borderRadius: '999px',
-                  padding: '12px 18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  fontFamily: font.sans
-                }}
+                style={{ border: `1px solid ${C.border}`, background: C.surface, borderRadius: '40px', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
               >
                 {copied ? <CheckCircle size={16} color={C.accentDark} /> : <Copy size={16} />}
                 {copied ? 'Copied!' : 'Share Link'}
               </button>
             </div>
 
-            {/* Song Title */}
-            <div style={{ padding: '28px', borderBottom: `1px solid ${C.border}`, background: '#FDF8F2' }}>
-              <h3 style={{ margin: 0, fontSize: '36px', fontFamily: font.serif, color: C.text }}>
-                {sessionData.songs[activeSongIndex].title}
-              </h3>
+            {/* Song title */}
+            <div style={{ padding: '24px', borderBottom: `1px solid ${C.border}`, background: '#FDF8F2' }}>
+              <h3 style={{ margin: 0, fontSize: '32px', fontFamily: font.serif, color: C.text }}>{sessionData.songs[activeSongIndex].title}</h3>
             </div>
 
             {/* Lyrics */}
-            <div style={{ padding: '36px', maxHeight: '65vh', overflowY: 'auto' }}>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: 2, fontSize: '18px', color: C.text }}>
+            <div style={{ padding: '32px', maxHeight: '60vh', overflowY: 'auto' }}>
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, fontSize: '18px', color: C.text }}>
                 {sessionData.songs[activeSongIndex].lyrics.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '10px 0' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '8px 0' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             </div>
 
-            {/* Navigation Buttons */}
-            <div style={{ borderTop: `1px solid ${C.border}`, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF8F5' }}>
+            {/* Carousel controls */}
+            <div style={{ borderTop: `1px solid ${C.border}`, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF8F5' }}>
               <button
                 disabled={activeSongIndex === 0}
                 onClick={() => setActiveSongIndex(prev => prev - 1)}
@@ -520,19 +420,17 @@ export default function LyricsSession() {
                   border: 'none',
                   background: activeSongIndex === 0 ? C.disabledBg : C.accentDark,
                   color: activeSongIndex === 0 ? C.disabledText : '#fff',
-                  borderRadius: '999px',
-                  padding: '12px 20px',
+                  borderRadius: '40px',
+                  padding: '10px 20px',
                   cursor: activeSongIndex === 0 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  fontWeight: 700,
-                  fontFamily: font.sans
+                  fontWeight: 600
                 }}
               >
                 <ChevronLeft size={16} /> Previous
               </button>
-
               <button
                 disabled={activeSongIndex === sessionData.songs.length - 1}
                 onClick={() => setActiveSongIndex(prev => prev + 1)}
@@ -540,22 +438,21 @@ export default function LyricsSession() {
                   border: 'none',
                   background: activeSongIndex === sessionData.songs.length - 1 ? C.disabledBg : C.accentDark,
                   color: activeSongIndex === sessionData.songs.length - 1 ? C.disabledText : '#fff',
-                  borderRadius: '999px',
-                  padding: '12px 20px',
+                  borderRadius: '40px',
+                  padding: '10px 20px',
                   cursor: activeSongIndex === sessionData.songs.length - 1 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  fontWeight: 700,
-                  fontFamily: font.sans
+                  fontWeight: 600
                 }}
               >
                 Next <ChevronRight size={16} />
               </button>
             </div>
 
-            {/* Quick Song Selector */}
-            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '20px 24px', borderTop: `1px solid ${C.border}` }}>
+            {/* Quick song selector */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '16px 20px', borderTop: `1px solid ${C.border}` }}>
               {sessionData.songs.map((song, idx) => (
                 <button
                   key={song.id}
@@ -563,8 +460,8 @@ export default function LyricsSession() {
                   style={{
                     border: idx === activeSongIndex ? `2px solid ${C.accentDark}` : `1px solid ${C.border}`,
                     background: idx === activeSongIndex ? '#FDF6EE' : '#fff',
-                    borderRadius: '999px',
-                    padding: '10px 18px',
+                    borderRadius: '40px',
+                    padding: '8px 16px',
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
                     fontWeight: idx === activeSongIndex ? 700 : 500,
@@ -579,10 +476,91 @@ export default function LyricsSession() {
           </div>
         )}
 
-        {/* No session message when not loading and no sessionData and no error */}
-        {!isLoadingSession && !sessionData && !error && (
-          <div style={{ textAlign: 'center', padding: '40px', color: C.textMuted }}>
-            Enter a session code above to view lyrics.
+        {/* Create Session Modal */}
+        {showCreateModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)' }} onClick={() => setShowCreateModal(false)}>
+            <div style={{ background: C.surface, borderRadius: '28px', maxWidth: '600px', width: '90%', maxHeight: '80vh', overflowY: 'auto', padding: '24px' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, fontSize: '24px', fontFamily: font.serif, color: C.text }}>Create Session</h2>
+                <button onClick={() => setShowCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Session Code</label>
+                <input
+                  type="text"
+                  value={createCode}
+                  onChange={e => setCreateCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="4 digits"
+                  style={{ width: '100%', padding: '12px', borderRadius: '16px', border: `1.5px solid ${C.border}`, fontSize: '18px', textAlign: 'center', letterSpacing: '4px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Expiry (hours) 1–12</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={expiryHours}
+                  onChange={e => setExpiryHours(Math.min(12, Math.max(1, parseInt(e.target.value) || 1)))}
+                  style={{ width: '100%', padding: '12px', borderRadius: '16px', border: `1.5px solid ${C.border}` }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '6px' }}>Search Songs</label>
+                <div style={{ position: 'relative' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: C.textMuted }} />
+                  <input
+                    type="text"
+                    placeholder="Type to search..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '40px', border: `1.5px solid ${C.border}` }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px', border: `1px solid ${C.border}`, borderRadius: '16px' }}>
+                {loadingSongs ? (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>Loading songs...</div>
+                ) : filteredSongs.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center', color: C.textMuted }}>No songs found</div>
+                ) : (
+                  filteredSongs.map(song => (
+                    <label key={song.id} style={{ display: 'flex', gap: '12px', padding: '12px', borderBottom: `1px solid ${C.border}`, cursor: 'pointer', alignItems: 'flex-start' }}>
+                      <input type="checkbox" checked={selectedSongIds.has(song.id)} onChange={e => {
+                        const next = new Set(selectedSongIds)
+                        e.target.checked ? next.add(song.id) : next.delete(song.id)
+                        setSelectedSongIds(next)
+                      }} />
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{song.title}</div>
+                        <div style={{ fontSize: '12px', color: C.textMuted }}>{song.lyrics.slice(0, 80)}…</div>
+                      </div>
+                    </label>
+                  ))
+                )}
+              </div>
+
+              <button
+                onClick={handleCreateSession}
+                disabled={isCreating || selectedSongIds.size === 0}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  background: isCreating || selectedSongIds.size === 0 ? C.disabledBg : C.accentDark,
+                  color: isCreating || selectedSongIds.size === 0 ? C.disabledText : '#fff',
+                  borderRadius: '40px',
+                  padding: '14px',
+                  fontWeight: 700,
+                  cursor: isCreating || selectedSongIds.size === 0 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isCreating ? 'Creating...' : 'Create Session'}
+              </button>
+            </div>
           </div>
         )}
       </div>
