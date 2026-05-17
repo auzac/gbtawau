@@ -107,34 +107,48 @@ export default function LandingPage() {
   }, [isEventsModalOpen, isRosterModalOpen])
 
   // Initialize Splide carousel
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('@splidejs/splide').then(({ default: Splide }) => {
-        const splide = new Splide('.horizontal-church-slider', {
-          type: 'slide',
-          perPage: 3,
-          perMove: 1,
-          gap: '2rem',
-          focus: 0,
-          speed: 600,
-          rewind: true,
-          rewindSpeed: 400,
-          pagination: false,
-          arrows: true,
-          dragAngleThreshold: 30,
-          updateOnMove: true,
-          trimSpace: false,
-          breakpoints: {
-            991: { perPage: 2, gap: '1.5rem' },
-            767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
-          }
-        })
-        splide.mount()
-        
-        return () => splide.destroy()
+useEffect(() => {
+  let splideInstance = null
+  let timeoutId = null
+  
+  const initSplide = async () => {
+    const element = document.querySelector('.horizontal-church-slider')
+    if (!element) return
+    
+    try {
+      const Splide = (await import('@splidejs/splide')).default
+      splideInstance = new Splide(element, {
+        type: 'slide',
+        perPage: 3,
+        perMove: 1,
+        gap: '2rem',
+        focus: 0,
+        speed: 600,
+        rewind: true,
+        rewindSpeed: 400,
+        pagination: false,
+        arrows: true,
+        dragAngleThreshold: 30,
+        updateOnMove: true,
+        trimSpace: false,
+        breakpoints: {
+          991: { perPage: 2, gap: '1.5rem' },
+          767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
+        }
       })
+      splideInstance.mount()
+    } catch (err) {
+      console.error('Splide initialization failed:', err)
     }
-  }, [carouselItems]) // re-initialize when items change
+  }
+  
+  timeoutId = setTimeout(initSplide, 200)
+  
+  return () => {
+    if (timeoutId) clearTimeout(timeoutId)
+    if (splideInstance) splideInstance.destroy()
+  }
+}, [carouselSlides.length]) // Re-run when number of slides changes
 
   const loadContent = async () => {
     setLoading(true)
@@ -168,28 +182,29 @@ export default function LandingPage() {
   }
 
   const loadCarouselItems = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('carousel_items')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: true })
-      if (error && error.code === '42P01') {
-        console.log('Carousel table not found yet, using placeholders.')
-        setCarouselItems([])
-        return
-      }
-      if (!error && data && data.length > 0) {
-        setCarouselItems(data)
-      } else {
-        setCarouselItems([])
-      }
-    } catch (error) {
-      console.error('Error loading carousel:', error)
+  try {
+    const { data, error } = await supabase
+      .from('carousel_items')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true })
+    
+    if (error && error.code === '42P01') {
+      // Table doesn't exist - silently use placeholders, no console error
+      setCarouselItems([])
+      return
+    }
+    if (!error && data && data.length > 0) {
+      setCarouselItems(data)
+    } else {
       setCarouselItems([])
     }
+  } catch (error) {
+    // Silent fail - use placeholders
+    setCarouselItems([])
   }
+}
 
   const loadRosters = async () => {
     const { data, error } = await supabase
