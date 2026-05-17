@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   X, Calendar, User, MapPinned, ArrowLeft, Users, ChevronDown,
-  Clock, MapPin, Phone, ChevronLeft, ChevronRight, Heart
+  Clock, MapPin, Phone, ChevronLeft, ChevronRight, Heart, ArrowRight
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
@@ -64,7 +64,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen]   = useState(false)
   const [scrolled, setScrolled]   = useState(false)
   const [loading, setLoading]     = useState(true)
-  const [videoError, setVideoError] = useState(false)  // fallback to static image
+  const [videoError, setVideoError] = useState(false)
 
   // Data state
   const [verse, setVerse]               = useState({ reference: '', text: '', theme: '' })
@@ -203,7 +203,6 @@ export default function LandingPage() {
   }, [menuOpen, isEventsModalOpen, isRosterModalOpen])
 
   // ── "What's On" Splide (hero thumbnail) – FIXED arrows ────────────────────────
-  // Now uses `arrows: false` and manually attaches click handlers to custom buttons
   useEffect(() => {
     if (carouselItems.length === 0) return
     let splide = null
@@ -220,8 +219,8 @@ export default function LandingPage() {
           type: 'slide',
           speed: 900,
           rewind: true,
-          pagination: false,     // we use our own dots
-          arrows: false,         // we use custom arrow buttons
+          pagination: false,
+          arrows: false,
           gap: 0,
           waitForTransition: false,
           updateOnMove: true,
@@ -229,7 +228,6 @@ export default function LandingPage() {
         splide.mount()
         whatsOnSplideRef.current = splide
 
-        // Attach event listeners for custom arrows
         const prevBtn = document.querySelector('.whats-on-arrow-prev')
         const nextBtn = document.querySelector('.whats-on-arrow-next')
         const handlePrev = () => splide.go('<')
@@ -253,7 +251,6 @@ export default function LandingPage() {
         whatsOnSplideRef.current.destroy()
         whatsOnSplideRef.current = null
       }
-      // Cleanup listeners
       const prevBtn = document.querySelector('.whats-on-arrow-prev')
       const nextBtn = document.querySelector('.whats-on-arrow-next')
       const handlePrev = () => {}
@@ -263,7 +260,7 @@ export default function LandingPage() {
     }
   }, [carouselItems.length])
 
-  // ── "How We Do Church" Splide (unchanged, arrows working) ─────────────────────
+  // ── "How We Do Church" Splide (unchanged) ─────────────────────────────────────
   useEffect(() => {
     let splide = null
     const init = async () => {
@@ -280,7 +277,7 @@ export default function LandingPage() {
           speed: 600,
           rewind: true,
           pagination: false,
-          arrows: false,         // we use custom buttons
+          arrows: false,
           trimSpace: false,
           breakpoints: {
             1024: { perPage: 2 },
@@ -290,7 +287,6 @@ export default function LandingPage() {
         splide.mount()
         howWeSplideRef.current = splide
 
-        // Attach custom arrow handlers
         const prevBtn = document.querySelector('.how-we-arrow-prev')
         const nextBtn = document.querySelector('.how-we-arrow-next')
         const handlePrev = () => splide.go('<')
@@ -345,10 +341,9 @@ export default function LandingPage() {
       />
 
       {/* ══════════════════════════════════════════════
-          FIXED BOTTOM BAR
+          FIXED BOTTOM BAR (unchanged)
       ══════════════════════════════════════════════ */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-black/10 h-11 flex items-center overflow-hidden select-none">
-        {/* Service times — left */}
         <div className="hidden md:flex items-center shrink-0 border-r border-black/10 h-full px-4 gap-3">
           <span className="sc-label text-[10px] uppercase tracking-[0.2em] text-black/50 whitespace-nowrap">Sunday Services</span>
           <span className="sc-pipe text-black/20">|</span>
@@ -362,8 +357,6 @@ export default function LandingPage() {
             {t('footer_worship') || 'Watch Online'} <span className="text-[8px]">▶</span>
           </a>
         </div>
-
-        {/* Marquee ticker — center */}
         <div className="flex-1 overflow-hidden relative">
           <div className="sc-marquee-track flex items-center gap-8 whitespace-nowrap animate-marquee">
             {[...MARQUEE_VALUES, ...MARQUEE_VALUES, ...MARQUEE_VALUES].map((v, i) => (
@@ -374,8 +367,6 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-
-        {/* Scroll down — right */}
         <div className="hidden lg:flex items-center gap-2 shrink-0 border-l border-black/10 h-full px-4">
           <span className="text-[10px] uppercase tracking-[0.2em] text-black/50">Scroll down</span>
           <span className="text-black/40 animate-bounce-y text-xs">↓</span>
@@ -383,16 +374,13 @@ export default function LandingPage() {
       </div>
 
       {/* ══════════════════════════════════════════════
-          NAVBAR
+          NAVBAR (unchanged)
       ══════════════════════════════════════════════ */}
       <nav className={`fixed top-0 left-0 right-0 z-50 px-5 md:px-8 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md border-b border-black/5' : ''}`}>
         <div className="max-w-screen-xl mx-auto h-16 flex items-center justify-between">
-          {/* Logo */}
           <a href="#home" className="flex items-center">
             <img src="/logo.webp" alt="GBT" className="h-9 w-auto object-contain" />
           </a>
-
-          {/* Right: locale toggle + menu pill */}
           <div className="flex items-center gap-3">
             <button
               onClick={toggleLocale}
@@ -422,14 +410,13 @@ export default function LandingPage() {
       </nav>
 
       {/* ══════════════════════════════════════════════
-          FULLSCREEN MENU — linen background, massive type
+          FULLSCREEN MENU (unchanged)
       ══════════════════════════════════════════════ */}
       <div
         className={`fixed inset-0 z-40 bg-[#E8E0D5] flex transition-all duration-500 ${
           menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Left col — nav links */}
         <div className="flex-1 flex flex-col justify-center pl-10 md:pl-16 lg:pl-24 pt-20 pb-14 border-r border-black/10">
           <div className="space-y-1">
             {NAV_LINKS.map((item, i) => (
@@ -476,10 +463,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-
-        {/* Right col — contact + social */}
         <div className="hidden md:flex w-[38%] lg:w-[34%] flex-col justify-between pl-10 lg:pl-16 pt-24 pb-14 pr-10">
-          {/* Contact info */}
           <div className="space-y-6">
             <div>
               <p className="text-[10px] uppercase tracking-[0.25em] text-black/40 mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>Address</p>
@@ -493,8 +477,6 @@ export default function LandingPage() {
               <p className="text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t('footer_phone') || '—'}</p>
             </div>
           </div>
-
-          {/* Social links */}
           <div className="flex flex-col gap-1">
             {['Facebook', 'Instagram', 'YouTube'].map(soc => (
               <a key={soc} href="#" className="text-sm hover:opacity-40 transition-opacity" style={{ fontFamily: "'DM Sans', sans-serif" }}>{soc}</a>
@@ -504,12 +486,9 @@ export default function LandingPage() {
       </div>
 
       {/* ══════════════════════════════════════════════
-          HERO — full-viewport, video bg (with fallback), "What's On" card
-          (Verse and button removed – now only carousel)
-          Fixed with min-h-[100dvh] for dynamic viewport on mobile
+          HERO — full-viewport, video bg, "What's On" card
       ══════════════════════════════════════════════ */}
       <section id="home" className="relative min-h-[100dvh] overflow-hidden bg-black">
-        {/* Video background */}
         {!videoError ? (
           <video
             className="absolute inset-0 w-full h-full object-cover opacity-70"
@@ -528,12 +507,9 @@ export default function LandingPage() {
             style={{ backgroundImage: "url('/backdrop.webp')" }}
           />
         )}
-
-        {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-        {/* Main content – flex column, carousel at bottom, uses 100dvh */}
         <div className="relative z-10 max-w-7xl mx-auto px-5 flex flex-col min-h-[100dvh] justify-end pb-12 md:pb-16">
           <div className="w-full">
             {carouselItems.length > 0 && (
@@ -554,7 +530,6 @@ export default function LandingPage() {
                             <button onClick={openEventsModal} className="card-cta">
                               FIND OUT MORE
                             </button>
-                            {/* Mobile arrows */}
                             <div className="card-mobile-arrows">
                               <button className="custom-prev card-arrow-sm">
                                 <ChevronLeft size={18} />
@@ -568,7 +543,6 @@ export default function LandingPage() {
                       ))}
                     </ul>
                   </div>
-                  {/* Desktop arrows */}
                   <div className="desktop-arrows">
                     <button className="custom-prev desktop-arrow desktop-arrow-left">
                       <ChevronLeft size={24} />
@@ -585,34 +559,38 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          ABOUT SECTION – now displays verse and "Welcome Home" button
+          ABOUT SECTION – now displays verse + Events & Roster buttons
       ══════════════════════════════════════════════ */}
       <section id="about" className="bg-white rounded-t-[2rem] -mt-8 relative z-10 px-8 md:px-16 lg:px-24 py-20 md:py-28">
         <div className="max-w-screen-lg mx-auto grid md:grid-cols-2 gap-12 items-center">
-          {/* Left column – verse content */}
           <div>
-            {/* Heading – verse reference */}
             <h1 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(3rem,8vw,6rem)', fontWeight: 800, lineHeight: 1.0 }}>
               {verse.reference || t('about_tagline') || 'This is Home'}
             </h1>
-            {/* Description – verse text */}
             <p className="mt-8 text-base md:text-lg text-black/60 leading-relaxed max-w-md"
                style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
               {verse.text || t('about_text') || 'We are a vibrant and friendly church. We love Jesus and we love people. We\'d love to see you here soon!'}
             </p>
-            {/* Welcome button (moved from hero) – opens Events modal */}
-            <div className="mt-8">
+            {/* Two buttons: Events and Roster (with icons) */}
+            <div className="flex flex-wrap gap-3 mt-8">
               <button
                 onClick={openEventsModal}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-black text-white text-[13px] uppercase tracking-[0.18em] font-medium hover:bg-black/80 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] font-medium hover:bg-black/80 transition-colors"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                {t('welcome_cta') || 'Welcome Home'}
+                <Calendar size={14} />
+                {t('events_button') || 'Events'}
+              </button>
+              <button
+                onClick={openRosterModal}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-black text-black text-[11px] uppercase tracking-[0.18em] font-medium hover:bg-black hover:text-white transition-colors"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                <Users size={14} />
+                {t('roster_button') || 'Roster'}
               </button>
             </div>
           </div>
-
-          {/* Right column – logo_2 placeholder */}
           <div className="relative flex justify-center">
             <div className="w-full max-w-sm aspect-[4/5] rounded-[3rem] bg-[#F5EFE6] overflow-hidden shadow-xl flex items-center justify-center">
               <img
@@ -630,14 +608,13 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          "HOW WE DO CHURCH" — full‑width, rounded, with proper padding
+          "HOW WE DO CHURCH" (unchanged)
       ══════════════════════════════════════════════ */}
       <section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
         <div className="px-6 md:px-12 lg:px-20">
           <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
             {t('how_we_do') || 'How we do church'}
           </h2>
-
           <div id="how-we-splide" className="splide how-we-splide">
             <div className="splide__track" style={{ overflow: 'hidden' }}>
               <ul className="splide__list">
@@ -663,8 +640,6 @@ export default function LandingPage() {
                 ))}
               </ul>
             </div>
-
-            {/* Custom arrows */}
             <div className="splide__arrows flex gap-3 mt-8 justify-center">
               <button className="how-we-arrow how-we-arrow-prev">
                 <ChevronLeft size={20} />
@@ -678,11 +653,10 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          MARQUEE — values ticker
+          MARQUEE — values ticker (unchanged)
       ══════════════════════════════════════════════ */}
       <section className="bg-white py-6 border-y border-black/5 overflow-hidden">
         <div className="sc-marquee-outer flex">
-          {/* Two copies for seamless loop */}
           {[0, 1].map(copy => (
             <div key={copy} className="sc-marquee-values flex items-center gap-8 shrink-0 animate-marquee-slow" aria-hidden={copy === 1}>
               {MARQUEE_VALUES.map((v, i) => (
@@ -699,7 +673,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          GIVING SECTION — replaces emoji with Heart icon
+          GIVING SECTION – mobile buttons with icons
       ══════════════════════════════════════════════ */}
       <section id="giving" className="bg-[#F5EFE6] px-8 md:px-16 lg:px-24 py-20 md:py-28">
         <div className="max-w-screen-lg mx-auto">
@@ -714,24 +688,25 @@ export default function LandingPage() {
               <p className="text-black/60 text-base leading-relaxed max-w-md" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                 Your generosity fuels our mission — from Sunday services to community outreach. Every gift makes a difference.
               </p>
-              <div className="flex gap-3 mt-8">
+              <div className="flex flex-wrap gap-3 mt-8">
                 <a
                   href="#"
-                  className="px-6 py-3 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] hover:bg-black/80 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] hover:bg-black/80 transition-colors"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
+                  <Heart size={14} />
                   Give now
                 </a>
                 <a
                   href="#"
-                  className="px-6 py-3 rounded-full border border-black text-black text-[11px] uppercase tracking-[0.18em] hover:bg-black hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-black text-black text-[11px] uppercase tracking-[0.18em] hover:bg-black hover:text-white transition-colors"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
                   Learn more
+                  <ArrowRight size={14} />
                 </a>
               </div>
             </div>
-            {/* Replaced emoji with Heart icon from lucide-react */}
             <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-[40%_60%_50%_50%/40%_50%_60%_50%] bg-[#F5EFE6] flex items-center justify-center">
               <Heart size={64} className="text-black/60" />
             </div>
@@ -744,14 +719,10 @@ export default function LandingPage() {
       ══════════════════════════════════════════════ */}
       <footer id="footer" className="bg-white border-t border-black/5 px-8 md:px-16 lg:px-24 pt-16 pb-20">
         <div className="max-w-screen-lg mx-auto">
-          {/* Top row */}
           <div className="flex flex-col md:flex-row md:items-start gap-12 md:gap-16 pb-14 border-b border-black/10">
-            {/* Logo */}
             <div className="shrink-0">
               <img src="/logo.webp" alt="GBT" className="h-10 w-auto object-contain opacity-80" />
             </div>
-
-            {/* Contact */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-black/40 mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Contact</p>
               <p className="text-sm text-black/70 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -760,8 +731,6 @@ export default function LandingPage() {
                 {t('footer_phone') || '—'}
               </p>
             </div>
-
-            {/* Links */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-black/40 mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Links</p>
               <div className="flex flex-col gap-1.5">
@@ -778,8 +747,6 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-
-            {/* Service times */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-black/40 mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Sunday Services</p>
               <div className="flex flex-col gap-1.5">
@@ -788,8 +755,6 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-
-            {/* Newsletter */}
             <div className="flex-1 max-w-xs">
               <p className="text-[10px] uppercase tracking-[0.28em] text-black/40 mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Newsletter</p>
               <p className="text-sm text-black/60 mb-4 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -804,8 +769,6 @@ export default function LandingPage() {
               </a>
             </div>
           </div>
-
-          {/* Disclaimer */}
           <p className="mt-8 text-[11px] text-black/30 leading-relaxed max-w-2xl" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             © {new Date().getFullYear()} GBT Church. All rights reserved.{' '}
             {t('footer_tagline') || ''}
@@ -825,7 +788,6 @@ export default function LandingPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-5">
               {!selectedEvent ? (
                 events.length === 0
@@ -880,7 +842,6 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-
             <div className="p-5 border-t border-black/5 flex justify-end">
               <button onClick={closeEventsModal} className="px-5 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] hover:bg-black/80 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                 {t('events_modal_close') || 'Close'}
@@ -902,9 +863,7 @@ export default function LandingPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-5">
-              {/* Month selector */}
               <div className="mb-5">
                 <label className="block text-[10px] uppercase tracking-[0.22em] text-black/40 mb-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t('roster_month') || 'Month'}</label>
                 <div className="relative">
@@ -920,8 +879,6 @@ export default function LandingPage() {
                   <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 pointer-events-none" />
                 </div>
               </div>
-
-              {/* Week tabs */}
               <div className="mb-6">
                 <label className="block text-[10px] uppercase tracking-[0.22em] text-black/40 mb-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t('roster_week') || 'Week'}</label>
                 <div className="flex gap-2">
@@ -937,8 +894,6 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Roster data */}
               <div className="bg-[#F5EFE6] rounded-xl p-5">
                 {rosterForSelectedWeek ? (
                   <div className="space-y-4">
@@ -961,7 +916,6 @@ export default function LandingPage() {
                 )}
               </div>
             </div>
-
             <div className="p-5 border-t border-black/5 flex justify-end">
               <button onClick={closeRosterModal} className="px-5 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] hover:bg-black/80 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                 {t('events_modal_close') || 'Close'}
@@ -972,13 +926,12 @@ export default function LandingPage() {
       )}
 
       {/* ══════════════════════════════════════════════
-          STYLES (updated for new arrow classes + mobile description 3 lines)
+          STYLES (unchanged from previous working version)
       ══════════════════════════════════════════════ */}
       <style>{`
         html { scroll-behavior: smooth; }
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* ── Marquee animations (unchanged) ── */
         @keyframes marquee {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -1009,7 +962,6 @@ export default function LandingPage() {
 
         .splide__track { overflow: visible !important; }
 
-        /* ========== HERO "WHAT'S ON" CAROUSEL ========== */
         .hero-carousel-wrapper {
           width: 100%;
           max-width: 560px;
@@ -1017,7 +969,6 @@ export default function LandingPage() {
           position: relative;
         }
 
-        /* Card styles (matches screenshot) */
         .whats-on-card {
           background: rgba(20, 20, 20, 0.85);
           backdrop-filter: blur(16px);
@@ -1073,7 +1024,6 @@ export default function LandingPage() {
           background: #f0f0f0;
         }
 
-        /* Pagination dots – inside card, top-right */
         .whats-on-slider .splide__pagination {
           position: absolute !important;
           top: 1.25rem !important;
@@ -1098,9 +1048,8 @@ export default function LandingPage() {
           background: #C9A882;
         }
 
-        /* Desktop arrows – half inside / half outside card */
         .desktop-arrows {
-          display: none; /* hidden on mobile, shown via media query */
+          display: none;
         }
         .desktop-arrow {
           position: absolute;
@@ -1125,13 +1074,12 @@ export default function LandingPage() {
           color: white;
         }
         .desktop-arrow-left {
-          left: -22px;  /* half of 44px */
+          left: -22px;
         }
         .desktop-arrow-right {
           right: -22px;
         }
 
-        /* Mobile arrows – inside card, bottom-right */
         .card-mobile-arrows {
           position: absolute;
           bottom: 1rem;
@@ -1158,7 +1106,6 @@ export default function LandingPage() {
           background: rgba(255,255,255,0.2);
         }
 
-        /* Responsive: show/hide appropriate arrows & show description (max 3 lines) */
         @media (min-width: 768px) {
           .desktop-arrows {
             display: block;
@@ -1180,7 +1127,6 @@ export default function LandingPage() {
           .whats-on-card {
             padding: 1rem;
           }
-          /* Description: show up to 3 lines (not hidden) */
           .card-description {
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -1193,13 +1139,11 @@ export default function LandingPage() {
             top: 0.8rem !important;
             right: 0.8rem !important;
           }
-          /* Ensure carousel doesn't overlap the fixed bottom bar */
           .hero-carousel-wrapper {
             margin-bottom: 0.5rem;
           }
         }
 
-        /* ========== "HOW WE DO CHURCH" CAROUSEL ========== */
         .how-we-arrow {
           pointer-events: auto;
           width: 44px;
