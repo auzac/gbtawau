@@ -51,80 +51,128 @@ export default function LandingPage() {
   }, [])
 
   // Initialize Splide carousel
-  useEffect(() => {
-    let splide = null
+useEffect(() => {
+  let splide = null
+  
+  const initSplide = async () => {
+    if (carouselItems.length === 0) return
     
-    const initSplide = async () => {
-      if (carouselItems.length === 0) return
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    const container = document.querySelector('.splide-carousel')
+    if (!container || splide) return
+    
+    try {
+      const Splide = (await import('@splidejs/splide')).default
       
-      await new Promise(resolve => setTimeout(resolve, 100))
+      splide = new Splide('.splide-carousel', {
+        type: 'slide',
+        perPage: 1,
+        perMove: 1,
+        gap: '0rem',
+        focus: 'center',
+        speed: 600,
+        rewind: true,
+        rewindSpeed: 400,
+        pagination: true,
+        arrows: false,
+        dragAngleThreshold: 30,
+        updateOnMove: true,
+        trimSpace: false,
+        // Add these for better touch handling
+        wheel: false,
+        waitForTransition: false,
+      })
       
-      const container = document.querySelector('.splide-carousel')
-      if (!container || splide) return
+      splide.mount()
+      window.splideInstance = splide
+      setSplideInitialized(true)
       
-      try {
-        const Splide = (await import('@splidejs/splide')).default
-        
-        splide = new Splide('.splide-carousel', {
-          type: 'slide',
-          perPage: 1,
-          perMove: 1,
-          gap: '0rem',
-          focus: 'center',
-          speed: 600,
-          rewind: true,
-          rewindSpeed: 400,
-          pagination: true,
-          arrows: false,
-          dragAngleThreshold: 30,
-          updateOnMove: true,
-          trimSpace: false,
-        })
-        
-        splide.mount()
-        window.splideInstance = splide
-        setSplideInitialized(true)
-        
-      } catch (err) {
-        console.error('Splide initialization failed:', err)
-      }
+    } catch (err) {
+      console.error('Splide initialization failed:', err)
     }
-    
-    const timeoutId = setTimeout(initSplide, 200)
-    
-    return () => {
-      clearTimeout(timeoutId)
-      if (splide) {
-        splide.destroy()
-        window.splideInstance = null
-      }
+  }
+  
+  const timeoutId = setTimeout(initSplide, 200)
+  
+  return () => {
+    clearTimeout(timeoutId)
+    if (splide) {
+      splide.destroy()
+      window.splideInstance = null
     }
-  }, [carouselItems.length])
+  }
+}, [carouselItems.length])
 
   // Custom navigation for carousel
-  useEffect(() => {
-    if (!splideInitialized) return
+useEffect(() => {
+  if (!splideInitialized) return
+  
+  // Small delay to ensure DOM is ready
+  const timer = setTimeout(() => {
+    const prevButtons = document.querySelectorAll('.custom-prev')
+    const nextButtons = document.querySelectorAll('.custom-next')
     
-    const prevButton = document.querySelector('.custom-prev')
-    const nextButton = document.querySelector('.custom-next')
-    
-    if (prevButton && nextButton) {
-      const handlePrev = () => {
-        if (window.splideInstance) window.splideInstance.go('<')
-      }
-      const handleNext = () => {
-        if (window.splideInstance) window.splideInstance.go('>')
-      }
-      
-      prevButton.addEventListener('click', handlePrev)
-      nextButton.addEventListener('click', handleNext)
-      
-      return () => {
-        prevButton.removeEventListener('click', handlePrev)
-        nextButton.removeEventListener('click', handleNext)
+    const handlePrev = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (window.splideInstance) {
+        window.splideInstance.go('<')
       }
     }
-  }, [splideInitialized])
+    
+    const handleNext = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (window.splideInstance) {
+        window.splideInstance.go('>')
+      }
+    }
+    
+    // Desktop arrows (have class .carousel-arrow-desktop)
+    const desktopPrev = document.querySelector('.carousel-arrow-left')
+    const desktopNext = document.querySelector('.carousel-arrow-right')
+    
+    if (desktopPrev) {
+      desktopPrev.removeEventListener('click', handlePrev)
+      desktopPrev.addEventListener('click', handlePrev)
+    }
+    if (desktopNext) {
+      desktopNext.removeEventListener('click', handleNext)
+      desktopNext.addEventListener('click', handleNext)
+    }
+    
+    // Mobile arrows (inside card)
+    prevButtons.forEach(btn => {
+      btn.removeEventListener('click', handlePrev)
+      btn.addEventListener('click', handlePrev)
+    })
+    nextButtons.forEach(btn => {
+      btn.removeEventListener('click', handleNext)
+      btn.addEventListener('click', handleNext)
+    })
+  }, 100)
+  
+  return () => {
+    clearTimeout(timer)
+    const prevButtons = document.querySelectorAll('.custom-prev')
+    const nextButtons = document.querySelectorAll('.custom-next')
+    const desktopPrev = document.querySelector('.carousel-arrow-left')
+    const desktopNext = document.querySelector('.carousel-arrow-right')
+    
+    const handlePrev = (e) => {
+      if (window.splideInstance) window.splideInstance.go('<')
+    }
+    const handleNext = (e) => {
+      if (window.splideInstance) window.splideInstance.go('>')
+    }
+    
+    if (desktopPrev) desktopPrev.removeEventListener('click', handlePrev)
+    if (desktopNext) desktopNext.removeEventListener('click', handleNext)
+    prevButtons.forEach(btn => btn.removeEventListener('click', handlePrev))
+    nextButtons.forEach(btn => btn.removeEventListener('click', handleNext))
+  }
+}, [splideInitialized])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
