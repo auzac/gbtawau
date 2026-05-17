@@ -326,7 +326,7 @@ export default function LandingPage() {
       backgroundImage: "url('/logo_2.webp')", // Replace with your cross image path if different
       backgroundRepeat: "no-repeat",
       backgroundPosition: "center",
-      backgroundSize: "auto 80%", // Adjust size as needed
+      backgroundSize: "auto 67%", // Adjust size as needed
       opacity: 0.07,              // Very transparent
       right: "0%",              // Shift to the right, cutting half
       top: "50%",
