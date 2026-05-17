@@ -455,7 +455,7 @@ export default function LandingPage() {
 
 {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
 {carouselItems.length > 0 && (
-  <div className="hero-carousel-container w-full mt-6 md:mt-8 mb-0">
+  <div className="hero-carousel-container w-full mt-6 md:mt-8 mb-0 pb-0">
     <div className="splide-carousel splide" aria-label="Announcements">
       <div className="splide__track">
         <ul className="splide__list">
@@ -663,7 +663,7 @@ export default function LandingPage() {
   width: 100%;
 }
 
-/* On mobile: edge-to-edge, tighter spacing */
+/* On mobile: edge-to-edge, NO bottom margin */
 @media (max-width: 767px) {
   .hero-carousel-container {
     width: 100vw;
@@ -673,6 +673,7 @@ export default function LandingPage() {
     margin-left: -50vw;
     margin-right: -50vw;
     margin-bottom: 0;
+    padding-bottom: 0;
   }
   
   .announcement-card {
@@ -691,22 +692,23 @@ export default function LandingPage() {
   
   .card-title {
     font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
   
   .card-description {
     font-size: 0.75rem;
     -webkit-line-clamp: 2;
+    line-height: 1.4;
   }
   
   .card-tag {
     font-size: 0.6rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
   }
   
-  /* Move pagination dots up to reduce bottom space */
+  /* Hide default pagination dots completely on mobile */
   .splide-carousel .splide__pagination {
-    bottom: 0.25rem;
+    display: none;
   }
 }
 
@@ -844,64 +846,56 @@ export default function LandingPage() {
   transform: scale(1.05);
 }
 
-.custom-prev:hover {
-  left: -1.35rem;
-}
-
-.custom-next:hover {
-  right: -1.35rem;
-}
-
 /* Hide default Splide arrows */
 .splide-carousel .splide__arrow {
   display: none;
 }
 
-/* Dots styling */
-.splide-carousel .splide__pagination {
-  position: absolute;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  z-index: 10;
-}
-
-.splide-carousel .splide__pagination__page {
-  background: rgba(255, 255, 255, 0.4);
-  width: 6px;
-  height: 6px;
-  margin: 0;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.splide-carousel .splide__pagination__page.is-active {
-  background: #C9A882;
-  transform: scale(1.3);
-  width: 8px;
-  height: 8px;
-}
-
-/* Mobile dots position */
-@media (max-width: 767px) {
-  .splide-carousel .splide__pagination {
-    bottom: 0.25rem;
-    position: relative;
-    margin-top: 0.5rem;
-  }
-  
-  /* Hide custom arrows on mobile */
-  .custom-navigation {
-    display: none;
-  }
-}
-
-/* Desktop dots position */
+/* Pagination - subtle at top-right corner of the card (desktop only) */
 @media (min-width: 768px) {
   .splide-carousel .splide__pagination {
-    bottom: -1.5rem;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    bottom: auto;
+    left: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    width: auto;
+  }
+  
+  .splide-carousel .splide__pagination__page {
+    background: rgba(255, 255, 255, 0.5);
+    width: 5px;
+    height: 5px;
+    margin: 0;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .splide-carousel .splide__pagination__page.is-active {
+    background: #C9A882;
+    transform: scale(1.2);
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Mobile: hide pagination completely (removes white space) */
+@media (max-width: 767px) {
+  .splide-carousel .splide__pagination {
+    display: none;
+  }
+  
+  /* Remove any extra spacing from the carousel container */
+  .hero-carousel-container .splide {
+    margin-bottom: 0;
   }
 }
       `}</style>
