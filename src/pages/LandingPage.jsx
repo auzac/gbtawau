@@ -547,34 +547,40 @@ export default function LandingPage() {
               <div className="splide__track">
                 <ul className="splide__list">
                   {carouselItems.map((item, idx) => (
-                    <li key={item.id || idx} className="splide__slide">
-                      <div className="whats-on-card rounded-2xl p-6 md:p-7 flex flex-col md:flex-row md:items-end md:gap-8"
-                           style={{
-                             background: 'rgba(240,234,224,0.95)',
-                             backdropFilter: 'blur(12px)',
-                             border: '1px solid rgba(255,255,255,0.3)',
-                           }}>
-                        <div className="flex-1">
-                          <h3 className="whats-on-title mb-2"
-                              style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(1.4rem,3vw,2rem)', fontWeight: 800, lineHeight: 1.1 }}>
-                            {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                          </h3>
-                          <p className="text-black/70 text-sm leading-relaxed line-clamp-3"
-                             style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                            {locale === 'bm' && item.description_bm ? item.description_bm : item.description_en}
-                          </p>
-                        </div>
-                        <div className="mt-4 md:mt-0 shrink-0">
-                          <button
-                            onClick={openEventsModal}
-                            className="inline-block px-6 py-2.5 rounded-full bg-black text-white text-[11px] uppercase tracking-[0.18em] font-medium hover:bg-black/80 transition-colors"
-                            style={{ fontFamily: "'DM Sans', sans-serif" }}
-                          >
-                            {t('learn_more') || 'Find out more'}
-                          </button>
-                        </div>
-                      </div>
-                    </li>
+<li key={item.id || idx} className="splide__slide">
+  <div className="whats-on-card rounded-2xl p-6 md:p-8"
+       style={{
+         background: 'rgba(20, 20, 20, 0.85)',
+         backdropFilter: 'blur(16px)',
+         border: '1px solid rgba(255,255,255,0.15)',
+         boxShadow: '0 25px 40px -12px rgba(0,0,0,0.3)',
+       }}>
+    {/* Label: "WHAT'S ON" */}
+    <p className="text-[10px] uppercase tracking-[0.3em] text-[#C9A882] mb-3"
+       style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      WHAT'S ON
+    </p>
+
+    {/* Heading */}
+    <h3 className="text-white text-[clamp(1.6rem,4vw,2.2rem)] font-bold leading-tight mb-3"
+        style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 800 }}>
+      {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+    </h3>
+
+    {/* Description */}
+    <p className="text-white/70 text-sm md:text-base leading-relaxed mb-5"
+       style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      {locale === 'bm' && item.description_bm ? item.description_bm : item.description_en}
+    </p>
+
+    {/* Button */}
+    <button onClick={openEventsModal}
+            className="inline-block px-6 py-2.5 rounded-full bg-white text-black text-[11px] uppercase tracking-[0.18em] font-semibold hover:bg-white/90 transition-colors"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      FIND OUT MORE
+    </button>
+  </div>
+</li>
                   ))}
                 </ul>
               </div>
