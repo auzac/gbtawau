@@ -112,51 +112,66 @@ export default function LyricsSession() {
   }
 
   const loadSession = async targetCode => {
-    if (!targetCode) return
-    setIsLoadingSession(true)
-    setError('')
-    setSessionData(null)
+  if (!targetCode) return
+  setIsLoadingSession(true)
+  setError('')
+  setSessionData(null)
 
-    try {
-      const { data: session, error: sessionErr } = await supabase
-        .from('public_sessions')
-        .select('*')
-        .eq('session_code', targetCode)
-        .maybeSingle()
+  try {
+    const { data: session, error: sessionErr } = await supabase
+      .from('public_sessions')
+      .select('*')
+      .eq('session_code', targetCode)
+      .maybeSingle()
 
-      if (sessionErr || !session) {
-        setError('Session not found. Please check the code.')
-        setIsLoadingSession(false)
-        return
-      }
-
-      if (session.expires_at && new Date(session.expires_at) < new Date()) {
-        setError('This session has expired.')
-        setIsLoadingSession(false)
-        return
-      }
-
-      const { data: songsData, error: songsErr } = await supabase
-        .from('session_songs')
-        .select(`songs ( id, title, lyrics )`)
-        .eq('session_id', session.id)
-
-      if (songsErr) throw songsErr
-
-      const mappedSongs = songsData?.map(row => row.songs).filter(Boolean) || []
-
-      setSessionData({
-        ...session,
-        songs: mappedSongs
-      })
-      setActiveSongIndex(0)
-    } catch (err) {
-      console.error(err)
-      setError('Failed to load session.')
-    } finally {
+    if (sessionErr || !session) {
+      setError('Session not found. Please check the code.')
       setIsLoadingSession(false)
+      return
     }
+
+    if (session.expires_at && new Date(session.expires_at) < new Date()) {
+      setError('This session has expired.')
+      setIsLoadingSession(false)
+      return
+    }
+
+    // Fetch the song IDs in this session
+    const { data: sessionSongs, error: linkErr } = await supabase
+      .from('session_songs')
+      .select('song_id')
+      .eq('session_id', session.id)
+
+    if (linkErr) throw linkErr
+
+    if (!sessionSongs || sessionSongs.length === 0) {
+      setSessionData({ ...session, songs: [] })
+      setIsLoadingSession(false)
+      return
+    }
+
+    const songIds = sessionSongs.map(s => s.song_id)
+
+    // Fetch the actual songs by their IDs
+    const { data: songsData, error: songsErr } = await supabase
+      .from('songs')
+      .select('id, title, lyrics')
+      .in('id', songIds)
+
+    if (songsErr) throw songsErr
+
+    setSessionData({
+      ...session,
+      songs: songsData || []
+    })
+    setActiveSongIndex(0)
+  } catch (err) {
+    console.error(err)
+    setError('Failed to load session.')
+  } finally {
+    setIsLoadingSession(false)
   }
+}
 
   const handleJoin = () => {
     const trimmed = joinCode.trim()
