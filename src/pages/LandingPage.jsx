@@ -677,12 +677,22 @@ export default function LandingPage() {
   padding: 0 1.25rem;          /* room for protruding arrows on desktop */
 }
 
-/* On mobile: remove padding to prevent white space */
+/* On mobile: remove outer padding, keep rounded corners */
 @media (max-width: 640px) {
   .hero-carousel-outer {
     padding: 0;
     margin-top: 1rem;
     margin-bottom: 0;
+  }
+  
+  .hero-carousel-bar {
+    border-radius: 20px;
+    padding: 1rem 1rem 0.75rem;
+    margin-bottom: 0;
+  }
+  
+  .hero-carousel-outer {
+    padding: 0 0.5rem;
   }
 }
 
