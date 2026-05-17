@@ -421,6 +421,7 @@ useEffect(() => {
 <section
   id="home"
   className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+  style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}
 >
         {/* Ambient Orbs */}
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
