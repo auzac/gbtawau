@@ -399,34 +399,108 @@ export default function LandingPage() {
 </section>
 
       {/* CAROUSEL SECTION (unchanged) */}
-      {carouselItems.length > 0 && carouselItems[currentSlide] && (
-        <section className="px-5 py-12 md:py-16 bg-white/40">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-center text-[clamp(1.3rem,3vw,1.8rem)] font-['Lora',serif] tracking-[-0.01em] text-[#2D2926] mb-8">{t('announcements_title')}</h2>
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-lg" onMouseEnter={() => setAutoplay(false)} onMouseLeave={() => setAutoplay(true)}>
-              <div className="relative aspect-video">
-                <img src={carouselItems[currentSlide].image_url} alt={carouselItems[currentSlide][`title_${locale}`] || ''} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 text-white text-left">
-                  <h3 className="text-xl md:text-2xl font-semibold font-['Lora',serif] mb-1">{carouselItems[currentSlide][`title_${locale}`]}</h3>
-                  {carouselItems[currentSlide][`description_${locale}`] && <p className="text-sm md:text-base opacity-90">{carouselItems[currentSlide][`description_${locale}`]}</p>}
-                  {carouselItems[currentSlide].link_url && <a href={carouselItems[currentSlide].link_url} className="mt-3 text-sm underline" target="_blank" rel="noopener noreferrer">{t('learn_more')}</a>}
-                </div>
-              </div>
-              {carouselItems.length > 1 && (
-                <>
-                  <button onClick={goToPrevSlide} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1.5 transition"><ChevronLeft size={24} className="text-white" /></button>
-                  <button onClick={goToNextSlide} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1.5 transition"><ChevronRight size={24} className="text-white" /></button>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                    {carouselItems.map((_, idx) => (
-                      <button key={idx} onClick={() => { setCurrentSlide(idx); setAutoplay(false); setTimeout(() => setAutoplay(true), 10000) }} className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? 'bg-white w-5' : 'bg-white/50'}`} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+      {/* ========== CAROUSEL SECTION (hardcoded placeholders + Supabase fallback) ========== */}
+{(carouselItems.length > 0 || true) && (
+  <section className="px-5 py-12 md:py-16 bg-white/40">
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-center text-[clamp(1.3rem,3vw,1.8rem)] font-['Lora',serif] tracking-[-0.01em] text-[#2D2926] mb-8">
+        {t('announcements_title')}
+      </h2>
+      <div
+        className="relative w-full rounded-2xl overflow-hidden shadow-lg"
+        onMouseEnter={() => setAutoplay(false)}
+        onMouseLeave={() => setAutoplay(true)}
+      >
+        <div className="relative aspect-video">
+          {/* Use placeholder images if no carousel data, otherwise use Supabase data */}
+          <img
+            src={carouselItems.length > 0 && carouselItems[currentSlide] 
+              ? carouselItems[currentSlide].image_url 
+              : `/placeholder-${(currentSlide % 3) + 1}.jpg`
+            }
+            alt={carouselItems.length > 0 && carouselItems[currentSlide] 
+              ? carouselItems[currentSlide][`title_${locale}`] 
+              : `Placeholder ${(currentSlide % 3) + 1}`
+            }
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback if placeholder images don't exist
+              e.target.src = 'https://placehold.co/1200x600/2D2926/FAF8F5?text=Announcement'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 text-white text-left">
+            <h3 className="text-xl md:text-2xl font-semibold font-['Lora',serif] mb-1">
+              {carouselItems.length > 0 && carouselItems[currentSlide]
+                ? carouselItems[currentSlide][`title_${locale}`]
+                : (locale === 'bm' 
+                    ? ['Pengumuman Istimewa', 'Acara Akan Datang', 'Sertai Kami'][currentSlide % 3]
+                    : ['Special Announcement', 'Upcoming Event', 'Join Us'][currentSlide % 3]
+                  )
+              }
+            </h3>
+            <p className="text-sm md:text-base opacity-90">
+              {carouselItems.length > 0 && carouselItems[currentSlide]?.description_en
+                ? (locale === 'bm' && carouselItems[currentSlide].description_bm 
+                    ? carouselItems[currentSlide].description_bm 
+                    : carouselItems[currentSlide].description_en)
+                : (locale === 'bm'
+                    ? 'Jangan lepaskan peluang ini untuk bersama-sama kita dalam kebaktian istimewa minggu ini.'
+                    : 'Don\'t miss this opportunity to join us for this week\'s special service.'
+                  )
+              }
+            </p>
+            <button
+              onClick={() => {
+                if (carouselItems.length > 0 && carouselItems[currentSlide]?.link_url) {
+                  window.open(carouselItems[currentSlide].link_url, '_blank')
+                } else {
+                  alert(locale === 'bm' ? 'Butiran akan datang' : 'Details coming soon')
+                }
+              }}
+              className="mt-3 text-sm underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition"
+            >
+              {t('learn_more')}
+            </button>
           </div>
-        </section>
-      )}
+        </div>
+
+        {/* Navigation Arrows */}
+        <button
+          onClick={goToPrevSlide}
+          className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1.5 transition"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft size={24} className="text-white" />
+        </button>
+        <button
+          onClick={goToNextSlide}
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1.5 transition"
+          aria-label="Next slide"
+        >
+          <ChevronRight size={24} className="text-white" />
+        </button>
+        
+        {/* Dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+          {[0, 1, 2].map((idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setCurrentSlide(idx)
+                setAutoplay(false)
+                setTimeout(() => setAutoplay(true), 10000)
+              }}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx === currentSlide ? 'bg-white w-5' : 'bg-white/50'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
 
       {/* ABOUT SECTION (unchanged) */}
       <section id="about" className="px-6 py-20 md:py-28">
