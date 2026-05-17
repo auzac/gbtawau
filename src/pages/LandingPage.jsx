@@ -58,25 +58,21 @@ export default function LandingPage() {
         await new Promise(resolve => setTimeout(resolve, 100))
         
         const Splide = (await import('@splidejs/splide')).default
-        const splide = new Splide('.splide-carousel', {
-          type: 'slide',
-          perPage: 3,
-          perMove: 1,
-          gap: '2rem',
-          focus: 0,
-          speed: 600,
-          rewind: true,
-          rewindSpeed: 400,
-          pagination: false,
-          arrows: true,
-          dragAngleThreshold: 30,
-          updateOnMove: true,
-          trimSpace: false,
-          breakpoints: {
-            991: { perPage: 2, gap: '1.5rem' },
-            767: { perPage: 1, gap: '1rem', padding: { right: '3rem' } }
-          }
-        })
+const splide = new Splide('.splide-carousel', {
+  type: 'slide',
+  perPage: 1,
+  perMove: 1,
+  gap: '0rem',
+  focus: 'center',
+  speed: 600,
+  rewind: true,
+  rewindSpeed: 400,
+  pagination: true,  // Show dots
+  arrows: true,      // Show arrows
+  dragAngleThreshold: 30,
+  updateOnMove: true,
+  trimSpace: false,
+})
         
         splide.mount()
         setSplideInitialized(true)
@@ -414,54 +410,55 @@ export default function LandingPage() {
           </div>
 
           {/* SPLIDE CAROUSEL */}
-          {carouselItems.length > 0 && (
-            <div className="hero-carousel-container w-full mt-4">
-              <div className="splide-carousel splide" aria-label="Bible Verses">
-                <div className="splide__track">
-                  <ul className="splide__list">
-                    {carouselItems.map((item, idx) => (
-                      <li key={item.id || idx} className="splide__slide">
-                        <div className="church-card-slide group">
-                          <div className="card-image-wrapper">
-                            <img 
-                              src={item.image_url || `/placeholder-${(idx % 3) + 1}.jpg`} 
-                              alt={locale === 'bm' ? item.title_bm : item.title_en}
-                              className="card-bg-image"
-                              onError={(e) => {
-                                e.target.src = 'https://placehold.co/800x1000/2D2926/FAF8F5?text=Bible+Verse'
-                              }}
-                            />
-                            <div className="card-gradient-overlay"></div>
-                          </div>
-                          <div className="card-content-block">
-                            <div className="card-tag">{item.theme || 'Bible Verse'}</div>
-                            <h3 className="card-title">
-                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                            </h3>
-                            <p className="card-description">
-                              {locale === 'bm' && item.description_bm 
-                                ? item.description_bm.substring(0, 100) 
-                                : (item.description_en || '').substring(0, 100)
-                              }...
-                            </p>
-                            <button
-                              onClick={() => {
-                                const fullVerse = locale === 'bm' ? item.description_bm : item.description_en
-                                alert(fullVerse || item.description_en)
-                              }}
-                              className="mt-3 text-sm underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition text-white"
-                            >
-                              {t('learn_more')}
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+          {/* SPLIDE CAROUSEL - Single Card Design */}
+{carouselItems.length > 0 && (
+  <div className="hero-carousel-container w-full max-w-md mx-auto mt-6">
+    <div className="splide-carousel splide" aria-label="Bible Verses">
+      <div className="splide__track">
+        <ul className="splide__list">
+          {carouselItems.map((item, idx) => (
+            <li key={item.id || idx} className="splide__slide">
+              <div className="single-card-slide">
+                <div className="card-image-wrapper">
+                  <img 
+                    src={item.image_url || '/logo_2.webp'} 
+                    alt={locale === 'bm' ? item.title_bm : item.title_en}
+                    className="card-bg-image"
+                    onError={(e) => {
+                      e.target.src = '/logo_2.webp'
+                    }}
+                  />
+                  <div className="card-gradient-overlay"></div>
+                </div>
+                <div className="card-content-block">
+                  <div className="card-tag">{item.theme || 'VERSE OF THE DAY'}</div>
+                  <h3 className="card-title">
+                    {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                  </h3>
+                  <p className="card-description">
+                    {locale === 'bm' && item.description_bm 
+                      ? item.description_bm 
+                      : (item.description_en || '')
+                    }
+                  </p>
+                  <button
+                    onClick={() => {
+                      const fullVerse = locale === 'bm' ? item.description_bm : item.description_en
+                      alert(fullVerse || item.description_en)
+                    }}
+                    className="card-button"
+                  >
+                    {t('learn_more')}
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+)}
         </div>
       </section>
 
@@ -629,119 +626,179 @@ export default function LandingPage() {
           * { animation: none !important; transition-duration: 0.01ms !important; }
         }
 
-        /* Splide Card Carousel Styles */
-        .splide-carousel {
-          width: 100%;
-        }
+        /* Splide Single Card Carousel Styles */
+.splide-carousel {
+  width: 100%;
+}
 
-        .church-card-slide {
-          position: relative;
-          border-radius: 16px;
-          overflow: hidden;
-          background-color: #1a1a1a;
-          aspect-ratio: 4 / 5;
-          cursor: grab;
-        }
+.single-card-slide {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+  aspect-ratio: 3 / 4;
+  cursor: grab;
+}
 
-        .church-card-slide:active {
-          cursor: grabbing;
-        }
+.single-card-slide:active {
+  cursor: grabbing;
+}
 
-        .card-image-wrapper {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          top: 0;
-          left: 0;
-          overflow: hidden;
-        }
+.card-image-wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
 
-        .card-bg-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+.card-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
 
-        .church-card-slide:hover .card-bg-image {
-          transform: scale(1.06);
-        }
+.single-card-slide:hover .card-bg-image {
+  transform: scale(1.05);
+}
 
-        .card-gradient-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0) 30%,
-            rgba(0, 0, 0, 0.5) 60%,
-            rgba(0, 0, 0, 0.85) 100%
-          );
-          z-index: 1;
-        }
+.card-gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  z-index: 1;
+}
 
-        .card-content-block {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          padding: 1.5rem 1.5rem 2rem;
-          box-sizing: border-box;
-          z-index: 2;
-          color: #ffffff;
-          text-align: left;
-        }
+.card-content-block {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+  z-index: 2;
+  color: #ffffff;
+  text-align: left;
+}
 
-        .card-tag {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.7rem;
-          letter-spacing: 0.15em;
-          color: #C9A882;
-          margin-bottom: 0.5rem;
-          text-transform: uppercase;
-        }
+.card-tag {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: #C9A882;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
 
-        .card-title {
-          font-family: 'Lora', serif;
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin: 0 0 0.5rem 0;
-          line-height: 1.2;
-        }
+.card-title {
+  font-family: 'Lora', serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.2;
+}
 
-        .card-description {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.85rem;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.8);
-          margin: 0;
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+.card-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 1.5rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
-        /* Splide arrow customization */
-        .splide-carousel .splide__arrow {
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(4px);
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          opacity: 0.7;
-          transition: opacity 0.3s;
-        }
+.card-button {
+  display: inline-block;
+  background: transparent;
+  border: 1.5px solid #C9A882;
+  color: #C9A882;
+  padding: 0.75rem 1.5rem;
+  border-radius: 40px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
 
-        .splide-carousel .splide__arrow:hover {
-          background: rgba(255, 255, 255, 0.4);
-          opacity: 1;
-        }
+.card-button:hover {
+  background: #C9A882;
+  color: #1a1a1a;
+  border-color: #C9A882;
+}
 
-        .splide-carousel .splide__arrow svg {
-          fill: #fff;
-        }
+/* Splide arrow customization */
+.splide-carousel .splide__arrow {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.splide-carousel .splide__arrow:hover {
+  background: rgba(255, 255, 255, 0.4);
+  opacity: 1;
+}
+
+.splide-carousel .splide__arrow svg {
+  fill: #fff;
+}
+
+/* Dots styling */
+.splide-carousel .splide__pagination {
+  bottom: -2rem;
+}
+
+.splide-carousel .splide__pagination__page {
+  background: rgba(255, 255, 255, 0.5);
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+}
+
+.splide-carousel .splide__pagination__page.is-active {
+  background: #C9A882;
+  transform: scale(1.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-content-block {
+    padding: 1.5rem 1.25rem;
+  }
+  .card-title {
+    font-size: 1.4rem;
+  }
+  .card-description {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 3;
+  }
+  .card-button {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.7rem;
+  }
+}
 
         /* Responsive card text adjustments */
         @media (max-width: 768px) {
