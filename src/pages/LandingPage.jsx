@@ -24,13 +24,11 @@ const NAV_LINKS = [
 ]
 
 const HOW_WE_DO = [
-  { title: 'Services',      body: 'Everyone is welcome at our Sunday services. Find out what to expect when you visit us for the first time.',  cta: 'Learn more',   href: '#about' },
-  { title: 'Worship',       body: 'We gather to sing, pray and encounter God together. Music is at the heart of who we are.',                   cta: 'Learn more',   href: '#about' },
-  { title: 'Community',     body: 'We\'re big on friendship and community, so we run lots of groups where you can connect with like-minded people.',  cta: 'Learn more',   href: '#about' },
-  { title: 'Grow',          body: 'Discover opportunities to volunteer, serve and grow in your faith within our family.',                        cta: 'Get involved', href: '#about' },
-  { title: 'Giving',        body: 'Generous giving is part of our DNA. Your generosity helps us love our city and change lives.',                cta: 'Give now',     href: '#giving' },
-  { title: 'Pastoral Care', body: 'Need prayer or support? Our pastoral team is here for you — submit a prayer request anytime.',               cta: 'Contact us',   href: '#footer' },
-]
+  { title: 'Placeholder 1', body: 'This is a temporary card while we fix the carousel layout.', cta: 'Learn more', href: '#about' },
+  { title: 'Placeholder 2', body: 'We will replace this with real content soon.', cta: 'Learn more', href: '#about' },
+  { title: 'Placeholder 3', body: 'Thank you for your patience – the proper design is coming.', cta: 'Learn more', href: '#about' },
+  { title: 'Placeholder 4', body: 'You can still use the Events and Roster modals below.', cta: 'Learn more', href: '#about' },
+];
 
 const MARQUEE_VALUES = [
   'Christ Centred', 'People Empowering', 'Life Giving', 'Outward Focused', 'Spirit of Excellence',
@@ -674,7 +672,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════
           "HOW WE DO CHURCH" — dark section
       ══════════════════════════════════════════════ */}
-      <section className="bg-[#1A1A18] rounded-[2rem] mx-2 md:mx-4 my-4 px-8 md:px-14 lg:px-20 py-16 md:py-24">
+      <section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
         <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
           {t('how_we_do') || 'How we do church'}
         </h2>
