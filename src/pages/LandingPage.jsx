@@ -50,37 +50,81 @@ export default function LandingPage() {
     loadContent()
   }, [])
 
-  // Initialize Splide after carouselItems are loaded
+  // Initialize Splide carousel - ADD THIS HERE
   useEffect(() => {
-    if (carouselItems.length > 0 && !splideInitialized) {
-      const initSplide = async () => {
-        // Small delay to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
+    let splide = null
+    
+    const initSplide = async () => {
+      if (carouselItems.length === 0) return
+      
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const container = document.querySelector('.splide-carousel')
+      if (!container || splide) return
+      
+      try {
         const Splide = (await import('@splidejs/splide')).default
-const splide = new Splide('.splide-carousel', {
-  type: 'slide',
-  perPage: 1,
-  perMove: 1,
-  gap: '0rem',
-  focus: 'center',
-  speed: 600,
-  rewind: true,
-  rewindSpeed: 400,
-  pagination: true,  // Show dots
-  arrows: true,      // Show arrows
-  dragAngleThreshold: 30,
-  updateOnMove: true,
-  trimSpace: false,
-})
+        
+        splide = new Splide('.splide-carousel', {
+          type: 'slide',
+          perPage: 1,
+          perMove: 1,
+          gap: '0rem',
+          focus: 'center',
+          speed: 600,
+          rewind: true,
+          rewindSpeed: 400,
+          pagination: true,
+          arrows: false,
+          dragAngleThreshold: 30,
+          updateOnMove: true,
+          trimSpace: false,
+        })
         
         splide.mount()
+        window.splideInstance = splide
         setSplideInitialized(true)
+        
+      } catch (err) {
+        console.error('Splide initialization failed:', err)
+      }
+    }
+    
+    const timeoutId = setTimeout(initSplide, 200)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      if (splide) {
+        splide.destroy()
+        window.splideInstance = null
+      }
+    }
+  }, [carouselItems.length])
+
+  // Custom navigation for carousel - KEEP THIS WHERE IT IS
+  useEffect(() => {
+    if (!splideInitialized) return
+    
+    const prevButton = document.querySelector('.custom-prev')
+    const nextButton = document.querySelector('.custom-next')
+    
+    if (prevButton && nextButton) {
+      const handlePrev = () => {
+        if (window.splideInstance) window.splideInstance.go('<')
+      }
+      const handleNext = () => {
+        if (window.splideInstance) window.splideInstance.go('>')
       }
       
-      initSplide()
+      prevButton.addEventListener('click', handlePrev)
+      nextButton.addEventListener('click', handleNext)
+      
+      return () => {
+        prevButton.removeEventListener('click', handlePrev)
+        nextButton.removeEventListener('click', handleNext)
+      }
     }
-  }, [carouselItems, splideInitialized])
+  }, [splideInitialized])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -409,29 +453,17 @@ const splide = new Splide('.splide-carousel', {
             </button>
           </div>
 
-          {/* SPLIDE CAROUSEL */}
-          {/* SPLIDE CAROUSEL - Single Card Design */}
+{/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
 {carouselItems.length > 0 && (
-  <div className="hero-carousel-container w-full max-w-md mx-auto mt-6">
-    <div className="splide-carousel splide" aria-label="Bible Verses">
+  <div className="hero-carousel-container w-full mt-6 md:mt-8">
+    <div className="splide-carousel splide" aria-label="Announcements">
       <div className="splide__track">
         <ul className="splide__list">
           {carouselItems.map((item, idx) => (
             <li key={item.id || idx} className="splide__slide">
-              <div className="single-card-slide">
-                <div className="card-image-wrapper">
-                  <img 
-                    src={item.image_url || '/logo_2.webp'} 
-                    alt={locale === 'bm' ? item.title_bm : item.title_en}
-                    className="card-bg-image"
-                    onError={(e) => {
-                      e.target.src = '/logo_2.webp'
-                    }}
-                  />
-                  <div className="card-gradient-overlay"></div>
-                </div>
+              <div className="announcement-card">
                 <div className="card-content-block">
-                  <div className="card-tag">{item.theme || 'VERSE OF THE DAY'}</div>
+                  <div className="card-tag">{item.theme || 'ANNOUNCEMENT'}</div>
                   <h3 className="card-title">
                     {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
                   </h3>
@@ -441,20 +473,20 @@ const splide = new Splide('.splide-carousel', {
                       : (item.description_en || '')
                     }
                   </p>
-                  <button
-                    onClick={() => {
-                      const fullVerse = locale === 'bm' ? item.description_bm : item.description_en
-                      alert(fullVerse || item.description_en)
-                    }}
-                    className="card-button"
-                  >
-                    {t('learn_more')}
-                  </button>
                 </div>
               </div>
             </li>
           ))}
         </ul>
+      </div>
+      {/* Custom navigation - only on desktop */}
+      <div className="custom-navigation hidden md:block">
+        <button className="custom-prev" aria-label="Previous slide">
+          <ChevronLeft size={20} />
+        </button>
+        <button className="custom-next" aria-label="Next slide">
+          <ChevronRight size={20} />
+        </button>
       </div>
     </div>
   </div>
@@ -626,69 +658,72 @@ const splide = new Splide('.splide-carousel', {
           * { animation: none !important; transition-duration: 0.01ms !important; }
         }
 
-        /* Splide Single Card Carousel Styles */
-.splide-carousel {
+/* Announcement Card Carousel Styles */
+.hero-carousel-container {
   width: 100%;
 }
 
-.single-card-slide {
+/* On mobile: edge-to-edge */
+@media (max-width: 767px) {
+  .hero-carousel-container {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+  }
+  
+  .announcement-card {
+    border-radius: 0;
+    margin: 0;
+  }
+  
+  .hero-carousel-container .splide__track {
+    border-radius: 0;
+  }
+}
+
+/* On desktop: rounded corners */
+@media (min-width: 768px) {
+  .hero-carousel-container {
+    padding: 0 1rem;
+  }
+  
+  .announcement-card {
+    border-radius: 24px;
+    margin: 0 auto;
+  }
+  
+  .hero-carousel-container .splide__track {
+    border-radius: 24px;
+  }
+}
+
+.announcement-card {
   position: relative;
-  border-radius: 24px;
+  background: linear-gradient(135deg, #2D2926 0%, #1a1a1a 100%);
+  aspect-ratio: 3 / 2;
   overflow: hidden;
-  background-color: #1a1a1a;
-  aspect-ratio: 3 / 4;
   cursor: grab;
 }
 
-.single-card-slide:active {
+.announcement-card:active {
   cursor: grabbing;
 }
 
-.card-image-wrapper {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-}
-
-.card-bg-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.single-card-slide:hover .card-bg-image {
-  transform: scale(1.05);
-}
-
-.card-gradient-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(0, 0, 0, 0.8) 100%
-  );
-  z-index: 1;
-}
-
 .card-content-block {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+  position: relative;
   width: 100%;
+  height: 100%;
   padding: 2rem 1.5rem;
   box-sizing: border-box;
   z-index: 2;
   color: #ffffff;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .card-tag {
@@ -711,79 +746,91 @@ const splide = new Splide('.splide-carousel', {
 
 .card-description {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.card-button {
-  display: inline-block;
-  background: transparent;
-  border: 1.5px solid #C9A882;
-  color: #C9A882;
-  padding: 0.75rem 1.5rem;
-  border-radius: 40px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
+@media (min-width: 768px) {
+  .card-description {
+    -webkit-line-clamp: 4;
+  }
 }
 
-.card-button:hover {
-  background: #C9A882;
-  color: #1a1a1a;
-  border-color: #C9A882;
+/* Custom navigation (bottom-right corner) */
+.custom-navigation {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
 }
 
-/* Splide arrow customization */
-.splide-carousel .splide__arrow {
+.custom-prev,
+.custom-next {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  opacity: 0.7;
-  transition: opacity 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  color: white;
 }
 
-.splide-carousel .splide__arrow:hover {
+.custom-prev:hover,
+.custom-next:hover {
   background: rgba(255, 255, 255, 0.4);
-  opacity: 1;
+  transform: scale(1.05);
 }
 
-.splide-carousel .splide__arrow svg {
-  fill: #fff;
+/* Hide default Splide arrows */
+.splide-carousel .splide__arrow {
+  display: none;
 }
 
 /* Dots styling */
 .splide-carousel .splide__pagination {
-  bottom: -2rem;
+  bottom: 0.75rem;
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  z-index: 10;
 }
 
 .splide-carousel .splide__pagination__page {
-  background: rgba(255, 255, 255, 0.5);
-  width: 8px;
-  height: 8px;
-  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.4);
+  width: 6px;
+  height: 6px;
+  margin: 0;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .splide-carousel .splide__pagination__page.is-active {
   background: #C9A882;
-  transform: scale(1.2);
+  transform: scale(1.3);
+  width: 8px;
+  height: 8px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+  .splide-carousel .splide__pagination {
+    bottom: 0.5rem;
+  }
   .card-content-block {
     padding: 1.5rem 1.25rem;
   }
@@ -791,27 +838,10 @@ const splide = new Splide('.splide-carousel', {
     font-size: 1.4rem;
   }
   .card-description {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     -webkit-line-clamp: 3;
   }
-  .card-button {
-    padding: 0.6rem 1.25rem;
-    font-size: 0.7rem;
-  }
 }
-
-        /* Responsive card text adjustments */
-        @media (max-width: 768px) {
-          .card-content-block {
-            padding: 1rem 1rem 1.5rem;
-          }
-          .card-title {
-            font-size: 1.2rem;
-          }
-          .card-description {
-            font-size: 0.75rem;
-          }
-        }
       `}</style>
     </div>
   )
