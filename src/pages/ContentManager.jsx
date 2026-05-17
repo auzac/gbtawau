@@ -329,7 +329,7 @@ export default function ContentManager() {
         {tab === 'verse' && (
           <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'24px' }}>
             {/* Library panel */}
-            <div style={{ flex:1, background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'20px' }}>
+            <div style={{ flex:1, minWidth:0, background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'20px' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px' }}>
                 <h2 style={{ margin:0, fontSize:'17px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Verse Library</h2>
                 <div style={{ display:'flex', gap:'6px' }}>
@@ -352,7 +352,7 @@ export default function ContentManager() {
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'8px' }}>
                       <div style={{ flex:1, minWidth:0 }}>
                         <p style={{ fontWeight:600, fontFamily:f.serif, margin:0, fontSize:'14px' }}>{v.reference}</p>
-                        <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'3px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{v.text}</p>
+                        <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'3px', wordBreak:'break-word' }}>{v.text}</p>
                       </div>
                       <div style={{ display:'flex', gap:'5px', alignItems:'center', flexShrink:0 }}>
                         {v.is_active && <span style={{ background:C.accentDark, color:'#fff', fontSize:'10px', padding:'2px 8px', borderRadius:'12px' }}>Active</span>}
@@ -381,7 +381,7 @@ export default function ContentManager() {
             </div>
 
             {/* Preview panel */}
-            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'16px' }}>
+            <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'16px' }}>
               {/* Active verse */}
               <div style={{ background:C.text, borderRadius:'18px', padding:'20px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
