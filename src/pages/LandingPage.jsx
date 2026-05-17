@@ -264,30 +264,28 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-      {/* NAVBAR (unchanged, same as before) */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
-        <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative w-4 h-4 opacity-70">
-              <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-4 bg-[#A58B75] rounded-full" />
-              <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-[#A58B75] rounded-full" />
-            </div>
-            <span className="uppercase tracking-[0.22em] text-[11px] text-[#8A7A6E] font-normal font-['DM_Sans',sans-serif]">
-              GBT
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
-              {locale === 'en' ? 'BM' : 'EN'}
-            </button>
-            <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
-              {[0,1].map(i => (
-                <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
-              ))}
-            </button>
-          </div>
-        </div>
-      </nav>
+{/* ========== NAVBAR (logo replaces text) ========== */}
+<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-5 ${scrolled ? 'bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#d9c9b7]/20' : 'bg-transparent border-b border-transparent'}`}>
+  <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <img
+        src="/logo.webp"
+        alt="GBT"
+        className="h-8 w-auto object-contain"
+      />
+    </div>
+    <div className="flex items-center gap-3">
+      <button onClick={toggleLocale} className="h-9 px-4 rounded-full border border-[#d9c9b7]/40 bg-white/70 text-[#8A7A6E] uppercase tracking-[0.14em] text-[11px] font-medium transition-all duration-200 hover:bg-white font-['DM_Sans',sans-serif]">
+        {locale === 'en' ? 'BM' : 'EN'}
+      </button>
+      <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu" className={`w-11 h-11 rounded-full border border-[#d9c9b7]/30 flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${menuOpen ? 'bg-[#2D2926]' : 'bg-white/80'}`}>
+        {[0,1].map(i => (
+          <span key={i} className={`block w-[18px] h-[1.5px] rounded-full transition-all duration-300 ${menuOpen ? 'bg-[#FAF8F5]' : 'bg-[#4A3F38]'} ${menuOpen && i===0 ? 'rotate-45 translate-y-[3px]' : ''} ${menuOpen && i===1 ? '-rotate-45 -translate-y-[3px]' : ''}`} />
+        ))}
+      </button>
+    </div>
+  </div>
+</nav>
 
       {/* FULLSCREEN MENU (same as before) */}
       <div className={`fixed inset-0 z-40 bg-[#2D2926] flex flex-col items-center justify-center transition-all duration-500 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
@@ -311,11 +309,12 @@ export default function LandingPage() {
 
       {/* HERO SECTION (unchanged) */}
       {/* ========== HERO SECTION ========== */}
+{/* ========== HERO + CAROUSEL INTEGRATED SECTION ========== */}
 <section
   id="home"
-  className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+  className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
 >
-  {/* Ambient Orbs (kept for aesthetics) */}
+  {/* Ambient Orbs */}
   <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
   <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
@@ -323,47 +322,32 @@ export default function LandingPage() {
   <div
     className="absolute inset-0 pointer-events-none z-0"
     style={{
-      backgroundImage: "url('/logo_2.webp')", // Replace with your cross image path if different
+      backgroundImage: "url('/logo_2.webp')",
       backgroundRepeat: "no-repeat",
-      backgroundPosition: "center",
-      backgroundSize: "auto 67%", // Adjust size as needed
-      opacity: 0.07,              // Very transparent
-      right: "0%",              // Shift to the right, cutting half
-      top: "50%",
-      transform: "translateY(-50%)",
-      width: "100%",
-      height: "100%"
+      backgroundPosition: "right center",
+      backgroundSize: "auto 60%",
+      opacity: 0.07,
     }}
   />
 
-  <div className="relative z-10 w-full max-w-2xl">
-    {/* Logo */}
-    <div className="flex justify-center mb-8">
-      <img
-        src="/logo.webp"
-        alt="GBT"
-        loading="eager"
-        className="w-[clamp(140px,38vw,200px)] object-contain opacity-95"
-      />
-    </div>
-
-    {/* Verse */}
-    <blockquote className="mb-10">
-      <p className="italic text-[clamp(1.3rem,4vw,2rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-4 font-['Lora',serif]">
+  <div className="relative z-10 w-full max-w-3xl mx-auto">
+    {/* Verse - smaller and tighter */}
+    <blockquote className="mb-6">
+      <p className="italic text-[clamp(1rem,3vw,1.5rem)] leading-relaxed tracking-[-0.01em] text-[#2D2926] mb-3 font-['Lora',serif]">
         "{verse.text}"
       </p>
-      <cite className="uppercase tracking-[0.3em] text-[10px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
+      <cite className="uppercase tracking-[0.3em] text-[9px] text-[#B09882] not-italic font-['DM_Sans',sans-serif]">
         {verse.reference}
       </cite>
     </blockquote>
 
-    {/* Welcome CTA */}
-    <div className="mb-10">
+    {/* Welcome CTA - moved up, more compact */}
+    <div className="mb-8">
       <a
         href="#about"
-        className="inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
+        className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#2D2926] text-[#FAF8F5] uppercase tracking-[0.12em] text-sm font-medium transition-all duration-300 hover:bg-[#4A3F38] hover:scale-[1.02] shadow-lg shadow-black/10 font-['DM_Sans',sans-serif]"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <path d="M15 3H19C19.5523 3 20 3.44772 20 4V20C20 20.5523 19.5523 21 19 21H15"/>
           <polyline points="10 17 15 12 10 7"/>
           <line x1="15" y1="12" x2="3" y2="12"/>
@@ -372,31 +356,130 @@ export default function LandingPage() {
       </a>
     </div>
 
-    {/* Quick Action Cards */}
-    <div className="flex flex-wrap justify-center gap-3">
+    {/* Quick Action Cards - more compact */}
+    <div className="flex flex-wrap justify-center gap-3 mb-8">
       <button
         onClick={openEventsModal}
-        className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+        className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
       >
-        <Calendar size={22} stroke="#7A6A5E" strokeWidth="1.5" />
-        <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+        <Calendar size={18} stroke="#7A6A5E" strokeWidth="1.5" />
+        <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
           {t('events_button')}
         </span>
       </button>
       <button
         onClick={openRosterModal}
-        className="min-w-[120px] rounded-2xl px-6 py-5 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
+        className="min-w-[100px] rounded-xl px-4 py-3 bg-white/70 border border-[#d9c9b7]/30 backdrop-blur-sm flex flex-col items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 cursor-pointer"
       >
-        <Users size={22} stroke="#7A6A5E" strokeWidth="1.5" />
-        <span className="uppercase tracking-[0.18em] text-[10px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
+        <Users size={18} stroke="#7A6A5E" strokeWidth="1.5" />
+        <span className="uppercase tracking-[0.18em] text-[9px] text-[#7A6A5E] font-medium font-['DM_Sans',sans-serif]">
           {t('roster_button')}
         </span>
       </button>
     </div>
-  </div>
 
-  {/* Removed the top vertical line and the bottom scroll cue entirely */}
+    {/* CAROUSEL - integrated directly below buttons, no separate section */}
+    <div className="w-full mt-4">
+      <div
+        className="relative w-full rounded-xl overflow-hidden shadow-md"
+        onMouseEnter={() => setAutoplay(false)}
+        onMouseLeave={() => setAutoplay(true)}
+      >
+        <div className="relative aspect-video max-h-[320px]">
+          <img
+            src={carouselItems.length > 0 && carouselItems[currentSlide] 
+              ? carouselItems[currentSlide].image_url 
+              : `/placeholder-${(currentSlide % 3) + 1}.jpg`
+            }
+            alt={carouselItems.length > 0 && carouselItems[currentSlide] 
+              ? carouselItems[currentSlide][`title_${locale}`] 
+              : `Placeholder ${(currentSlide % 3) + 1}`
+            }
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = 'https://placehold.co/1200x600/2D2926/FAF8F5?text=Announcement'
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4 text-white text-left">
+            <h3 className="text-lg md:text-xl font-semibold font-['Lora',serif] mb-1">
+              {carouselItems.length > 0 && carouselItems[currentSlide]
+                ? carouselItems[currentSlide][`title_${locale}`]
+                : (locale === 'bm' 
+                    ? ['Pengumuman Istimewa', 'Acara Akan Datang', 'Sertai Kami'][currentSlide % 3]
+                    : ['Special Announcement', 'Upcoming Event', 'Join Us'][currentSlide % 3]
+                  )
+              }
+            </h3>
+            <p className="text-xs md:text-sm opacity-90 line-clamp-2">
+              {carouselItems.length > 0 && carouselItems[currentSlide]?.description_en
+                ? (locale === 'bm' && carouselItems[currentSlide].description_bm 
+                    ? carouselItems[currentSlide].description_bm 
+                    : carouselItems[currentSlide].description_en)
+                : (locale === 'bm'
+                    ? 'Jangan lepaskan peluang ini untuk bersama-sama kita.'
+                    : 'Don\'t miss this opportunity to join us.'
+                  )
+              }
+            </p>
+            <button
+              onClick={() => {
+                if (carouselItems.length > 0 && carouselItems[currentSlide]?.link_url) {
+                  window.open(carouselItems[currentSlide].link_url, '_blank')
+                } else {
+                  alert(locale === 'bm' ? 'Butiran akan datang' : 'Details coming soon')
+                }
+              }}
+              className="mt-2 text-xs underline inline-flex items-center gap-1 cursor-pointer hover:text-[#C9A882] transition"
+            >
+              {t('learn_more')}
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation Arrows */}
+        {(carouselItems.length > 0 || true) && (
+          <>
+            <button
+              onClick={goToPrevSlide}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1 transition"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft size={20} className="text-white" />
+            </button>
+            <button
+              onClick={goToNextSlide}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 rounded-full p-1 transition"
+              aria-label="Next slide"
+            >
+              <ChevronRight size={20} className="text-white" />
+            </button>
+            
+            {/* Dots */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {[0, 1, 2].map((idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCurrentSlide(idx)
+                    setAutoplay(false)
+                    setTimeout(() => setAutoplay(true), 10000)
+                  }}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    idx === currentSlide ? 'bg-white w-4' : 'bg-white/50'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
 </section>
+
+{/* ========== REMOVE the old separate CAROUSEL SECTION ========== */}
+{/* The old carousel section is now deleted – integrated into hero above */}
 
       {/* CAROUSEL SECTION (unchanged) */}
       {/* ========== CAROUSEL SECTION (hardcoded placeholders + Supabase fallback) ========== */}
