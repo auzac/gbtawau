@@ -8,20 +8,32 @@ import {
   LogOut,
   CalendarDays,
   UserRound,
-  DollarSign    // <-- ADDED for Finance module
+  DollarSign
 } from 'lucide-react'
-
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+
+// ─── Design tokens (same as FinanceManager) ──────────────────────────────────
+const C = {
+  bg:          '#FAF8F5',
+  surface:     '#FFFFFF',
+  surfaceAlt:  '#F5EFE6',
+  border:      '#EAE1D4',
+  text:        '#2D2926',
+  textMid:     '#57534E',
+  textMuted:   '#9A8B80',
+  accent:      '#C4A88B',
+  accentDark:  '#92622E',
+  accentBg:    '#FDF3E8',
+}
+
+const font = { serif: "'Lora', serif", sans: "'DM Sans', sans-serif" }
 
 function StaffHub() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
   
-  const [stats, setStats] = useState({
-    totalMembers: null,
-    upcomingEvents: null
-  })
+  const [stats, setStats] = useState({ totalMembers: null, upcomingEvents: null })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,19 +42,16 @@ function StaffHub() {
 
   const loadStats = async () => {
     setLoading(true)
-    
-    const { count: membersCount, error: membersError } = await supabase
+    const { count: membersCount } = await supabase
       .from('members')
       .select('*', { count: 'exact', head: true })
-    
-    const { count: eventsCount, error: eventsError } = await supabase
+    const { count: eventsCount } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
       .gte('date', new Date().toISOString().split('T')[0])
-    
     setStats({
-      totalMembers: membersError ? 0 : membersCount || 0,
-      upcomingEvents: eventsError ? 0 : eventsCount || 0
+      totalMembers: membersCount || 0,
+      upcomingEvents: eventsCount || 0
     })
     setLoading(false)
   }
@@ -53,163 +62,107 @@ function StaffHub() {
   }
 
   const modules = [
-    {
-      id: 'members',
-      title: 'Membership',
-      icon: Users,
-      description: 'Manage church members, profiles, and directory records.',
-      action: 'Open Module',
-      path: '/staff/members',
-      active: true
-    },
-    {
-      id: 'content',
-      title: 'Content',
-      icon: FileText,
-      description: 'Update weekly verses, worship schedules, announcements, and events.',
-      action: 'Open Module',
-      path: '/staff/content',
-      active: true
-    },
-    {
-      id: 'finance',           // <-- NEW MODULE
-      title: 'Finance',
-      icon: DollarSign,
-      description: 'Track membership renewals, payments, and financial records.',
-      action: 'Open Module',
-      path: '/staff/finance',
-      active: true
-    },
-    {
-      id: 'admin',
-      title: 'Administrative',
-      icon: ShieldCheck,
-      description: 'Letters, reporting tools, approvals, and administrative workflows.',
-      action: 'Coming Soon',
-      path: null,
-      active: false
-    }
+    { id: 'members', title: 'Membership', icon: Users, description: 'Manage church members, profiles, and directory records.', path: '/staff/members', active: true },
+    { id: 'content', title: 'Content', icon: FileText, description: 'Update weekly verses, worship schedules, announcements, and events.', path: '/staff/content', active: true },
+    { id: 'finance', title: 'Finance', icon: DollarSign, description: 'Track membership renewals, payments, and financial records.', path: '/staff/finance', active: true },
+    { id: 'admin', title: 'Administrative', icon: ShieldCheck, description: 'Letters, reporting tools, approvals, and workflows.', path: null, active: false },
   ]
 
   const statItems = [
-    {
-      label: 'Total Members',
-      value: stats.totalMembers,
-      icon: UserRound
-    },
-    {
-      label: 'Upcoming Events',
-      value: stats.upcomingEvents,
-      icon: CalendarDays
-    }
+    { label: 'Total Members', value: stats.totalMembers, icon: UserRound },
+    { label: 'Upcoming Events', value: stats.upcomingEvents, icon: CalendarDays },
   ]
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      
-      <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: font.sans }}>
+      <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-      <header className="sticky top-0 z-20 border-b border-[#EAE1D4]/80 bg-white/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="h-16 flex items-center justify-between">
-            <div>
-              <h1 className="font-serif text-[18px] text-[#2D2926] leading-none" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
-                Gereja Baptis Tawau
-              </h1>
-              <p className="text-[10px] tracking-[0.22em] uppercase text-[#9A8D82] mt-1">
-                Staff Portal
-              </p>
-            </div>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-[#7A6A5E] hover:text-[#2D2926] transition">
-              <LogOut size={16} strokeWidth={1.8} />
-              Logout
-            </button>
+      {/* Header */}
+      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: C.text, fontFamily: font.serif, lineHeight: 1.2 }}>Gereja Baptis Tawau</h1>
+            <p style={{ margin: 0, fontSize: '10px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9A8D82', marginTop: '2px' }}>Staff Portal</p>
           </div>
+          <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: C.textMid, background: 'none', border: 'none', cursor: 'pointer' }}>
+            <LogOut size={14} /> Logout
+          </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-6 py-10">
-        <div className="mb-10">
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#2D2926] font-light tracking-[-0.02em]" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
-            Welcome back
-          </h2>
-          <p className="text-[#8A7A6E] text-sm mt-2">
-            Manage church operations and internal content.
-          </p>
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px' }}>
+        {/* Welcome */}
+        <div style={{ marginBottom: '32px' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, color: C.text, fontFamily: font.serif, letterSpacing: '-0.02em' }}>Welcome back</h2>
+          <p style={{ color: C.textMuted, fontSize: '14px', marginTop: '8px' }}>Manage church operations and internal content.</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5 mb-8">
-          {statItems.map((stat) => {
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+          {statItems.map(stat => {
             const Icon = stat.icon
             const displayValue = loading ? '—' : stat.value
             return (
-              <div key={stat.label} className="bg-white border border-[#ECE4D9] rounded-3xl p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-[#8A7A6E] mb-3">{stat.label}</p>
-                    <h3 className="text-4xl font-light text-[#2D2926] tracking-[-0.04em]" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
-                      {displayValue}
-                    </h3>
-                  </div>
-                  <div className="w-11 h-11 rounded-2xl bg-[#F4EFE8] flex items-center justify-center">
-                    <Icon size={20} strokeWidth={1.8} className="text-[#6F6258]" />
-                  </div>
+              <div key={stat.label} style={{ background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: '24px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: '12px', color: C.textMuted, marginBottom: '6px' }}>{stat.label}</p>
+                  <h3 style={{ margin: 0, fontSize: '32px', fontWeight: 400, color: C.text, fontFamily: font.serif, letterSpacing: '-0.02em' }}>{displayValue}</h3>
+                </div>
+                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={20} strokeWidth={1.8} style={{ color: '#6F6258' }} />
                 </div>
               </div>
             )
           })}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-5">
-          {modules.map((module) => {
+        {/* Modules grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+          {modules.map(module => {
             const Icon = module.icon
             return (
-              <div
-                key={module.id}
-                className={`group rounded-3xl border p-7 flex flex-col justify-between min-h-[260px] transition-all duration-300 ${
-                  module.active
-                    ? 'bg-white border-[#ECE4D9] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,0,0,0.04)]'
-                    : 'bg-[#F8F5F1] border-[#ECE4D9] opacity-80'
-                }`}
+              <div key={module.id} style={{
+                background: module.active ? C.surface : '#F8F5F1',
+                border: `1.5px solid ${C.border}`,
+                borderRadius: '24px',
+                padding: '28px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '260px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                cursor: module.active ? 'pointer' : 'default',
+                opacity: module.active ? 1 : 0.7,
+              }}
+              onMouseEnter={e => { if (module.active) { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.05)' } }}
+              onMouseLeave={e => { if (module.active) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' } }}
+              onClick={() => module.active && navigate(module.path)}
               >
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#F3EEE7] flex items-center justify-center mb-6">
-                    <Icon size={22} strokeWidth={1.8} className="text-[#6F6258]" />
+                  <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#F3EEE7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                    <Icon size={22} strokeWidth={1.8} style={{ color: '#6F6258' }} />
                   </div>
-                  <h3 className="font-serif text-[22px] text-[#2D2926] tracking-[-0.02em] mb-3" style={{ fontFamily: "'Lora', 'Georgia', serif" }}>
-                    {module.title}
-                  </h3>
-                  <p className="text-[15px] leading-7 text-[#7A6A5E]">
-                    {module.description}
-                  </p>
+                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 500, fontFamily: font.serif, color: C.text, letterSpacing: '-0.01em', marginBottom: '12px' }}>{module.title}</h3>
+                  <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.6, color: C.textMid }}>{module.description}</p>
                 </div>
-                <div className="pt-8">
-                  {module.active ? (
-                    <button
-                      onClick={() => navigate(module.path)}
-                      className="w-full h-11 rounded-full border border-[#E7DED2] bg-[#FAF8F5] text-[#2D2926] text-sm hover:bg-white transition"
-                    >
-                      {module.action} →
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full h-11 rounded-full border border-[#E7DED2] bg-[#F1ECE6] text-[#B0A49A] text-sm cursor-not-allowed"
-                    >
-                      {module.action}
-                    </button>
-                  )}
+                <div style={{ marginTop: '32px' }}>
+                  <button disabled={!module.active} style={{
+                    width: '100%', padding: '10px', borderRadius: '40px', border: `1.5px solid ${C.border}`,
+                    background: module.active ? '#FAF8F5' : '#F1ECE6', color: module.active ? C.text : '#B0A49A',
+                    fontSize: '13px', fontWeight: 500, fontFamily: font.sans, cursor: module.active ? 'pointer' : 'not-allowed'
+                  }}>
+                    {module.active ? `${module.action || 'Open Module'} →` : 'Coming Soon'}
+                  </button>
                 </div>
               </div>
             )
           })}
         </div>
 
-        <div className="pt-12">
-          <div className="w-10 h-px bg-[#D8CCC0] mx-auto mb-4" />
-          <p className="text-center text-[11px] tracking-wide text-[#B0A49A]">
-            Gereja Baptis Tawau • Internal Staff System
-          </p>
+        {/* Footer */}
+        <div style={{ marginTop: '48px', textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '1px', background: '#D8CCC0', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: '10px', letterSpacing: '0.05em', color: '#B0A49A' }}>Gereja Baptis Tawau • Internal Staff System</p>
         </div>
       </main>
     </div>
