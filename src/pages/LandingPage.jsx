@@ -51,128 +51,124 @@ export default function LandingPage() {
   }, [])
 
   // Initialize Splide carousel
-useEffect(() => {
-  let splide = null
-  
-  const initSplide = async () => {
-    if (carouselItems.length === 0) return
+  useEffect(() => {
+    let splide = null
     
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    const container = document.querySelector('.splide-carousel')
-    if (!container || splide) return
-    
-    try {
-      const Splide = (await import('@splidejs/splide')).default
+    const initSplide = async () => {
+      if (carouselItems.length === 0) return
       
-      splide = new Splide('.splide-carousel', {
-        type: 'slide',
-        perPage: 1,
-        perMove: 1,
-        gap: '0rem',
-        focus: 'center',
-        speed: 600,
-        rewind: true,
-        rewindSpeed: 400,
-        pagination: true,
-        arrows: false,
-        dragAngleThreshold: 30,
-        updateOnMove: true,
-        trimSpace: false,
-        // Add these for better touch handling
-        wheel: false,
-        waitForTransition: false,
-      })
+      await new Promise(resolve => setTimeout(resolve, 100))
       
-      splide.mount()
-      window.splideInstance = splide
-      setSplideInitialized(true)
+      const container = document.querySelector('.splide-carousel')
+      if (!container || splide) return
       
-    } catch (err) {
-      console.error('Splide initialization failed:', err)
+      try {
+        const Splide = (await import('@splidejs/splide')).default
+        
+        splide = new Splide('.splide-carousel', {
+          type: 'slide',
+          perPage: 1,
+          perMove: 1,
+          gap: '0rem',
+          focus: 'center',
+          speed: 600,
+          rewind: true,
+          rewindSpeed: 400,
+          pagination: true,
+          arrows: false,
+          dragAngleThreshold: 30,
+          updateOnMove: true,
+          trimSpace: false,
+          wheel: false,
+          waitForTransition: false,
+        })
+        
+        splide.mount()
+        window.splideInstance = splide
+        setSplideInitialized(true)
+        
+      } catch (err) {
+        console.error('Splide initialization failed:', err)
+      }
     }
-  }
-  
-  const timeoutId = setTimeout(initSplide, 200)
-  
-  return () => {
-    clearTimeout(timeoutId)
-    if (splide) {
-      splide.destroy()
-      window.splideInstance = null
+    
+    const timeoutId = setTimeout(initSplide, 200)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      if (splide) {
+        splide.destroy()
+        window.splideInstance = null
+      }
     }
-  }
-}, [carouselItems.length])
+  }, [carouselItems.length])
 
   // Custom navigation for carousel
-useEffect(() => {
-  if (!splideInitialized) return
-  
-  // Small delay to ensure DOM is ready
-  const timer = setTimeout(() => {
-    const prevButtons = document.querySelectorAll('.custom-prev')
-    const nextButtons = document.querySelectorAll('.custom-next')
+  useEffect(() => {
+    if (!splideInitialized) return
     
-    const handlePrev = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (window.splideInstance) {
-        window.splideInstance.go('<')
+    const timer = setTimeout(() => {
+      const prevButtons = document.querySelectorAll('.custom-prev')
+      const nextButtons = document.querySelectorAll('.custom-next')
+      
+      const handlePrev = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (window.splideInstance) {
+          window.splideInstance.go('<')
+        }
       }
-    }
-    
-    const handleNext = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (window.splideInstance) {
-        window.splideInstance.go('>')
+      
+      const handleNext = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (window.splideInstance) {
+          window.splideInstance.go('>')
+        }
       }
-    }
+      
+      const desktopPrev = document.querySelector('.carousel-arrow-left')
+      const desktopNext = document.querySelector('.carousel-arrow-right')
+      
+      if (desktopPrev) {
+        desktopPrev.removeEventListener('click', handlePrev)
+        desktopPrev.addEventListener('click', handlePrev)
+      }
+      if (desktopNext) {
+        desktopNext.removeEventListener('click', handleNext)
+        desktopNext.addEventListener('click', handleNext)
+      }
+      
+      prevButtons.forEach(btn => {
+        btn.removeEventListener('click', handlePrev)
+        btn.addEventListener('click', handlePrev)
+      })
+      nextButtons.forEach(btn => {
+        btn.removeEventListener('click', handleNext)
+        btn.addEventListener('click', handleNext)
+      })
+    }, 100)
     
-    // Desktop arrows (have class .carousel-arrow-desktop)
-    const desktopPrev = document.querySelector('.carousel-arrow-left')
-    const desktopNext = document.querySelector('.carousel-arrow-right')
-    
-    if (desktopPrev) {
-      desktopPrev.removeEventListener('click', handlePrev)
-      desktopPrev.addEventListener('click', handlePrev)
+    return () => {
+      clearTimeout(timer)
+      const prevButtons = document.querySelectorAll('.custom-prev')
+      const nextButtons = document.querySelectorAll('.custom-next')
+      const desktopPrev = document.querySelector('.carousel-arrow-left')
+      const desktopNext = document.querySelector('.carousel-arrow-right')
+      
+      const handlePrev = () => {
+        if (window.splideInstance) window.splideInstance.go('<')
+      }
+      const handleNext = () => {
+        if (window.splideInstance) window.splideInstance.go('>')
+      }
+      
+      if (desktopPrev) desktopPrev.removeEventListener('click', handlePrev)
+      if (desktopNext) desktopNext.removeEventListener('click', handleNext)
+      prevButtons.forEach(btn => btn.removeEventListener('click', handlePrev))
+      nextButtons.forEach(btn => btn.removeEventListener('click', handleNext))
     }
-    if (desktopNext) {
-      desktopNext.removeEventListener('click', handleNext)
-      desktopNext.addEventListener('click', handleNext)
-    }
-    
-    // Mobile arrows (inside card)
-    prevButtons.forEach(btn => {
-      btn.removeEventListener('click', handlePrev)
-      btn.addEventListener('click', handlePrev)
-    })
-    nextButtons.forEach(btn => {
-      btn.removeEventListener('click', handleNext)
-      btn.addEventListener('click', handleNext)
-    })
-  }, 100)
-  
-  return () => {
-    clearTimeout(timer)
-    const prevButtons = document.querySelectorAll('.custom-prev')
-    const nextButtons = document.querySelectorAll('.custom-next')
-    const desktopPrev = document.querySelector('.carousel-arrow-left')
-    const desktopNext = document.querySelector('.carousel-arrow-right')
-    
-    const handlePrev = (e) => {
-      if (window.splideInstance) window.splideInstance.go('<')
-    }
-    const handleNext = (e) => {
-      if (window.splideInstance) window.splideInstance.go('>')
-    }
-    
-    if (desktopPrev) desktopPrev.removeEventListener('click', handlePrev)
-    if (desktopNext) desktopNext.removeEventListener('click', handleNext)
-    prevButtons.forEach(btn => btn.removeEventListener('click', handlePrev))
-    nextButtons.forEach(btn => btn.removeEventListener('click', handleNext))
-  }
-}, [splideInitialized])
+  }, [splideInitialized])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -365,7 +361,7 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#FAF8F5] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
       </div>
     )
@@ -418,25 +414,25 @@ useEffect(() => {
       </div>
 
       {/* ========== HERO SECTION ========== */}
-<section
-  id="home"
-  className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
->
+      <section
+        id="home"
+        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-6 pt-24 pb-[calc(2rem+env(safe-area-inset-bottom))] overflow-hidden bg-gradient-to-b from-[#FAF8F5] to-[#F0E9DF]"
+      >
         {/* Ambient Orbs */}
         <div className="absolute top-[8%] left-[-5%] w-[260px] h-[260px] rounded-full bg-[radial-gradient(circle,rgba(210,185,160,0.25)_0%,transparent_70%)]" />
         <div className="absolute bottom-[10%] right-[-8%] w-[320px] h-[320px] rounded-full bg-[radial-gradient(circle,rgba(185,160,130,0.18)_0%,transparent_70%)]" />
 
-{/* Background Image - backdrop.webp */}
-<div
-  className="absolute inset-0 pointer-events-none z-0"
-  style={{
-    backgroundImage: "url('/backdrop.webp')",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right center",
-    backgroundSize: "cover",      // Alternative: covers entire area
-    opacity: 0.12,
-  }}
-/>
+        {/* Background Image - backdrop.webp */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: "url('/backdrop.webp')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right center",
+            backgroundSize: "cover",
+            opacity: 0.12,
+          }}
+        />
 
         <div className="relative z-10 w-full max-w-3xl mx-auto">
           
@@ -495,56 +491,61 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* SPLIDE CAROUSEL - Single Card, No Images, Wide Format */}
+          {/* SPLIDE CAROUSEL - FIXED with mt-auto for CTA button */}
           {carouselItems.length > 0 && (
-  <div className="hero-carousel-outer">
-    <div className="splide-carousel splide hero-carousel-bar" aria-label="Announcements">
-      <p className="carousel-section-label">Announcements</p>
+            <div className="hero-carousel-outer">
+              <div className="splide-carousel splide hero-carousel-bar" aria-label="Announcements">
+                <p className="carousel-section-label">Announcements</p>
 
-      {/* Pagination dots — top right, rendered by Splide into .splide__pagination via CSS repositioning */}
-      <div className="splide__track">
-        <ul className="splide__list">
-          {carouselItems.map((item, idx) => (
-            <li key={item.id || idx} className="splide__slide">
-              <div className="announcement-card">
-                <span className="card-theme-pill">{item.theme || 'Announcement'}</span>
-                <h3 className="card-title">
-                  {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
-                </h3>
-                <p className="card-body-text">
-                  {locale === 'bm' && item.description_bm
-                    ? item.description_bm
-                    : (item.description_en || '')}
-                </p>
+                <div className="splide__track">
+                  <ul className="splide__list">
+                    {carouselItems.map((item, idx) => (
+                      <li key={item.id || idx} className="splide__slide h-full">
+                        {/* Fixed card structure - CTA button locked at bottom */}
+                        <div className="announcement-card flex flex-col h-full text-left">
+                          {/* Top content area - grows but doesn't push button */}
+                          <div className="flex-1 flex flex-col">
+                            <span className="card-theme-pill self-start">{item.theme || 'Announcement'}</span>
+                            <h3 className="card-title mt-2">
+                              {locale === 'bm' && item.title_bm ? item.title_bm : item.title_en}
+                            </h3>
+                            <p className="card-body-text mt-1 line-clamp-3">
+                              {locale === 'bm' && item.description_bm
+                                ? item.description_bm
+                                : (item.description_en || '')}
+                            </p>
+                          </div>
 
-<div className="card-bottom-row">
-  <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
-</div>
-{/* Mobile arrows - fixed position, moved outside card-bottom-row */}
-<div className="card-mobile-arrows">
-  <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
-    <ChevronLeft size={16} />
-  </button>
-  <button className="custom-next card-arrow-sm" aria-label="Next slide">
-    <ChevronRight size={16} />
-  </button>
-</div>
+                          {/* CTA Button - locked at bottom with mt-auto */}
+                          <div className="mt-auto pt-4">
+                            <button className="card-cta-btn">{t('learn_more') || 'Read more'} ›</button>
+                          </div>
+                          
+                          {/* Mobile arrows - absolute positioned, independent of content */}
+                          <div className="card-mobile-arrows">
+                            <button className="custom-prev card-arrow-sm" aria-label="Previous slide">
+                              <ChevronLeft size={16} />
+                            </button>
+                            <button className="custom-next card-arrow-sm" aria-label="Next slide">
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Desktop arrows — half outside the bar */}
+                <button className="custom-prev carousel-arrow-desktop carousel-arrow-left" aria-label="Previous slide">
+                  <ChevronLeft size={20} />
+                </button>
+                <button className="custom-next carousel-arrow-desktop carousel-arrow-right" aria-label="Next slide">
+                  <ChevronRight size={20} />
+                </button>
               </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Desktop arrows — half outside the bar */}
-      <button className="custom-prev carousel-arrow-desktop carousel-arrow-left" aria-label="Previous slide">
-        <ChevronLeft size={20} />
-      </button>
-      <button className="custom-next carousel-arrow-desktop carousel-arrow-right" aria-label="Next slide">
-        <ChevronRight size={20} />
-      </button>
-    </div>
-  </div>
-)}
+            </div>
+          )}
         </div>
       </section>
 
@@ -700,272 +701,262 @@ useEffect(() => {
         </div>
       )}
 
-<style>{`
-  html { scroll-behavior: smooth; }
-  * { box-sizing: border-box; }
-  @keyframes bob {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(6px); }
-  }
-  .animate-bob { animation: bob 2.5s ease-in-out infinite; }
+      <style>{`
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; }
+        @keyframes bob {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%       { transform: translateX(-50%) translateY(6px); }
+        }
+        .animate-bob { animation: bob 2.5s ease-in-out infinite; }
 
-  /* ── CAROUSEL OUTER ── */
-  .hero-carousel-outer {
-    position: relative;
-    width: 100%;
-    margin-top: 1.5rem;
-    padding: 0 1.25rem;
-  }
+        /* ── CAROUSEL OUTER ── */
+        .hero-carousel-outer {
+          position: relative;
+          width: 100%;
+          margin-top: 1.5rem;
+          padding: 0 1.25rem;
+        }
 
-  /* Mobile: Option A - edge-to-edge with small margins for rounded corners */
-  @media (max-width: 640px) {
-    .hero-carousel-outer {
-      padding: 0 0.0rem;
-      margin-top: 1rem;
-      margin-bottom: 0;
-    }
-  }
+        @media (max-width: 640px) {
+          .hero-carousel-outer {
+            padding: 0 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 0;
+          }
+        }
 
-  /* ── BAR SHAPE ── */
-  .hero-carousel-bar {
-    background: rgba(35, 31, 28, 0.85);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(201, 168, 130, 0.3);
-    border-radius: 1.25rem;
-    padding: 1.4rem 3.75rem;
-    position: relative;
-    overflow: visible !important;
-    transition: all 0.3s ease;
-  }
+        /* ── BAR SHAPE ── */
+        .hero-carousel-bar {
+          background: rgba(35, 31, 28, 0.85);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(201, 168, 130, 0.3);
+          border-radius: 1.25rem;
+          padding: 1.4rem 3.75rem;
+          position: relative;
+          overflow: visible !important;
+          transition: all 0.3s ease;
+        }
 
-  /* Mobile: rounded corners with small side margins */
-  @media (max-width: 640px) {
-    .hero-carousel-bar {
-      border-radius: 20px;
-      padding: 1rem 1rem 0.75rem;
-      margin-bottom: 0;
-    }
-  }
+        @media (max-width: 640px) {
+          .hero-carousel-bar {
+            border-radius: 20px;
+            padding: 1rem 1rem 0.75rem;
+            margin-bottom: 0;
+          }
+        }
 
-  /* Section label */
-  .carousel-section-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: #C9A882;
-    margin: 0 0 0.5rem;
-    text-align: left;
-  }
+        .carousel-section-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: #C9A882;
+          margin: 0 0 0.5rem;
+          text-align: left;
+        }
 
-  /* Splide pagination repositioned to top-right */
-  .hero-carousel-bar .splide__pagination {
-    position: absolute !important;
-    top: 1rem !important;
-    right: 1.25rem !important;
-    bottom: auto !important;
-    left: auto !important;
-    gap: 5px;
-    padding: 0;
-  }
+        /* Splide pagination repositioned to top-right */
+        .hero-carousel-bar .splide__pagination {
+          position: absolute !important;
+          top: 1rem !important;
+          right: 1.25rem !important;
+          bottom: auto !important;
+          left: auto !important;
+          gap: 5px;
+          padding: 0;
+        }
 
-  @media (max-width: 640px) {
-    .hero-carousel-bar .splide__pagination {
-      top: 0.75rem !important;
-      right: 1rem !important;
-    }
-  }
+        @media (max-width: 640px) {
+          .hero-carousel-bar .splide__pagination {
+            top: 0.75rem !important;
+            right: 1rem !important;
+          }
+        }
 
-  .hero-carousel-bar .splide__pagination__page {
-    width: 5px;
-    height: 5px;
-    background: rgba(201, 168, 130, 0.5);
-    border-radius: 999px;
-    border: none;
-    transition: width 0.3s, background 0.3s;
-    margin: 0 2px;
-  }
+        .hero-carousel-bar .splide__pagination__page {
+          width: 5px;
+          height: 5px;
+          background: rgba(201, 168, 130, 0.5);
+          border-radius: 999px;
+          border: none;
+          transition: width 0.3s, background 0.3s;
+          margin: 0 2px;
+        }
 
-  .hero-carousel-bar .splide__pagination__page.is-active {
-    width: 14px;
-    background: #C9A882;
-    transform: none;
-  }
+        .hero-carousel-bar .splide__pagination__page.is-active {
+          width: 14px;
+          background: #C9A882;
+          transform: none;
+        }
 
-  /* ── SLIDE CARD ── */
-  .announcement-card {
-    position: relative;
-    text-align: left;
-    min-height: 90px;
-  }
+        /* ── SLIDE CARD ── */
+        .announcement-card {
+          position: relative;
+          text-align: left;
+          height: 100%;
+          min-height: 200px;
+        }
 
-  @media (max-width: 640px) {
-    .announcement-card {
-      min-height: auto;
-    }
-  }
+        .splide__slide {
+          height: auto !important;
+        }
 
-  .card-theme-pill {
-    display: inline-block;
-    background: rgba(201, 168, 130, 0.2);
-    color: #C9A882;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border-radius: 999px;
-    margin-bottom: 0.45rem;
-  }
+        .card-theme-pill {
+          display: inline-block;
+          background: rgba(201, 168, 130, 0.2);
+          color: #C9A882;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          padding: 3px 10px;
+          border-radius: 999px;
+          margin-bottom: 0.45rem;
+        }
 
-  .card-title {
-    font-family: 'Lora', serif;
-    font-size: 1.2rem;
-    color: #FFFFFF;
-    margin: 0 0 0.35rem;
-    line-height: 1.3;
-  }
+        .card-title {
+          font-family: 'Lora', serif;
+          font-size: 1.2rem;
+          color: #FFFFFF;
+          margin: 0 0 0.35rem;
+          line-height: 1.3;
+        }
 
-  .card-body-text {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.85);
-    line-height: 1.65;
-    font-style: italic;
-    border-left: 2px solid rgba(201, 168, 130, 0.4);
-    padding-left: 0.75rem;
-    margin: 0;
-  }
+        .card-body-text {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.85);
+          line-height: 1.65;
+          font-style: italic;
+          border-left: 2px solid rgba(201, 168, 130, 0.4);
+          padding-left: 0.75rem;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
 
-  /* Bottom row: CTA button only */
-  .card-bottom-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-top: 1rem;
-  }
+        /* Mobile: fewer text lines */
+        @media (max-width: 640px) {
+          .card-body-text {
+            -webkit-line-clamp: 2;
+          }
+          .announcement-card {
+            min-height: 180px;
+          }
+        }
 
-  @media (max-width: 640px) {
-    .card-bottom-row {
-      margin-top: 0.75rem;
-    }
-  }
+        .card-cta-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(201, 168, 130, 0.5);
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(4px);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #C9A882;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
 
-  .card-cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(201, 168, 130, 0.5);
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #C9A882;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-  }
+        .card-cta-btn:hover {
+          background: #C9A882;
+          color: #2D2926;
+          border-color: #C9A882;
+        }
 
-  .card-cta-btn:hover {
-    background: #C9A882;
-    color: #2D2926;
-    border-color: #C9A882;
-  }
+        /* Mobile arrows - absolute positioned at bottom-right */
+        .card-mobile-arrows {
+          position: absolute;
+          bottom: 0.5rem;
+          right: 0.5rem;
+          display: none;
+          gap: 6px;
+          z-index: 15;
+        }
 
-  /* Mobile arrows - absolute positioned at bottom-right of announcement-card */
-  .card-mobile-arrows {
-    position: absolute;
-    bottom: 0.75rem;
-    right: 0.5rem;
-    display: none;
-    gap: 6px;
-    z-index: 15;
-  }
+        .card-arrow-sm {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(201, 168, 130, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #C9A882;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+        }
 
-  .card-arrow-sm {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(201, 168, 130, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #C9A882;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
+        .card-arrow-sm:hover {
+          background: #C9A882;
+          color: #2D2926;
+        }
 
-  .card-arrow-sm:hover {
-    background: #C9A882;
-    color: #2D2926;
-  }
+        /* Desktop arrows */
+        .carousel-arrow-desktop {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(201, 168, 130, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #C9A882;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+          z-index: 10;
+        }
 
-  /* Desktop arrows — half outside the bar, vertically centred */
-  .carousel-arrow-desktop {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(201, 168, 130, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #C9A882;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-    z-index: 10;
-  }
+        .carousel-arrow-desktop:hover {
+          background: #C9A882;
+          color: #2D2926;
+          border-color: #C9A882;
+        }
 
-  .carousel-arrow-desktop:hover {
-    background: #C9A882;
-    color: #2D2926;
-    border-color: #C9A882;
-  }
+        .carousel-arrow-left {
+          left: -18px;
+        }
 
-  .carousel-arrow-left {
-    left: -18px;
-  }
+        .carousel-arrow-right {
+          right: -18px;
+        }
 
-  .carousel-arrow-right {
-    right: -18px;
-  }
-
-  /* ── MOBILE OVERRIDES ── */
-  @media (max-width: 640px) {
-    .carousel-arrow-desktop {
-      display: none;
-    }
-    
-    .card-mobile-arrows {
-      display: flex;
-    }
-    
-    /* Remove all extra spacing below carousel */
-    .hero-carousel-bar .splide__track {
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-    
-    .hero-carousel-bar .splide__list {
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-    
-    .splide__slide {
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-  }
-`}</style>
+        /* ── MOBILE OVERRIDES ── */
+        @media (max-width: 640px) {
+          .carousel-arrow-desktop {
+            display: none;
+          }
+          
+          .card-mobile-arrows {
+            display: flex;
+          }
+          
+          .hero-carousel-bar .splide__track {
+            margin-bottom: 0;
+            padding-bottom: 0;
+          }
+          
+          .hero-carousel-bar .splide__list {
+            margin-bottom: 0;
+            padding-bottom: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }
