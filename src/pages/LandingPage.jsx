@@ -7,7 +7,7 @@ import {
 import { supabase } from '../lib/supabase'
 import { useLocale } from '../contexts/LocaleContext'
 
-// Import Splide styles and component
+// Import Splide styles
 import '@splidejs/splide/css'
 
 const NAV_LINKS = [
@@ -50,7 +50,7 @@ export default function LandingPage() {
     loadContent()
   }, [])
 
-  // Initialize Splide carousel - ADD THIS HERE
+  // Initialize Splide carousel
   useEffect(() => {
     let splide = null
     
@@ -101,7 +101,7 @@ export default function LandingPage() {
     }
   }, [carouselItems.length])
 
-  // Custom navigation for carousel - KEEP THIS WHERE IT IS
+  // Custom navigation for carousel
   useEffect(() => {
     if (!splideInitialized) return
     
@@ -191,18 +191,17 @@ export default function LandingPage() {
         }
         const randomVerses = shuffled.slice(0, 3)
         
-        const carouselData = randomVerses.map((verse, index) => ({
-          id: verse.id,
+        const carouselData = randomVerses.map((vItem, index) => ({
+          id: vItem.id,
           image_url: `/placeholder-${(index % 3) + 1}.jpg`,
-          title_en: verse.reference,
-          title_bm: verse.reference,
-          description_en: verse.text,
-          description_bm: verse.text,
-          theme: verse.theme || 'Bible Verse'
+          title_en: vItem.reference,
+          title_bm: vItem.reference,
+          description_en: vItem.text,
+          description_bm: vItem.text,
+          theme: vItem.theme || 'Bible Verse'
         }))
         
         setCarouselItems(carouselData)
-        console.log('Loaded 3 random verses for carousel:', carouselData.length)
       } else {
         setCarouselItems([
           { id: 1, image_url: '/placeholder-1.jpg', title_en: 'Psalm 23:1', title_bm: 'Mazmur 23:1', description_en: 'The Lord is my shepherd; I shall not want.', description_bm: 'Tuhan adalah gembalaku; aku tidak kekurangan apa pun.', theme: 'Psalm' },
@@ -650,161 +649,57 @@ export default function LandingPage() {
         }
         .animate-bob { animation: bob 2.5s ease-in-out infinite; }
         
-        /* ==========================================================================
-           FIXED CAROUSEL STYLING DEFINITIONS
-           ========================================================================== */
-        
-        /* Base configuration targeting Splide container layout issues */
-        .splide-carousel {
-          overflow: hidden;
-          width: 100%;
-          max-width: 100%;
-        }
-
-        .splide__track {
-          overflow: hidden;
-          width: 100%;
-        }
-
-        /* Prevent empty internal element layout heights below mobile typography */
-        .splide__list {
-          display: flex !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          height: auto !important;
-        }
-
-        .splide__slide {
-          width: 100%;
-          flex-shrink: 0;
-          height: auto !important;
-        }
-
-        /* Announcement Content Structure */
         .announcement-card {
-          width: 100%;
-          background: #ffffff;
+          background: rgba(255, 255, 255, 0.8);
           border: 1px solid rgba(217, 201, 183, 0.4);
-          border-radius: 1.25rem;
-          padding: 2rem 1.5rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-          box-sizing: border-box;
+          backdrop-filter: blur(4px);
+          border-radius: 1rem;
+          padding: 2rem;
+          margin: 0.5rem;
           text-align: center;
-          margin: 0 auto;
         }
-
-        .card-content-block {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
         .card-tag {
           font-family: 'DM Sans', sans-serif;
-          font-size: 0.7rem;
-          font-weight: 600;
-          text-transform: uppercase;
+          font-size: 10px;
           letter-spacing: 0.2em;
-          color: #b09882;
-          margin-bottom: 0.75rem;
+          color: #B09882;
+          text-transform: uppercase;
+          margin-bottom: 0.5rem;
         }
-
         .card-title {
           font-family: 'Lora', serif;
-          font-size: 1.35rem;
-          font-weight: 500;
-          color: #2d2926;
+          font-size: 1.5rem;
+          color: #2D2926;
           margin-bottom: 0.75rem;
-          line-height: 1.4;
         }
-
         .card-description {
           font-family: 'DM Sans', sans-serif;
           font-size: 0.95rem;
+          color: #6B5E55;
           line-height: 1.6;
-          color: #7a6e66;
-          max-width: 540px;
-          margin: 0 auto;
         }
-
-        /* Fixed Navigation Buttons: Removed Transparency completely */
         .custom-navigation {
           display: flex;
           justify-content: center;
-          gap: 1rem;
-          margin-top: 1.25rem;
-          position: relative;
-          z-index: 10;
+          gap: 1.5rem;
+          margin-top: 1.5rem;
         }
-
         .custom-prev, .custom-next {
-          display: inline-flex;
+          background: white;
+          border: 1px solid rgba(217, 201, 183, 0.5);
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 50%;
+          display: flex;
           align-items: center;
           justify-content: center;
-          width: 2.75rem;
-          height: 2.75rem;
-          border-radius: 9999px;
-          border: 1px solid rgba(217, 201, 183, 0.6);
-          background-color: #ffffff !important; /* Forces white color structural fallback */
-          color: #2d2926;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+          color: #7A6A5E;
           cursor: pointer;
-          transition: all 0.2s ease-in-out;
+          transition: all 0.2s ease;
         }
-
         .custom-prev:hover, .custom-next:hover {
-          background-color: #2d2926 !important;
-          color: #faf8f5;
-          border-color: #2d2926;
-        }
-
-        /* Default Splide Pagination Dot Override Fixes */
-        .splide__pagination {
-          position: relative !important;
-          top: auto !important;
-          bottom: auto !important;
-          margin-top: 1rem !important;
-          padding: 0 !important;
-          line-height: 1;
-        }
-
-        .splide__pagination__page {
-          background: rgba(45, 41, 38, 0.2) !important;
-          border: none !important;
-          margin: 0 4px !important;
-          width: 6px !important;
-          height: 6px !important;
-          transition: transform 0.2s ease, background-color 0.2s ease !important;
-        }
-
-        .splide__pagination__page.is-active {
-          background: #2d2926 !important;
-          transform: scale(1.2);
-        }
-
-        /* Mobile Layout Adaptations (Fixes the White Gap Issue) */
-        @media (max-width: 768px) {
-          .announcement-card {
-            padding: 1.5rem 1.25rem;
-            border-radius: 1rem;
-          }
-          
-          .card-title {
-            font-size: 1.15rem;
-          }
-          
-          .card-description {
-            font-size: 0.85rem;
-            line-height: 1.5;
-          }
-          
-          /* Ensures container layout wraps height securely on tiny screens */
-          .hero-carousel-container {
-            padding-bottom: 0px !important;
-            margin-bottom: 0px !important;
-            height: auto !important;
-          }
+          background: #2D2926;
+          color: #FAF8F5;
         }
       `}</style>
     </div>
