@@ -8,6 +8,10 @@ import StaffHub from './pages/StaffHub'
 import MemberManager from './pages/MemberManager'
 import ContentManager from './pages/ContentManager'
 import AdminTools from './pages/AdminTools'
+import FinanceManager from './pages/FinanceManager'
+
+
+
 
 // Protected Route wrapper component
 function ProtectedRoute({ children }) {
@@ -59,6 +63,11 @@ function AppRoutes() {
           <AdminTools />
         </ProtectedRoute>
       } />
+<Route path="/staff/finance" element={
+  <ProtectedRoute>
+    <FinanceManager />
+  </ProtectedRoute>
+} />
     </Routes>
   )
 }
