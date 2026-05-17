@@ -670,50 +670,52 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          "HOW WE DO CHURCH" — dark section
-      ══════════════════════════════════════════════ */}
-      <section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
-        <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
-          {t('how_we_do') || 'How we do church'}
-        </h2>
+    "HOW WE DO CHURCH" — full‑width, rounded, with proper padding
+══════════════════════════════════════════════ */}
+<section className="bg-[#1A1A18] w-full rounded-[2rem] my-4 py-16 md:py-24">
+  <div className="px-6 md:px-12 lg:px-20">
+    <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: 'clamp(2.5rem,7vw,5rem)', fontWeight: 800, color: 'white', marginBottom: '2.5rem', lineHeight: 1.0 }}>
+      {t('how_we_do') || 'How we do church'}
+    </h2>
 
-        <div id="how-we-splide" className="splide how-we-splide">
-          <div className="splide__track" style={{ overflow: 'visible' }}>
-            <ul className="splide__list">
-              {HOW_WE_DO.map((card, i) => (
-                <li key={i} className="splide__slide">
-                  <div className="bg-white rounded-2xl p-6 md:p-8 flex flex-col h-full min-h-[280px]">
-                    <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-                      {card.title}
-                    </h3>
-                    <p className="text-sm text-black/60 leading-relaxed flex-1"
-                       style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                      {card.body}
-                    </p>
-                    <a
-                      href={card.href}
-                      className="mt-6 inline-block px-5 py-2 rounded-full border border-black/30 text-[10px] uppercase tracking-[0.18em] text-black hover:bg-black hover:text-white hover:border-black transition-all self-start"
-                      style={{ fontFamily: "'DM Sans', sans-serif" }}
-                    >
-                      {card.cta}
-                    </a>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div id="how-we-splide" className="splide how-we-splide">
+      <div className="splide__track" style={{ overflow: 'hidden' }}>
+        <ul className="splide__list">
+          {HOW_WE_DO.map((card, i) => (
+            <li key={i} className="splide__slide">
+              <div className="bg-white rounded-2xl p-6 md:p-8 flex flex-col h-full min-h-[280px]">
+                <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                  {card.title}
+                </h3>
+                <p className="text-sm text-black/60 leading-relaxed flex-1"
+                   style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  {card.body}
+                </p>
+                <a
+                  href={card.href}
+                  className="mt-6 inline-block px-5 py-2 rounded-full border border-black/30 text-[10px] uppercase tracking-[0.18em] text-black hover:bg-black hover:text-white hover:border-black transition-all self-start"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  {card.cta}
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-          {/* Custom arrows with unique classes */}
-          <div className="splide__arrows flex gap-3 mt-8">
-            <button className="how-we-arrow how-we-arrow-prev">
-              <ChevronLeft size={20} />
-            </button>
-            <button className="how-we-arrow how-we-arrow-next">
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* Custom arrows */}
+      <div className="splide__arrows flex gap-3 mt-8 justify-center">
+        <button className="how-we-arrow how-we-arrow-prev">
+          <ChevronLeft size={20} />
+        </button>
+        <button className="how-we-arrow how-we-arrow-next">
+          <ChevronRight size={20} />
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* ══════════════════════════════════════════════
           MARQUEE — values ticker
