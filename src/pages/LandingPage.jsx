@@ -506,8 +506,9 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════
           HERO — full-viewport, video bg (with fallback), "What's On" card
           (Verse and button removed – now only carousel)
+          Fixed with min-h-[100dvh] for dynamic viewport on mobile
       ══════════════════════════════════════════════ */}
-      <section id="home" className="relative min-h-screen overflow-hidden bg-black">
+      <section id="home" className="relative min-h-[100dvh] overflow-hidden bg-black">
         {/* Video background */}
         {!videoError ? (
           <video
@@ -532,9 +533,8 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-        {/* Main content – flex column, carousel at bottom */}
-        <div className="relative z-10 max-w-7xl mx-auto px-5 flex flex-col min-h-screen justify-end pb-12 md:pb-16">
-          {/* Only the carousel – no verse, no extra buttons */}
+        {/* Main content – flex column, carousel at bottom, uses 100dvh */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 flex flex-col min-h-[100dvh] justify-end pb-12 md:pb-16">
           <div className="w-full">
             {carouselItems.length > 0 && (
               <div className="hero-carousel-wrapper">
@@ -972,7 +972,7 @@ export default function LandingPage() {
       )}
 
       {/* ══════════════════════════════════════════════
-          STYLES (updated for new arrow classes + mobile description hiding)
+          STYLES (updated for new arrow classes + mobile description 3 lines)
       ══════════════════════════════════════════════ */}
       <style>{`
         html { scroll-behavior: smooth; }
@@ -1158,7 +1158,7 @@ export default function LandingPage() {
           background: rgba(255,255,255,0.2);
         }
 
-        /* Responsive: show/hide appropriate arrows & hide description on mobile */
+        /* Responsive: show/hide appropriate arrows & show description (max 3 lines) */
         @media (min-width: 768px) {
           .desktop-arrows {
             display: block;
@@ -1180,13 +1180,22 @@ export default function LandingPage() {
           .whats-on-card {
             padding: 1rem;
           }
-          /* Hide description on mobile to save vertical space */
+          /* Description: show up to 3 lines (not hidden) */
           .card-description {
-            display: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
           }
           .whats-on-slider .splide__pagination {
             top: 0.8rem !important;
             right: 0.8rem !important;
+          }
+          /* Ensure carousel doesn't overlap the fixed bottom bar */
+          .hero-carousel-wrapper {
+            margin-bottom: 0.5rem;
           }
         }
 
