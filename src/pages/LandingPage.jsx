@@ -651,6 +651,21 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
+
+          {/* Right — decorative image placeholder */}
+          <div className="relative flex justify-center">
+            <div className="w-full max-w-sm aspect-[4/5] rounded-[3rem] bg-[#F5EFE6] overflow-hidden shadow-xl flex items-center justify-center">
+              <img
+                src="/church-photo.jpg"
+                alt="Church community"
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <p className="text-black/20 text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>Church photo</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
