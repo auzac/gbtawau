@@ -548,17 +548,6 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Welcome button & quick actions – optional, keep if you want */}
-      <div className="hero-button-group mb-8">
-        <a
-          href="#about"
-          className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-white text-black text-[13px] uppercase tracking-[0.18em] font-medium hover:bg-white/90 transition"
-          style={{ fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {t('welcome_cta') || 'Welcome Home'}
-        </a>
-      </div>
-
       {/* Quick action pills – mobile only (or keep both) */}
       <div className="flex flex-wrap justify-center gap-3 md:hidden">
         <button onClick={openEventsModal} className="px-4 py-2 rounded-full bg-white/90 text-black text-[10px] uppercase tracking-wide">
