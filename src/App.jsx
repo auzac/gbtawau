@@ -9,6 +9,9 @@ import MemberManager from './pages/MemberManager'
 import ContentManager from './pages/ContentManager'
 import AdminTools from './pages/AdminTools'
 import FinanceManager from './pages/FinanceManager'
+import LyricsSession from './pages/LyricsSession'
+
+
 
 
 
@@ -38,6 +41,7 @@ function AppRoutes() {
     <Routes>
       {/* Public Website */}
       <Route path="/" element={<LandingPage />} />
+      
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />
@@ -68,6 +72,9 @@ function AppRoutes() {
     <FinanceManager />
   </ProtectedRoute>
 } />
+      <Route path="/lyrics/*" element={<LyricsSession />} />
+
+
     </Routes>
   )
 }
