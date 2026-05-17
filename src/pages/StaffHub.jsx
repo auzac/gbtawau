@@ -2,171 +2,205 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Users,
-  FileText,
-  ShieldCheck,
-  LogOut,
-  CalendarDays,
-  UserRound,
-  DollarSign
+  Users, FileText, ShieldCheck, LogOut,
+  CalendarDays, DollarSign, Music2, ChevronRight
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
-// ─── Design tokens (same as FinanceManager) ──────────────────────────────────
 const C = {
-  bg:          '#FAF8F5',
-  surface:     '#FFFFFF',
-  surfaceAlt:  '#F5EFE6',
-  border:      '#EAE1D4',
-  text:        '#2D2926',
-  textMid:     '#57534E',
-  textMuted:   '#9A8B80',
-  accent:      '#C4A88B',
-  accentDark:  '#92622E',
-  accentBg:    '#FDF3E8',
+  bg:         '#FAF8F5',
+  surface:    '#FFFFFF',
+  surfaceAlt: '#F5EFE6',
+  border:     '#EAE1D4',
+  text:       '#2D2926',
+  textMid:    '#57534E',
+  textMuted:  '#9A8B80',
+  accentDark: '#92622E',
+  accentBg:   '#FDF3E8',
+}
+const f = { serif: "'Lora', serif", sans: "'DM Sans', sans-serif" }
+
+// ─── Module definitions ───────────────────────────────────────────────────────
+const MODULES = [
+  {
+    id: 'members',
+    title: 'Membership',
+    desc: 'Members, profiles & directory',
+    Icon: Users,
+    path: '/staff/members',
+    active: true,
+  },
+  {
+    id: 'content',
+    title: 'Content',
+    desc: 'Verses, roster & announcements',
+    Icon: FileText,
+    path: '/staff/content',
+    active: true,
+    showEvents: true,
+  },
+  {
+    id: 'finance',
+    title: 'Finance',
+    desc: 'Renewals & payment records',
+    Icon: DollarSign,
+    path: '/staff/finance',
+    active: true,
+  },
+  {
+    id: 'lyrics',
+    title: 'Lyrics',
+    desc: 'Live worship lyrics sessions',
+    Icon: Music2,
+    path: '/lyrics',
+    active: true,
+  },
+  {
+    id: 'admin',
+    title: 'Administrative',
+    desc: 'Letters, reports & approvals',
+    Icon: ShieldCheck,
+    path: null,
+    active: false,
+  },
+]
+
+// ─── Module card ──────────────────────────────────────────────────────────────
+function ModuleCard({ mod, upcomingEvents, onClick }) {
+  const { Icon, title, desc, active, showEvents } = mod
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={!active}
+      onMouseEnter={() => active && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '16px',
+        background: hovered ? C.accentBg : active ? C.surface : '#F5F1EC',
+        border: `1.5px solid ${hovered ? C.accentDark : C.border}`,
+        borderRadius: '18px',
+        cursor: active ? 'pointer' : 'default',
+        opacity: active ? 1 : 0.55,
+        textAlign: 'left',
+        transition: 'background 0.15s, border-color 0.15s',
+        fontFamily: f.sans,
+        minHeight: 0,
+      }}
+    >
+      {/* Top row: icon + badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+        <div style={{ width: '38px', height: '38px', borderRadius: '11px', background: hovered ? '#EFE0CC' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
+          <Icon size={18} strokeWidth={1.75} color={hovered ? C.accentDark : C.textMid} />
+        </div>
+        {showEvents && upcomingEvents > 0 && (
+          <span style={{ fontSize: '11px', fontWeight: 600, background: C.accentBg, color: C.accentDark, border: `1px solid #DFC0A0`, borderRadius: '99px', padding: '2px 9px', lineHeight: 1.5 }}>
+            {upcomingEvents} upcoming
+          </span>
+        )}
+        {!active && (
+          <span style={{ fontSize: '10px', fontWeight: 600, background: '#EDE8E2', color: '#9A8B80', borderRadius: '99px', padding: '2px 8px', lineHeight: 1.5 }}>
+            Soon
+          </span>
+        )}
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1 }}>
+        <p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, fontFamily: f.serif, color: C.text, lineHeight: 1.2 }}>{title}</p>
+        <p style={{ margin: 0, fontSize: '12px', color: C.textMuted, lineHeight: 1.4 }}>{desc}</p>
+      </div>
+
+      {/* Arrow */}
+      {active && (
+        <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
+          <ChevronRight size={16} color={hovered ? C.accentDark : C.border} style={{ transition: 'color 0.15s' }} />
+        </div>
+      )}
+    </button>
+  )
 }
 
-const font = { serif: "'Lora', serif", sans: "'DM Sans', sans-serif" }
-
-function StaffHub() {
+// ─── Main ─────────────────────────────────────────────────────────────────────
+export default function StaffHub() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
-  
-  const [stats, setStats] = useState({ totalMembers: null, upcomingEvents: null })
-  const [loading, setLoading] = useState(true)
+  const [upcomingEvents, setUpcomingEvents] = useState(0)
 
   useEffect(() => {
-    loadStats()
-  }, [])
-
-  const loadStats = async () => {
-    setLoading(true)
-    const { count: membersCount } = await supabase
-      .from('members')
-      .select('*', { count: 'exact', head: true })
-    const { count: eventsCount } = await supabase
+    supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
       .gte('date', new Date().toISOString().split('T')[0])
-    setStats({
-      totalMembers: membersCount || 0,
-      upcomingEvents: eventsCount || 0
-    })
-    setLoading(false)
-  }
+      .then(({ count }) => setUpcomingEvents(count || 0))
+  }, [])
 
-  const handleLogout = async () => {
-    await signOut()
-    navigate('/login')
-  }
+  const handleLogout = async () => { await signOut(); navigate('/login') }
 
-  const modules = [
-    { id: 'members', title: 'Membership', icon: Users, description: 'Manage church members, profiles, and directory records.', path: '/staff/members', active: true },
-    { id: 'content', title: 'Content', icon: FileText, description: 'Update weekly verses, worship schedules, announcements, and events.', path: '/staff/content', active: true },
-    { id: 'finance', title: 'Finance', icon: DollarSign, description: 'Track membership renewals, payments, and financial records.', path: '/staff/finance', active: true },
-    { id: 'admin', title: 'Administrative', icon: ShieldCheck, description: 'Letters, reporting tools, approvals, and workflows.', path: null, active: false },
-  ]
-
-  const statItems = [
-    { label: 'Total Members', value: stats.totalMembers, icon: UserRound },
-    { label: 'Upcoming Events', value: stats.upcomingEvents, icon: CalendarDays },
-  ]
+  // Greeting based on time of day
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: font.sans }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: f.sans, display: 'flex', flexDirection: 'column' }}>
       <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-      {/* Header */}
-      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: C.text, fontFamily: font.serif, lineHeight: 1.2 }}>Gereja Baptis Tawau</h1>
-            <p style={{ margin: 0, fontSize: '10px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9A8D82', marginTop: '2px' }}>Staff Portal</p>
+      {/* ── Header ── */}
+      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 20px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.webp" alt="GBT" style={{ height: '28px', width: 'auto', objectFit: 'contain' }} />
+            <div style={{ width: '1px', height: '20px', background: C.border }} />
+            <span style={{ fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.textMuted }}>Staff Portal</span>
           </div>
-          <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: C.textMid, background: 'none', border: 'none', cursor: 'pointer' }}>
-            <LogOut size={14} /> Logout
+          <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: f.sans }}>
+            <LogOut size={14} /> Sign out
           </button>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px' }}>
-        {/* Welcome */}
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ margin: 0, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, color: C.text, fontFamily: font.serif, letterSpacing: '-0.02em' }}>Welcome back</h2>
-          <p style={{ color: C.textMuted, fontSize: '14px', marginTop: '8px' }}>Manage church operations and internal content.</p>
+      {/* ── Main ── */}
+      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '28px 20px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
+
+        {/* Greeting */}
+        <div>
+          <h1 style={{ margin: 0, fontSize: 'clamp(22px,4vw,30px)', fontWeight: 400, color: C.text, fontFamily: f.serif, letterSpacing: '-0.01em' }}>{greeting}.</h1>
+          <p style={{ margin: '5px 0 0', fontSize: '13px', color: C.textMuted }}>What would you like to manage today?</p>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          {statItems.map(stat => {
-            const Icon = stat.icon
-            const displayValue = loading ? '—' : stat.value
-            return (
-              <div key={stat.label} style={{ background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: '24px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '12px', color: C.textMuted, marginBottom: '6px' }}>{stat.label}</p>
-                  <h3 style={{ margin: 0, fontSize: '32px', fontWeight: 400, color: C.text, fontFamily: font.serif, letterSpacing: '-0.02em' }}>{displayValue}</h3>
-                </div>
-                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={20} strokeWidth={1.8} style={{ color: '#6F6258' }} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Modules grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-          {modules.map(module => {
-            const Icon = module.icon
-            return (
-              <div key={module.id} style={{
-                background: module.active ? C.surface : '#F8F5F1',
-                border: `1.5px solid ${C.border}`,
-                borderRadius: '24px',
-                padding: '28px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '260px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                cursor: module.active ? 'pointer' : 'default',
-                opacity: module.active ? 1 : 0.7,
-              }}
-              onMouseEnter={e => { if (module.active) { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.05)' } }}
-              onMouseLeave={e => { if (module.active) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' } }}
-              onClick={() => module.active && navigate(module.path)}
-              >
-                <div>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#F3EEE7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                    <Icon size={22} strokeWidth={1.8} style={{ color: '#6F6258' }} />
-                  </div>
-                  <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 500, fontFamily: font.serif, color: C.text, letterSpacing: '-0.01em', marginBottom: '12px' }}>{module.title}</h3>
-                  <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.6, color: C.textMid }}>{module.description}</p>
-                </div>
-                <div style={{ marginTop: '32px' }}>
-                  <button disabled={!module.active} style={{
-                    width: '100%', padding: '10px', borderRadius: '40px', border: `1.5px solid ${C.border}`,
-                    background: module.active ? '#FAF8F5' : '#F1ECE6', color: module.active ? C.text : '#B0A49A',
-                    fontSize: '13px', fontWeight: 500, fontFamily: font.sans, cursor: module.active ? 'pointer' : 'not-allowed'
-                  }}>
-                    {module.active ? `${module.action || 'Open Module'} →` : 'Coming Soon'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+        {/* Module grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', flex: 1 }}>
+          {MODULES.map(mod => (
+            <ModuleCard
+              key={mod.id}
+              mod={mod}
+              upcomingEvents={upcomingEvents}
+              onClick={() => mod.active && navigate(mod.path)}
+            />
+          ))}
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: '48px', textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '1px', background: '#D8CCC0', margin: '0 auto 16px' }} />
-          <p style={{ fontSize: '10px', letterSpacing: '0.05em', color: '#B0A49A' }}>Gereja Baptis Tawau • Internal Staff System</p>
+        <div style={{ textAlign: 'center', paddingTop: '4px' }}>
+          <p style={{ margin: 0, fontSize: '10px', letterSpacing: '0.06em', color: '#C0B4A8', fontFamily: f.sans }}>
+            GBT&nbsp;·&nbsp;Internal Staff System&nbsp;·&nbsp;Powered by Supabase
+          </p>
         </div>
       </main>
+
+      <style>{`
+        @media (min-width: 600px) {
+          .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (min-width: 900px) {
+          .module-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+        }
+      `}</style>
     </div>
   )
 }
-
-export default StaffHub
