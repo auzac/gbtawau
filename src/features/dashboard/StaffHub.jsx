@@ -156,6 +156,8 @@ export default function StaffHub() {
   return (
     <StaffLayout title="Staff Portal" hideBack>
 
+      {/* Flex container for sidebar + content */}
+      <div style={{ display: 'flex' }}>
       {/* Sidebar */}
       <aside style={{ width: '272px', flexShrink: 0, background: C.text, minHeight: '100vh', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px', overflowY: 'auto' }}>
         {/* Logo */}
@@ -234,6 +236,7 @@ export default function StaffHub() {
           </p>
           <p style={{ margin: '6px 0 0', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#C0B4A8', fontFamily: f.sans }}>Jeremiah 29:11</p>
         </div>
+      </div>
       </div>
     </StaffLayout>
   )
