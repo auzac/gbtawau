@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, FileText, ShieldCheck,
-  CalendarDays, DollarSign, Music2
+  CalendarDays, DollarSign, Music2, MessageSquare
 } from 'lucide-react'
 import StaffLayout from '../../components/layout/StaffLayout'
 import { fetchUpcomingEvents } from '../../services/events'
 import { fetchMembers } from '../../services/members'
 import { fetchRenewals } from '../../services/finance'
 import { fetchMemberRequests } from '../../services/memberRequests'
+import { fetchFeedback } from '../../services/feedback'
 import useIsMobile from '../../hooks/useIsMobile'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -59,6 +60,16 @@ const MODULES = [
     badgeLabel: 'pending',
   },
   {
+    id: 'feedback',
+    title: 'Feedback',
+    desc: 'Inbox & member messages',
+    Icon: MessageSquare,
+    path: '/staff/feedback',
+    active: true,
+    badgeKey: 'openFeedback',
+    badgeLabel: 'open',
+  },
+  {
     id: 'lyrics',
     title: 'Lyrics Master',
     desc: 'Song library & lyric management',
@@ -84,24 +95,26 @@ import { MobileCard, DesktopCard, SoonBadge } from './ModuleCard'
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function StaffHub() {
   const navigate  = useNavigate()
-  const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0, pendingRequests: 0 })
+  const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0, pendingRequests: 0, openFeedback: 0 })
   const isMobile = useIsMobile()
 
   useEffect(() => {
     const load = async () => {
       const year = new Date().getFullYear()
       try {
-        const [events, members, renewals, requests] = await Promise.all([
+        const [events, members, renewals, requests, feedback] = await Promise.all([
           fetchUpcomingEvents(),
           fetchMembers(),
           fetchRenewals(),
           fetchMemberRequests(),
+          fetchFeedback(),
         ])
         const upcomingEvents = events?.length || 0
         const totalMembers = members?.length || 0
         const paidRenewals = renewals?.filter(r => r.renewal_year === year)?.length || 0
         const pendingRequests = (requests || []).filter(r => r.status === 'pending').length
-        setStats({ upcomingEvents, pendingRenewals: Math.max(0, totalMembers - paidRenewals), pendingRequests })
+        const openFeedback = (feedback || []).filter(f => f.status === 'Open').length
+        setStats({ upcomingEvents, pendingRenewals: Math.max(0, totalMembers - paidRenewals), pendingRequests, openFeedback })
       } catch (err) { console.error(err) }
     }
     load()

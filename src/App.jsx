@@ -11,6 +11,7 @@ import MemberManager from './features/members/MemberManager'
 import ContentManager from './features/content/ContentManager'
 import AdminTools from './features/admin-tools/AdminTools'
 import FinanceManager from './features/finance/FinanceManager'
+import FeedbackManager from './features/feedback/FeedbackManager'
 import LyricsSession from './features/lyrics/LyricsSession'
 
 // Protected Route wrapper component
@@ -63,6 +64,11 @@ function AppRoutes() {
       <Route path="/staff/finance" element={
         <ProtectedRoute>
           <FinanceManager />
+        </ProtectedRoute>
+      } />
+      <Route path="/staff/feedback" element={
+        <ProtectedRoute>
+          <FeedbackManager />
         </ProtectedRoute>
       } />
       <Route path="/lyrics/*" element={<LyricsSession />} />
