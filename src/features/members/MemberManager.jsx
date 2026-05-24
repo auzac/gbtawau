@@ -1,11 +1,11 @@
-// src/features/members/MemberManager.jsx
+﻿// src/features/members/MemberManager.jsx
 import React, { useState, useEffect, useMemo } from 'react'
 import StaffLayout from '../../components/layout/StaffLayout'
 import { fetchMembers, createMember, updateMember, deleteMember, bulkImportMembers } from '../../services/members'
 import {
   Plus, Upload, Download, Search,
   User, Users, Baby, Zap, BookOpen, Skull,
-  Mars, Venus
+  Mars, Venus, UserCheck
 } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -18,8 +18,10 @@ import MemberForm from './MemberForm'
 import BulkImportModal from './BulkImportModal'
 import MemberCard from './MemberCard'
 import MemberTable from './MemberTable'
+import MemberRequests from './MemberRequests'
+import { fetchMemberRequests } from '../../services/memberRequests'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DEFAULT_FORM = {
   name: '', sex: 'Male', address: '', dob: '',
   registeredSince: '', baptismDate: '', maritalStatus: 'Single',
@@ -32,7 +34,7 @@ const AGE_GROUPS = [
   { key: 'adult',  label: 'Adults',   min: 26,  max: Infinity },
 ]
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Design tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   bg:          '#FAF8F5',
   surface:     '#FFFFFF',
@@ -46,7 +48,7 @@ const C = {
   accentBg:    '#FDF3E8',
 }
 
-// ─── Date Utilities ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Date Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const toCSV = s => { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}` }
 const calcAge = dob => {
   if (!dob) return null
@@ -57,7 +59,7 @@ const calcAge = dob => {
   return age
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SectionLabel({ children, style={} }) {
   return (
     <p style={{
@@ -68,7 +70,7 @@ function SectionLabel({ children, style={} }) {
   )
 }
 
-// ─── Shared button styles ───────────────────────────────────────────────────
+// â”€â”€â”€ Shared button styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const btnBase = {
   display:'inline-flex', alignItems:'center', justifyContent:'center',
   gap:'7px', borderRadius:'99px', fontFamily:"'DM Sans', system-ui, sans-serif",
@@ -76,7 +78,7 @@ const btnBase = {
 }
 const btnPrimary    = { ...btnBase, padding:'10px 18px', fontSize:'14px', background:C.text,    color:'#fff' }
 const btnSecondary  = { ...btnBase, padding:'10px 18px', fontSize:'14px', background:C.surface, color:C.textMid, border:`1.5px solid ${C.border}` }
-// ─── Main Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function MemberManager() {
   const [members,         setMembers]         = useState([])
   const [loading,         setLoading]         = useState(true)
@@ -87,15 +89,21 @@ export default function MemberManager() {
   const [editingId,       setEditingId]       = useState(null)
   const [selectedMember,  setSelectedMember]  = useState(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
+  const [view,            setView]            = useState('directory') // 'directory' | 'requests'
+  const [pendingRequests, setPendingRequests] = useState(0)
   const isMobile = useIsMobile()
   const { toast, showToast } = useToast()
 
   const loadMembers = async () => {
     setLoading(true)
     try {
-      const data = await fetchMembers()
+      const [data, reqs] = await Promise.all([
+        fetchMembers(),
+        fetchMemberRequests(),
+      ])
       setMembers(data)
-    } catch (err) { showToast('Error loading members', true); console.error(err) }
+      setPendingRequests((reqs || []).filter(r => r.status === 'pending').length)
+    } catch (err) { showToast('Error loading data', true); console.error(err) }
     setLoading(false)
   }
   useEffect(() => { loadMembers() }, [])
@@ -182,7 +190,7 @@ export default function MemberManager() {
       m.marital_status||'Single', m.is_deceased?'Yes':'No', toCSV(m.date_of_death)||''
     ])
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-    const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' })
+    const blob = new Blob(['ï»¿'+csv], { type:'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href=url; a.download=`church_members_${new Date().toISOString().split('T')[0]}.csv`; a.click()
@@ -195,17 +203,17 @@ export default function MemberManager() {
     setIsBulkImportOpen(false)
   }
 
-  if (loading) return <LoadingSpinner accentColor="#C4A88B"><p style={{ color:'#9A8B80', fontSize:'13px', margin:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Loading directory…</p></LoadingSpinner>
+  if (loading) return <LoadingSpinner accentColor="#C4A88B"><p style={{ color:'#9A8B80', fontSize:'13px', margin:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Loading directoryâ€¦</p></LoadingSpinner>
 
   return (
     <StaffLayout title="Member Management" subtitle="Church Directory">
       {toast && <Toast message={toast.text} isError={toast.isError} />}
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} isMobile={isMobile} />}
 
-      {/* ── Body */}
+      {/* â”€â”€ Body */}
       <div style={{ maxWidth:'1400px', margin:'0 auto', padding: isMobile ? '20px 16px 48px' : '28px 28px 56px', display:'flex', gap:'28px', alignItems:'flex-start' }}>
 
-        {/* ── Sidebar (desktop) */}
+        {/* â”€â”€ Sidebar (desktop) */}
         {!isMobile && (
           <aside style={{ width:'280px', flexShrink:0, position:'sticky', top:'84px', display:'flex', flexDirection:'column', gap:'20px' }}>
 
@@ -214,10 +222,10 @@ export default function MemberManager() {
               <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
                 <StatCard icon={<Users size={14} />}    label="Total Members" value={stats.total} dark />
                 <StatCard icon={<BookOpen size={14} />} label="Baptised"      value={stats.baptised}
-                  sub={stats.total ? `${Math.round((stats.baptised/stats.total)*100)}% of total` : '—'} />
+                  sub={stats.total ? `${Math.round((stats.baptised/stats.total)*100)}% of total` : 'â€”'} />
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                  <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
-                  <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
+                  <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'â€”'} />
+                  <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'â€”'} />
                 </div>
               </div>
             </div>
@@ -226,8 +234,8 @@ export default function MemberManager() {
               <SectionLabel>Age Groups</SectionLabel>
               <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
                 {[
-                  { label:'Children', value:stats.children, sub:'0 – 12 years',  variant:'child',    icon:Baby },
-                  { label:'Youth',    value:stats.youth,    sub:'13 – 25 years',  variant:'youth',    icon:Zap },
+                  { label:'Children', value:stats.children, sub:'0 â€“ 12 years',  variant:'child',    icon:Baby },
+                  { label:'Youth',    value:stats.youth,    sub:'13 â€“ 25 years',  variant:'youth',    icon:Zap },
                   { label:'Adults',   value:stats.adults,   sub:'26 and above',   variant:'adult',    icon:User },
                   { label:'Deceased', value:stats.deceased, sub:'On record',       variant:'deceased', icon:Skull },
                 ].map(({ label, value, sub, variant, icon:Icon }) => (
@@ -242,6 +250,33 @@ export default function MemberManager() {
                     <Badge variant={variant}>{value}</Badge>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <SectionLabel>Requests</SectionLabel>
+              <div
+                onClick={() => setView(view === 'requests' ? 'directory' : 'requests')}
+                style={{
+                  background: view === 'requests' ? C.accentBg : C.surface,
+                  border: `1.5px solid ${view === 'requests' ? C.accentDark : C.border}`,
+                  borderRadius: '14px', padding: '12px 14px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  cursor: 'pointer', transition: 'all 0.12s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <UserCheck size={14} style={{ color: C.textMuted }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: C.text, fontFamily: f.serif }}>
+                      {view === 'requests' ? 'Viewing Requests' : 'Registrations'}
+                    </p>
+                    <p style={{ margin: '1px 0 0', fontSize: '10px', color: C.textMuted, fontFamily: f.sans }}>
+                      {pendingRequests} pending
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={pendingRequests > 0 ? 'youth' : 'adult'}>{pendingRequests}</Badge>
               </div>
             </div>
 
@@ -266,7 +301,7 @@ export default function MemberManager() {
           </aside>
         )}
 
-        {/* ── Main column */}
+        {/* â”€â”€ Main column */}
         <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'16px' }}>
 
           {/* Mobile stats */}
@@ -275,15 +310,15 @@ export default function MemberManager() {
               <SectionLabel>Congregation Overview</SectionLabel>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'10px' }}>
                 <StatCard icon={<Users size={14} />}    label="Total Members" value={stats.total} dark />
-                <StatCard icon={<BookOpen size={14} />} label="Baptised"      value={stats.baptised} sub={stats.total?`${Math.round((stats.baptised/stats.total)*100)}%`:'—'} />
+                <StatCard icon={<BookOpen size={14} />} label="Baptised"      value={stats.baptised} sub={stats.total?`${Math.round((stats.baptised/stats.total)*100)}%`:'â€”'} />
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'10px' }}>
-                <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
-                <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
+                <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'â€”'} />
+                <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'â€”'} />
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                <StatCard icon={<Baby size={14} />}  label="Children (0–12)" value={stats.children} />
-                <StatCard icon={<Zap size={14} />}   label="Youth (13–25)"   value={stats.youth} />
+                <StatCard icon={<Baby size={14} />}  label="Children (0â€“12)" value={stats.children} />
+                <StatCard icon={<Zap size={14} />}   label="Youth (13â€“25)"   value={stats.youth} />
                 <StatCard icon={<User size={14} />}  label="Adults (26+)"    value={stats.adults} />
                 <StatCard icon={<Skull size={14} />} label="Deceased"         value={stats.deceased} />
               </div>
@@ -299,7 +334,68 @@ export default function MemberManager() {
             </div>
           )}
 
-          {/* ── Directory panel */}
+          {/* Mobile requests card */}
+          {isMobile && (
+            <div
+              onClick={() => setView(view === 'requests' ? 'directory' : 'requests')}
+              style={{
+                background: view === 'requests' ? C.accentBg : C.surface,
+                border: `1.5px solid ${view === 'requests' ? C.accentDark : C.border}`,
+                borderRadius: '14px', padding: '14px 16px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: view === 'requests' ? '#fff' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <UserCheck size={16} color={view === 'requests' ? C.accentDark : C.textMuted} />
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: C.text, fontFamily: f.serif }}>
+                    Membership Requests
+                  </p>
+                  <p style={{ margin: '1px 0 0', fontSize: '11px', color: C.textMuted, fontFamily: f.sans }}>
+                    {pendingRequests > 0 ? `${pendingRequests} pending review` : 'No pending requests'}
+                  </p>
+                </div>
+              </div>
+              <Badge variant={pendingRequests > 0 ? 'youth' : 'adult'}>{pendingRequests}</Badge>
+            </div>
+          )}
+
+          {/* â”€â”€ View toggle pills â”€â”€ */}
+          <div style={{ display:'flex', gap:'6px', marginBottom:'14px' }}>
+            {[['directory', 'Directory'], ['requests', `Requests${pendingRequests > 0 ? ` (${pendingRequests})` : ''}`]].map(([key, label]) => (
+              <button key={key} onClick={() => setView(key)} style={{
+                padding:'6px 14px', borderRadius:'99px', fontSize:'12px', fontWeight:600,
+                border:`1.5px solid ${view===key ? C.text : C.border}`,
+                background: view===key ? C.text : C.surface,
+                color: view===key ? '#fff' : C.textMid,
+                cursor:'pointer', fontFamily:"'DM Sans', system-ui, sans-serif",
+                display:'flex', alignItems:'center', gap:'4px',
+              }}>
+                {key === 'requests' && <UserCheck size={13} />}
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* â”€â”€ Requests panel â”€â”€ */}
+          {view === 'requests' ? (
+            <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding: isMobile ? '16px' : '20px' }}>
+              <div style={{ marginBottom:'14px' }}>
+                <h2 style={{ margin:0, fontSize:'16px', fontWeight:700, color:C.text, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
+                  Membership Requests
+                </h2>
+                <p style={{ margin:'2px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>
+                  {pendingRequests > 0 ? `${pendingRequests} pending review` : 'No pending requests'}
+                </p>
+              </div>
+              <MemberRequests />
+            </div>
+          ) : (
+
+          /* â”€â”€ Directory panel â”€â”€ */
           <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, overflow:'hidden' }}>
 
             {/* Panel header */}
@@ -317,7 +413,7 @@ export default function MemberManager() {
                 </div>
                 <div style={{ position:'relative', flexShrink:0 }}>
                   <input
-                    type="text" placeholder="Search…" value={searchTerm}
+                    type="text" placeholder="Searchâ€¦" value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className="mm-input"
                     style={{ width: isMobile ? '130px' : '240px', padding:'8px 12px 8px 34px', borderRadius:'99px', fontSize:'13px' }}
@@ -359,7 +455,7 @@ export default function MemberManager() {
                   onClick={searchTerm||ageFilter!=='all' ? ()=>{ setSearchTerm(''); setAgeFilter('all') } : openAdd}
                   style={{ marginTop:'12px', color:C.accentDark, background:'none', border:'none', cursor:'pointer', fontSize:'14px', fontFamily:"'DM Sans', system-ui, sans-serif", fontWeight:600 }}
                 >
-                  {searchTerm||ageFilter!=='all' ? 'Clear filters' : 'Add your first member →'}
+                  {searchTerm||ageFilter!=='all' ? 'Clear filters' : 'Add your first member â†’'}
                 </button>
               </div>
 
@@ -380,10 +476,11 @@ export default function MemberManager() {
               />
             )}
           </div>
+          )}
 
           {isMobile && (
             <p style={{ textAlign:'center', fontSize:'10px', color:C.textMuted, margin:0, fontFamily:"'DM Sans', system-ui, sans-serif", letterSpacing:'0.05em' }}>
-              Synced to Supabase · Cloud storage
+              Synced to Supabase Â· Cloud storage
             </p>
           )}
         </div>
@@ -432,3 +529,4 @@ export default function MemberManager() {
     </StaffLayout>
   )
 }
+
