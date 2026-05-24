@@ -74,7 +74,7 @@ const MODULES = [
 ]
 
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
-import { MobileCard, DesktopCard } from './ModuleCard'
+import { MobileCard, DesktopCard, SoonBadge } from './ModuleCard'
 
 
 
