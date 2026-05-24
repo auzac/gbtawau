@@ -8,6 +8,7 @@ export const BadgeMap = {
   divorced: { bg:'#FFF7ED', color:'#C2410C' },
   deceased: { bg:'#F3F4F6', color:'#6B7280' },
   child:    { bg:'#FFFBEB', color:'#B45309' },
+  pending:  { bg:'#FEF3C7', color:'#92400E' },
   youth:    { bg:'#F0FDFA', color:'#0F766E' },
   adult:    { bg:'#F5EFE6', color:'#57534E' },
   baptised: { bg:'#F0FDF4', color:'#166534' },

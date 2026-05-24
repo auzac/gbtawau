@@ -38,7 +38,7 @@ export function MobileCard({ mod, stats, onClick }) {
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         padding: '14px', textAlign: 'left', fontFamily: f.sans,
         background: hov ? C.accentBg : active ? C.surface : '#F5F1EC',
-        border: `1.5px solid ${hov ? C.accentDark : C.border}`,
+        border: `1.5px solid ${hov ? C.accentDark : badgeVal ? '#C9A882' : C.border}`,
         borderRadius: '18px', cursor: active ? 'pointer' : 'default',
         opacity: active ? 1 : 0.55, transition: 'background 0.15s, border-color 0.15s', minHeight: 0,
       }}
@@ -47,7 +47,7 @@ export function MobileCard({ mod, stats, onClick }) {
         <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: hov ? '#EFE0CC' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
           <Icon size={17} strokeWidth={1.75} color={hov ? C.accentDark : C.textMid} />
         </div>
-        {badgeVal ? <Badge>{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
+        {badgeVal ? <Badge variant="pending">{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
       </div>
       <div>
         <p style={{ margin: '0 0 3px', fontSize: '14px', fontWeight: 600, fontFamily: f.serif, color: C.text, lineHeight: 1.2 }}>{title}</p>
@@ -76,7 +76,7 @@ export function DesktopCard({ mod, stats, onClick }) {
       style={{
         display: 'flex', flexDirection: 'column', padding: '24px', textAlign: 'left',
         fontFamily: f.sans, background: hov ? C.accentBg : active ? C.surface : '#F8F5F1',
-        border: `1.5px solid ${hov ? C.accentDark : C.border}`,
+        border: `1.5px solid ${hov ? C.accentDark : badgeVal ? '#C9A882' : C.border}`,
         borderRadius: '20px', cursor: active ? 'pointer' : 'default',
         opacity: active ? 1 : 0.6, transition: 'background 0.15s, border-color 0.15s', gap: '18px',
       }}
@@ -85,7 +85,7 @@ export function DesktopCard({ mod, stats, onClick }) {
         <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: hov ? '#EFE0CC' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
           <Icon size={21} strokeWidth={1.75} color={hov ? C.accentDark : C.textMid} />
         </div>
-        {badgeVal ? <Badge>{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
+        {badgeVal ? <Badge variant="pending">{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
       </div>
       <div style={{ flex: 1 }}>
         <p style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 500, fontFamily: f.serif, color: C.text, lineHeight: 1.2 }}>{title}</p>
