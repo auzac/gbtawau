@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import LoadingSpinner from './components/ui/LoadingSpinner'
 
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
@@ -21,11 +22,7 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#2D2926]/20 border-t-[#2D2926] rounded-full animate-spin" />
-      </div>
-    )
+    return <LoadingSpinner size="32px" thickness="2px" />
   }
   
   if (!user) {

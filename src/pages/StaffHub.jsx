@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import useIsMobile from '../hooks/useIsMobile'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const C = {
@@ -71,11 +72,7 @@ const MODULES = [
 ]
 
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
-const Badge = ({ children }) => (
-  <span style={{ fontSize: '11px', fontWeight: 600, background: C.accentBg, color: C.accentDark, border: `1px solid #DFC0A0`, borderRadius: '99px', padding: '2px 9px', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
-    {children}
-  </span>
-)
+import { Badge } from '../components/ui/Badge'
 
 const SoonBadge = () => (
   <span style={{ fontSize: '10px', fontWeight: 600, background: '#EDE8E2', color: '#9A8B80', borderRadius: '99px', padding: '2px 8px', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
@@ -166,13 +163,7 @@ export default function StaffHub() {
   const navigate  = useNavigate()
   const { signOut } = useAuth()
   const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0 })
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check(); window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const load = async () => {

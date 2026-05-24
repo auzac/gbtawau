@@ -3,6 +3,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+import Modal from '../components/ui/Modal'
+import StatCard from '../components/ui/StatCard'
+import FieldLabel from '../components/ui/FieldLabel'
+import Toast from '../components/ui/Toast'
+import useIsMobile from '../hooks/useIsMobile'
+import { useToast } from '../hooks/useToast'
 import {
   ArrowLeft, LogOut, CheckCircle, AlertCircle,
   Search, Download, X, Users, TrendingUp, Banknote,
@@ -87,60 +94,7 @@ function MiniStat({ label, value, hi }) {
   )
 }
 
-// ─── Desktop StatCard ─────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value, sub }) {
-  return (
-    <div style={{ background: C.text, borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#78716C', fontFamily: font.sans }}>{label}</span>
-        {Icon && <Icon size={13} color="#78716C" />}
-      </div>
-      <span style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1, color: '#fff', fontFamily: font.serif, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-      {sub && <span style={{ fontSize: '11px', color: '#78716C', fontFamily: font.sans }}>{sub}</span>}
-    </div>
-  )
-}
-
-// ─── FieldLabel ───────────────────────────────────────────────────────────────
-const FieldLabel = ({ children }) => (
-  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: C.textMuted, marginBottom: '6px', fontFamily: font.sans }}>{children}</label>
-)
-
-// ─── ModalShell ───────────────────────────────────────────────────────────────
-function ModalShell({ title, onClose, isMobile, children }) {
-  const overlayStyle = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-    display: 'flex', zIndex: 100, backdropFilter: 'blur(2px)',
-    ...(isMobile
-      ? { alignItems: 'flex-end', justifyContent: 'center' }
-      : { alignItems: 'center', justifyContent: 'center', padding: '24px' }),
-  }
-  const panelStyle = {
-    background: C.surface, width: '100%', overflowY: 'auto',
-    ...(isMobile
-      ? { borderRadius: '24px 24px 0 0', maxHeight: '92vh', paddingBottom: 'env(safe-area-inset-bottom,16px)' }
-      : { borderRadius: '20px', maxWidth: '480px', maxHeight: '88vh' }),
-  }
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={panelStyle} onClick={e => e.stopPropagation()}>
-        {isMobile && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 2px' }}>
-            <div style={{ width: '36px', height: '4px', borderRadius: '99px', background: C.border }} />
-          </div>
-        )}
-        <div style={{ padding: isMobile ? '10px 20px 14px' : '24px 24px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: isMobile ? '18px' : '20px', fontWeight: 600, color: C.text, fontFamily: font.serif }}>{title}</h2>
-          <button onClick={onClose} style={{ width: '32px', height: '32px', borderRadius: '50%', border: `1.5px solid ${C.border}`, background: C.surfaceAlt, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={14} color={C.textMid} />
-          </button>
-        </div>
-        <div style={{ height: '1px', background: C.border }} />
-        <div style={{ padding: isMobile ? '16px 20px' : '20px 24px 24px' }}>{children}</div>
-      </div>
-    </div>
-  )
-}
+// ─── ModalShell uses shared Modal component
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FinanceManager() {
@@ -159,15 +113,8 @@ export default function FinanceManager() {
     amount: '', paymentDate: new Date().toISOString().split('T')[0],
     paymentMethod: 'Cash', receiptNumber: '', notes: '',
   })
-  const [savedMessage, setSavedMessage] = useState(null)
-  const [isMobile,     setIsMobile]     = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const isMobile = useIsMobile()
+  const { toast: savedMessage, showToast: showSaved } = useToast()
 
   const loadData = async () => {
     setLoading(true)
@@ -181,11 +128,6 @@ export default function FinanceManager() {
   }
 
   useEffect(() => { loadData() }, [])
-
-  const showSaved = (text, isError = false) => {
-    setSavedMessage({ text, isError })
-    setTimeout(() => setSavedMessage(null), 2500)
-  }
 
   const hasPaidForYear  = (id, yr) => renewals.some(r => r.member_id === id && r.renewal_year === yr)
   const getLastRenewal  = (id)     => renewals.filter(r => r.member_id === id).sort((a, b) => b.renewal_year - a.renewal_year)[0] ?? null
@@ -259,27 +201,14 @@ export default function FinanceManager() {
   const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
 
   // ── Loading screen ──────────────────────────────────────────────────────────
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: '34px', height: '34px', borderRadius: '50%', border: `3px solid ${C.border}`, borderTopColor: C.accentDark, animation: 'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
+  if (loading) return <LoadingSpinner />
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-      {/* Toast */}
-      {savedMessage && (
-        <div style={{ position: 'fixed', top: '72px', left: '50%', transform: 'translateX(-50%)', zIndex: 200, animation: 'slideDown 0.2s ease-out', whiteSpace: 'nowrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '9px 18px', borderRadius: '99px', background: savedMessage.isError ? '#DC2626' : C.text, color: '#fff', fontSize: '13px', fontFamily: font.sans }}>
-            {savedMessage.isError ? <AlertCircle size={14} /> : <CheckCircle size={14} />}
-            {savedMessage.text}
-          </div>
-        </div>
-      )}
+      {savedMessage && <Toast message={savedMessage.text} isError={savedMessage.isError} />}
 
       {/* ── Header ── */}
       <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, position: 'sticky', top: 0, zIndex: 50 }}>
@@ -500,7 +429,7 @@ export default function FinanceManager() {
 
       {/* ── Payment Modal ── */}
       {isPaymentModalOpen && selectedMember && (
-        <ModalShell title={`Record Renewal`} onClose={() => setIsPaymentModalOpen(false)} isMobile={isMobile}>
+        <Modal isOpen title={`Record Renewal`} onClose={() => setIsPaymentModalOpen(false)} isMobile={isMobile}>
           {/* Member pill */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: C.surfaceAlt, borderRadius: '12px', marginBottom: '20px' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: C.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: C.textMid, fontFamily: font.serif, flexShrink: 0 }}>
@@ -556,7 +485,7 @@ export default function FinanceManager() {
               <button type="submit" style={{ padding: '12px', borderRadius: '12px', border: 'none', background: C.text, color: '#fff', fontSize: '14px', fontWeight: 600, fontFamily: font.sans, cursor: 'pointer' }}>Record Payment</button>
             </div>
           </form>
-        </ModalShell>
+        </Modal>
       )}
 
       <style>{`

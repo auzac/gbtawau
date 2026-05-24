@@ -9,6 +9,15 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+import Modal from '../components/ui/Modal'
+import FormLabel from '../components/ui/FormLabel'
+import Field from '../components/ui/Field'
+import IconButton from '../components/ui/IconButton'
+import PillButton from '../components/ui/PillButton'
+import Toast from '../components/ui/Toast'
+import useIsMobile from '../hooks/useIsMobile'
+import { useToast } from '../hooks/useToast'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const C = {
@@ -27,41 +36,7 @@ const inp = {
 const th = { padding: '11px 16px', textAlign: 'left', fontSize: '10px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: C.textMuted, fontFamily: f.sans, whiteSpace: 'nowrap' }
 const td = { padding: '13px 16px', fontSize: '13px', color: C.textMid, fontFamily: f.sans, verticalAlign: 'middle' }
 
-// ─── Micro components ─────────────────────────────────────────────────────────
-const Label = ({ children }) => (
-  <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: C.textMuted, marginBottom: '6px', fontFamily: f.sans }}>{children}</label>
-)
-const Field = ({ label, children }) => <div><Label>{label}</Label>{children}</div>
-
-// Circular icon button
-const IBtn = ({ onClick, children, danger, style = {} }) => (
-  <button onClick={onClick} style={{ width: '32px', height: '32px', borderRadius: '50%', border: `1.5px solid ${danger ? '#FECACA' : C.border}`, background: danger ? '#FEF2F2' : C.surfaceAlt, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...style }}>
-    {children}
-  </button>
-)
-
-// Text button (pill)
-const PillBtn = ({ onClick, children, primary, danger, type = 'button', style = {} }) => (
-  <button type={type} onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, fontFamily: f.sans, cursor: 'pointer', border: primary ? 'none' : `1.5px solid ${danger ? '#FECACA' : C.border}`, background: primary ? C.text : danger ? '#FEF2F2' : C.surface, color: primary ? '#fff' : danger ? '#DC2626' : C.textMid, ...style }}>
-    {children}
-  </button>
-)
-
-function ModalShell({ title, onClose, isMobile, children }) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', zIndex: 100, backdropFilter: 'blur(2px)', ...(isMobile ? { alignItems: 'flex-end' } : { alignItems: 'center', justifyContent: 'center', padding: '24px' }) }} onClick={onClose}>
-      <div style={{ background: C.surface, width: '100%', overflowY: 'auto', ...(isMobile ? { borderRadius: '24px 24px 0 0', maxHeight: '92vh', paddingBottom: 'env(safe-area-inset-bottom,16px)' } : { borderRadius: '20px', maxWidth: '500px', maxHeight: '88vh' }) }} onClick={e => e.stopPropagation()}>
-        {isMobile && <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 2px' }}><div style={{ width: '36px', height: '4px', borderRadius: '99px', background: C.border }} /></div>}
-        <div style={{ padding: isMobile ? '10px 20px 14px' : '24px 24px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: isMobile ? '18px' : '20px', fontWeight: 600, color: C.text, fontFamily: f.serif }}>{title}</h2>
-          <IBtn onClick={onClose}><X size={14} color={C.textMid} /></IBtn>
-        </div>
-        <div style={{ height: '1px', background: C.border }} />
-        <div style={{ padding: isMobile ? '16px 20px' : '20px 24px 24px' }}>{children}</div>
-      </div>
-    </div>
-  )
-}
+// ─── Micro components use shared imports (FormLabel, Field, IconButton, PillButton, Modal)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const to12 = t => { if (!t) return ''; const [h, m] = t.split(':'); const hr = +h; return `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}` }
@@ -74,9 +49,10 @@ export default function ContentManager() {
   const { signOut } = useAuth()
 
   const [tab,         setTab]         = useState('verse')
-  const [toast,       setToast]       = useState(null)
   const [loading,     setLoading]     = useState(true)
-  const [isMobile,    setIsMobile]    = useState(false)
+  const isMobile = useIsMobile()
+  const { toast, showToast } = useToast()
+  const msg = (text, isError = false) => showToast(text, isError, 2200)
 
   // Data
   const [verseLib,    setVerseLib]    = useState([])
@@ -114,13 +90,8 @@ export default function ContentManager() {
   const [annForm,    setAnnForm]    = useState({ title_en:'', title_bm:'', description_en:'', description_bm:'', image_url:'', link_url:'', display_order:0, is_active:true })
 
   // ─── Init ───────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check(); window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  const msg = (text, isError = false) => { setToast({ text, isError }); setTimeout(() => setToast(null), 2200) }
+  // msg(text, isError) — provided by useToast with 2200ms duration via showToast(text, isError, 2200)
+  // Usage preserved: msg('text') / msg('text', true) — showToast handles the same signature
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -258,32 +229,20 @@ export default function ContentManager() {
     { id:'announcements', label:'Announcements', Icon: Megaphone  },
   ]
 
-  if (loading) return (
-    <div style={{ minHeight:'100vh', background:C.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ width:'34px', height:'34px', borderRadius:'50%', border:`3px solid ${C.border}`, borderTopColor:C.accentDark, animation:'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  )
+  if (loading) return <LoadingSpinner />
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
       <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-      {/* Toast */}
-      {toast && (
-        <div style={{ position:'fixed', top:'72px', left:'50%', transform:'translateX(-50%)', zIndex:200, animation:'slideDown 0.2s ease-out', whiteSpace:'nowrap' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'7px', padding:'9px 18px', borderRadius:'99px', background: toast.isError ? '#DC2626' : C.text, color:'#fff', fontSize:'13px', fontFamily:f.sans }}>
-            {toast.isError ? <AlertCircle size={14}/> : <CheckCircle size={14}/>} {toast.text}
-          </div>
-        </div>
-      )}
+      {toast && <Toast message={toast.text} isError={toast.isError} />}
 
       {/* Header */}
       <header style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, zIndex:50 }}>
         <div style={{ maxWidth:'1400px', margin:'0 auto', padding:'0 20px', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-            <IBtn onClick={() => navigate('/staff')}><ArrowLeft size={15} color={C.textMid}/></IBtn>
+            <IconButton onClick={() => navigate('/staff')}><ArrowLeft size={15} color={C.textMid}/></IconButton>
             <div>
               <h1 style={{ margin:0, fontSize:'17px', fontWeight:600, color:C.text, fontFamily:f.serif, lineHeight:1.2 }}>Content Manager</h1>
               {!isMobile && <p style={{ margin:0, fontSize:'11px', color:C.textMuted, fontFamily:f.sans }}>Website content administration</p>}
@@ -291,18 +250,18 @@ export default function ContentManager() {
           </div>
           <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
             {isMobile ? (
-              <IBtn onClick={() => setCalOpen(true)}><CalendarDays size={15} color={C.textMid}/></IBtn>
+              <IconButton onClick={() => setCalOpen(true)}><CalendarDays size={15} color={C.textMid}/></IconButton>
             ) : (
-              <PillBtn onClick={() => setCalOpen(true)} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
+              <PillButton onClick={() => setCalOpen(true)} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
                 <CalendarDays size={13}/> Calendar
-              </PillBtn>
+              </PillButton>
             )}
             {isMobile ? (
-              <IBtn onClick={signOut}><LogOut size={15} color={C.textMid}/></IBtn>
+              <IconButton onClick={signOut}><LogOut size={15} color={C.textMid}/></IconButton>
             ) : (
-              <PillBtn onClick={signOut} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
+              <PillButton onClick={signOut} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
                 <LogOut size={13}/> Sign out
-              </PillBtn>
+              </PillButton>
             )}
           </div>
         </div>
@@ -333,7 +292,7 @@ export default function ContentManager() {
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px' }}>
                 <h2 style={{ margin:0, fontSize:'17px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Verse Library</h2>
                 <div style={{ display:'flex', gap:'6px' }}>
-                  <IBtn onClick={exportCSV}><Download size={14} color={C.textMid}/></IBtn>
+                  <IconButton onClick={exportCSV}><Download size={14} color={C.textMid}/></IconButton>
                   <label style={{ width:'32px', height:'32px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     <Upload size={14} color={C.textMid}/>
                     <input type="file" accept=".csv" onChange={importCSV} style={{ display:'none' }}/>
@@ -356,7 +315,7 @@ export default function ContentManager() {
                       </div>
                       <div style={{ display:'flex', gap:'5px', alignItems:'center', flexShrink:0 }}>
                         {v.is_active && <span style={{ background:C.accentDark, color:'#fff', fontSize:'10px', padding:'2px 8px', borderRadius:'12px' }}>Active</span>}
-                        <IBtn onClick={e => { e.stopPropagation(); deleteVerse(v.id, v.reference) }} danger><Trash2 size={12} color="#DC2626"/></IBtn>
+                        <IconButton onClick={e => { e.stopPropagation(); deleteVerse(v.id, v.reference) }} danger><Trash2 size={12} color="#DC2626"/></IconButton>
                       </div>
                     </div>
                   </div>
@@ -373,8 +332,8 @@ export default function ContentManager() {
                   <textarea placeholder="Verse text" rows={3} value={newVerse.text} onChange={e => setNewVerse(p=>({...p,text:e.target.value}))} style={inp}/>
                   <input placeholder="Theme (optional)" value={newVerse.theme} onChange={e => setNewVerse(p=>({...p,theme:e.target.value}))} style={inp}/>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                    <PillBtn primary onClick={saveVerse}>Save</PillBtn>
-                    <PillBtn onClick={() => setShowAddVerse(false)}>Cancel</PillBtn>
+                    <PillButton primary onClick={saveVerse}>Save</PillButton>
+                    <PillButton onClick={() => setShowAddVerse(false)}>Cancel</PillButton>
                   </div>
                 </div>
               )}
@@ -406,9 +365,9 @@ export default function ContentManager() {
                     <p style={{ fontSize:'14px', fontWeight:500, color:C.text, margin:0 }}>{selVerse.reference}</p>
                     <p style={{ fontSize:'11px', color:C.textMuted, marginTop:'2px', fontFamily:f.sans }}>{selVerse.theme || 'No theme'}</p>
                   </div>
-                  <PillBtn primary onClick={() => activateVerse(selVerse.id)} style={{ marginTop:'16px', width:'100%' }}>
+                  <PillButton primary onClick={() => activateVerse(selVerse.id)} style={{ marginTop:'16px', width:'100%' }}>
                     <CheckCircle size={14}/> Activate This Verse
-                  </PillBtn>
+                  </PillButton>
                 </div>
               )}
             </div>
@@ -423,9 +382,9 @@ export default function ContentManager() {
                 <h2 style={{ margin:0, fontSize:'18px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Upcoming Events</h2>
                 <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>Manage public-facing church events</p>
               </div>
-              <PillBtn onClick={() => openEvt()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
+              <PillButton onClick={() => openEvt()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
                 {isMobile ? <Plus size={16}/> : <><Plus size={14}/> Add Event</>}
-              </PillBtn>
+              </PillButton>
             </div>
             {events.length === 0 ? (
               <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'48px 24px', textAlign:'center', color:C.textMuted, fontFamily:f.sans }}>
@@ -455,8 +414,8 @@ export default function ContentManager() {
                       </div>
                       {/* Actions */}
                       <div style={{ display:'flex', gap:'6px', flexShrink:0 }}>
-                        <IBtn onClick={() => openEvt(evt)}><Pencil size={13} color={C.textMid}/></IBtn>
-                        <IBtn onClick={() => delEvt(evt.id)} danger><Trash2 size={13} color="#DC2626"/></IBtn>
+                        <IconButton onClick={() => openEvt(evt)}><Pencil size={13} color={C.textMid}/></IconButton>
+                        <IconButton onClick={() => delEvt(evt.id)} danger><Trash2 size={13} color="#DC2626"/></IconButton>
                       </div>
                     </div>
                   </div>
@@ -481,7 +440,7 @@ export default function ContentManager() {
                       <p style={{ fontSize:'10px', letterSpacing:'0.1em', textTransform:'uppercase', color:C.textMuted, margin:0, fontFamily:f.sans }}>Week of</p>
                       <h3 style={{ margin:'3px 0 0', fontSize:'15px', fontWeight:600, fontFamily:f.serif, color:C.text }}>{week.weekStart}</h3>
                     </div>
-                    <IBtn onClick={() => openRst(week)}><Pencil size={13} color={C.textMid}/></IBtn>
+                    <IconButton onClick={() => openRst(week)}><Pencil size={13} color={C.textMid}/></IconButton>
                   </div>
                   <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:'12px', display:'flex', flexDirection:'column', gap:'9px' }}>
                     {[['Leader', week.leader], ['Pianist', week.pianist], ['Reader', week.reader]].map(([role, name]) => (
@@ -505,9 +464,9 @@ export default function ContentManager() {
                 <h2 style={{ margin:0, fontSize:'18px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Carousel Announcements</h2>
                 <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>Slides shown on the homepage carousel</p>
               </div>
-              <PillBtn onClick={() => openAnn()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
+              <PillButton onClick={() => openAnn()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
                 {isMobile ? <Plus size={16}/> : <><Plus size={14}/> Add Announcement</>}
-              </PillBtn>
+              </PillButton>
             </div>
             {announces.length === 0 ? (
               <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'48px 24px', textAlign:'center', color:C.textMuted, fontFamily:f.sans }}>No announcements yet. Click + to create one.</div>
@@ -518,8 +477,8 @@ export default function ContentManager() {
                     <div style={{ display:'flex', gap:'12px', alignItems:'center' }}>
                       {/* Order controls */}
                       <div style={{ display:'flex', flexDirection:'column', gap:'3px', flexShrink:0 }}>
-                        <IBtn onClick={() => moveAnn(item.id,'up')} style={{ width:'26px', height:'26px', opacity: idx===0?0.35:1 }}><MoveUp size={11} color={C.textMid}/></IBtn>
-                        <IBtn onClick={() => moveAnn(item.id,'down')} style={{ width:'26px', height:'26px', opacity: idx===announces.length-1?0.35:1 }}><MoveDown size={11} color={C.textMid}/></IBtn>
+                        <IconButton onClick={() => moveAnn(item.id,'up')} style={{ width:'26px', height:'26px', opacity: idx===0?0.35:1 }}><MoveUp size={11} color={C.textMid}/></IconButton>
+                        <IconButton onClick={() => moveAnn(item.id,'down')} style={{ width:'26px', height:'26px', opacity: idx===announces.length-1?0.35:1 }}><MoveDown size={11} color={C.textMid}/></IconButton>
                       </div>
                       {/* Thumbnail */}
                       <div style={{ width:'52px', height:'52px', borderRadius:'10px', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
@@ -533,11 +492,11 @@ export default function ContentManager() {
                       </div>
                       {/* Actions */}
                       <div style={{ display:'flex', gap:'6px', flexShrink:0, alignItems:'center' }}>
-                        <IBtn onClick={() => toggleAnn(item.id, item.is_active)} style={{ background: item.is_active ? '#E6F4E6' : C.surfaceAlt }}>
+                        <IconButton onClick={() => toggleAnn(item.id, item.is_active)} style={{ background: item.is_active ? '#E6F4E6' : C.surfaceAlt }}>
                           {item.is_active ? <Eye size={13} color="#2E7D32"/> : <EyeOff size={13} color={C.textMuted}/>}
-                        </IBtn>
-                        <IBtn onClick={() => openAnn(item)}><Pencil size={13} color={C.textMid}/></IBtn>
-                        <IBtn onClick={() => delAnn(item.id)} danger><Trash2 size={13} color="#DC2626"/></IBtn>
+                        </IconButton>
+                        <IconButton onClick={() => openAnn(item)}><Pencil size={13} color={C.textMid}/></IconButton>
+                        <IconButton onClick={() => delAnn(item.id)} danger><Trash2 size={13} color="#DC2626"/></IconButton>
                       </div>
                     </div>
                   </div>
@@ -549,8 +508,7 @@ export default function ContentManager() {
       </div>
 
       {/* ══ CALENDAR MODAL ═════════════════════════════════════════════════════ */}
-      {calOpen && (
-        <ModalShell title="Content Calendar" onClose={() => setCalOpen(false)} isMobile={isMobile}>
+        <Modal isOpen={calOpen} onClose={() => setCalOpen(false)} title="Content Calendar" isMobile={isMobile}>
           <div style={{ background:C.surfaceAlt, borderRadius:'14px', padding:'16px', marginBottom:'18px' }}>
             <div style={{ display:'flex', flexWrap:'wrap', gap:'10px', alignItems:'center', marginBottom:'12px' }}>
               <select value={calMonth} onChange={e => setCalMonth(+e.target.value)} style={{ ...inp, width:'auto', padding:'7px 10px', flex:1 }}>
@@ -565,9 +523,9 @@ export default function ContentManager() {
                 ))}
               </div>
             </div>
-            <PillBtn primary onClick={loadCalPreview} style={{ width:'100%', padding:'10px', borderRadius:'10px' }}>
+            <PillButton primary onClick={loadCalPreview} style={{ width:'100%', padding:'10px', borderRadius:'10px' }}>
               Load Week {calWeek}
-            </PillBtn>
+            </PillButton>
           </div>
           {calPreview && (
             <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
@@ -595,12 +553,10 @@ export default function ContentManager() {
               </div>
             </div>
           )}
-        </ModalShell>
-      )}
+        </Modal>
 
       {/* ══ EVENT MODAL ════════════════════════════════════════════════════════ */}
-      {evtOpen && (
-        <ModalShell title={editEvt ? 'Edit Event' : 'Add Event'} onClose={() => setEvtOpen(false)} isMobile={isMobile}>
+        <Modal isOpen={evtOpen} onClose={() => setEvtOpen(false)} title={editEvt ? 'Edit Event' : 'Add Event'} isMobile={isMobile}>
           <form onSubmit={saveEvt} style={{ display:'flex', flexDirection:'column', gap:'13px' }}>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
               <Field label="Date *"><input type="date" value={evtForm.date} onChange={e => setEvtForm(p=>({...p,date:e.target.value}))} required style={inp}/></Field>
@@ -613,32 +569,28 @@ export default function ContentManager() {
             </div>
             <Field label="Description"><textarea rows={3} value={evtForm.descriptionEn} onChange={e => setEvtForm(p=>({...p,descriptionEn:e.target.value}))} style={inp}/></Field>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'4px' }}>
-              <PillBtn onClick={() => setEvtOpen(false)}>Cancel</PillBtn>
-              <PillBtn type="submit" primary>{editEvt ? 'Update' : 'Save'}</PillBtn>
+              <PillButton onClick={() => setEvtOpen(false)}>Cancel</PillButton>
+              <PillButton type="submit" primary>{editEvt ? 'Update' : 'Save'}</PillButton>
             </div>
           </form>
-        </ModalShell>
-      )}
+        </Modal>
 
       {/* ══ ROSTER MODAL ═══════════════════════════════════════════════════════ */}
-      {rstOpen && (
-        <ModalShell title="Edit Worship Week" onClose={() => setRstOpen(false)} isMobile={isMobile}>
+        <Modal isOpen={rstOpen} onClose={() => setRstOpen(false)} title="Edit Worship Week" isMobile={isMobile}>
           <form onSubmit={saveRst} style={{ display:'flex', flexDirection:'column', gap:'13px' }}>
             <Field label="Week Starting (DD/MM/YYYY)"><input type="text" value={rstForm.weekStart} onChange={e => setRstForm(p=>({...p,weekStart:e.target.value}))} style={inp}/></Field>
             <Field label="Worship Leader"><input type="text" value={rstForm.leader} onChange={e => setRstForm(p=>({...p,leader:e.target.value}))} style={inp}/></Field>
             <Field label="Pianist"><input type="text" value={rstForm.pianist} onChange={e => setRstForm(p=>({...p,pianist:e.target.value}))} style={inp}/></Field>
             <Field label="Scripture Reader"><input type="text" value={rstForm.reader} onChange={e => setRstForm(p=>({...p,reader:e.target.value}))} style={inp}/></Field>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'4px' }}>
-              <PillBtn onClick={() => setRstOpen(false)}>Cancel</PillBtn>
-              <PillBtn type="submit" primary>Save Changes</PillBtn>
+              <PillButton onClick={() => setRstOpen(false)}>Cancel</PillButton>
+              <PillButton type="submit" primary>Save Changes</PillButton>
             </div>
           </form>
-        </ModalShell>
-      )}
+        </Modal>
 
       {/* ══ ANNOUNCEMENT MODAL ═════════════════════════════════════════════════ */}
-      {annOpen && (
-        <ModalShell title={editAnn ? 'Edit Announcement' : 'Add Announcement'} onClose={() => setAnnOpen(false)} isMobile={isMobile}>
+        <Modal isOpen={annOpen} onClose={() => setAnnOpen(false)} title={editAnn ? 'Edit Announcement' : 'Add Announcement'} isMobile={isMobile}>
           <form onSubmit={saveAnn} style={{ display:'flex', flexDirection:'column', gap:'13px' }}>
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:'12px' }}>
               <Field label="Title (English) *"><input type="text" required value={annForm.title_en} onChange={e => setAnnForm(p=>({...p,title_en:e.target.value}))} style={inp}/></Field>
@@ -658,12 +610,11 @@ export default function ContentManager() {
               </label>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'4px' }}>
-              <PillBtn onClick={() => setAnnOpen(false)}>Cancel</PillBtn>
-              <PillBtn type="submit" primary>Save</PillBtn>
+              <PillButton onClick={() => setAnnOpen(false)}>Cancel</PillButton>
+              <PillButton type="submit" primary>Save</PillButton>
             </div>
           </form>
-        </ModalShell>
-      )}
+        </Modal>
 
       <style>{`
         @keyframes spin      { to { transform: rotate(360deg); } }

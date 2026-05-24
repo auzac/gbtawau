@@ -9,6 +9,7 @@ import {
   Clock, MapPin, Phone, ChevronLeft, ChevronRight, Heart, ArrowRight
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useLocale } from '../contexts/LocaleContext'
 import '@splidejs/splide/css'
 
@@ -322,11 +323,7 @@ export default function LandingPage() {
   // ─── LOADING ───────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F5EFE6] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-black/10 border-t-black rounded-full animate-spin" />
-      </div>
-    )
+    return <LoadingSpinner background="#F5EFE6" borderColor="rgba(0,0,0,0.1)" accentColor="#000000" size="32px" thickness="2px" />
   }
 
   // ─── RENDER ────────────────────────────────────────────────────────────────────

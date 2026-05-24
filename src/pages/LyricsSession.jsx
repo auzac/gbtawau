@@ -31,19 +31,9 @@ const inp = (extra = {}) => ({
   fontFamily: f.sans, ...extra,
 })
 
-// Icon-only circular button
-const IBtn = ({ onClick, children, style = {} }) => (
-  <button onClick={onClick} style={{ width: '36px', height: '36px', borderRadius: '50%', border: `1.5px solid ${C.border}`, background: C.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...style }}>
-    {children}
-  </button>
-)
-
-// Full-width pill button
-const PillBtn = ({ onClick, children, primary, disabled, type = 'button', style = {} }) => (
-  <button type={type} onClick={onClick} disabled={disabled} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '12px 22px', borderRadius: '99px', fontSize: '14px', fontWeight: 600, fontFamily: f.sans, cursor: disabled ? 'not-allowed' : 'pointer', border: primary ? 'none' : `1.5px solid ${C.border}`, background: disabled ? C.disabledBg : primary ? C.text : C.surface, color: disabled ? C.disabledText : primary ? '#fff' : C.textMid, transition: 'opacity 0.15s', ...style }}>
-    {children}
-  </button>
-)
+// Icon-only circular button (shared)
+import IconButton from '../components/ui/IconButton'
+import PillButton from '../components/ui/PillButton'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const generateCode = async () => {
@@ -201,7 +191,7 @@ export default function LyricsSession() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <IBtn onClick={refreshSessions}><RefreshCw size={15} color={sessionsLoading ? C.accentDark : C.textMid} style={{ animation: sessionsLoading ? 'spin 0.8s linear infinite' : 'none' }} /></IBtn>
+            <IconButton onClick={refreshSessions}><RefreshCw size={15} color={sessionsLoading ? C.accentDark : C.textMid} style={{ animation: sessionsLoading ? 'spin 0.8s linear infinite' : 'none' }} /></IconButton>
             <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '99px', border: 'none', background: C.text, color: '#FAF8F5', fontSize: '13px', fontWeight: 600, fontFamily: f.sans, cursor: 'pointer' }}>
               <Plus size={15} /> New Session
             </button>
@@ -277,12 +267,12 @@ export default function LyricsSession() {
                 <p style={{ margin: '2px 0 0', fontSize: '11px', color: C.textMuted, fontFamily: f.sans }}>{activeSongIdx + 1} of {totalSongs} songs</p>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <IBtn onClick={copyLink} style={{ background: copied ? '#F0FAF0' : C.surface, borderColor: copied ? '#C8E6C9' : C.border }}>
+                <IconButton onClick={copyLink} style={{ background: copied ? '#F0FAF0' : C.surface, borderColor: copied ? '#C8E6C9' : C.border }}>
                   {copied ? <CheckCircle size={15} color="#2E7D32" /> : <Copy size={15} color={C.textMid} />}
-                </IBtn>
-                <IBtn onClick={() => { setSessionData(null); setJoinCode(''); navigate('/lyrics') }}>
+                </IconButton>
+                <IconButton onClick={() => { setSessionData(null); setJoinCode(''); navigate('/lyrics') }}>
                   <X size={15} color={C.textMid} />
-                </IBtn>
+                </IconButton>
               </div>
             </div>
 
@@ -320,26 +310,26 @@ export default function LyricsSession() {
 
             {/* Prev / Next navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderTop: `1px solid ${C.border}`, background: C.bg }}>
-              <PillBtn
+              <PillButton
                 onClick={() => setActiveSongIdx(p => p - 1)}
                 disabled={activeSongIdx === 0}
                 style={{ padding: '10px 18px', fontSize: '13px' }}
               >
                 <ChevronLeft size={16} /> Prev
-              </PillBtn>
+              </PillButton>
               {/* Dot indicators */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 {sessionData.songs.map((_, idx) => (
                   <button key={idx} onClick={() => setActiveSongIdx(idx)} style={{ width: idx === activeSongIdx ? '18px' : '7px', height: '7px', borderRadius: '99px', background: idx === activeSongIdx ? C.accentDark : C.border, border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s' }} />
                 ))}
               </div>
-              <PillBtn
+              <PillButton
                 onClick={() => setActiveSongIdx(p => p + 1)}
                 disabled={activeSongIdx === totalSongs - 1}
                 style={{ padding: '10px 18px', fontSize: '13px' }}
               >
                 Next <ChevronRight size={16} />
-              </PillBtn>
+              </PillButton>
             </div>
           </div>
         )}
@@ -366,7 +356,7 @@ export default function LyricsSession() {
             {/* Modal header */}
             <div style={{ padding: '10px 20px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: f.serif, color: C.text }}>Create Session</h2>
-              <IBtn onClick={() => setShowCreate(false)}><X size={15} color={C.textMid} /></IBtn>
+              <IconButton onClick={() => setShowCreate(false)}><X size={15} color={C.textMid} /></IconButton>
             </div>
             <div style={{ height: '1px', background: C.border }} />
 
@@ -440,14 +430,14 @@ export default function LyricsSession() {
 
             {/* Sticky CTA */}
             <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}` }}>
-              <PillBtn
+              <PillButton
                 onClick={handleCreate}
                 primary
                 disabled={isCreating || selectedIds.size === 0}
                 style={{ width: '100%', padding: '14px', borderRadius: '14px' }}
               >
                 {isCreating ? 'Creating…' : `Create Session · ${selectedIds.size} song${selectedIds.size !== 1 ? 's' : ''}`}
-              </PillBtn>
+              </PillButton>
             </div>
           </div>
         </div>

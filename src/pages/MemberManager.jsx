@@ -7,8 +7,16 @@ import {
   X, Phone, Calendar, MapPin, Heart, Cross, AlertCircle,
   ArrowLeft, LogOut, Plus, Upload, Download, Search,
   User, Users, Baby, Zap, BookOpen, Skull, ChevronDown,
-  CheckCircle, UserCheck, Mars, Venus
+  UserCheck, Mars, Venus
 } from 'lucide-react'
+import { Badge } from '../components/ui/Badge'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
+import Modal from '../components/ui/Modal'
+import StatCard from '../components/ui/StatCard'
+import FieldLabel from '../components/ui/FieldLabel'
+import Toast from '../components/ui/Toast'
+import useIsMobile from '../hooks/useIsMobile'
+import { useToast } from '../hooks/useToast'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MARITAL_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -70,74 +78,6 @@ function DateInput({ value, onChange, placeholder, required }) {
     if (isValidDate(v)) onChange(toStorage(v))
   }
   return <input type="text" value={raw} onChange={handleChange} required={required} placeholder={placeholder} className="mm-input" />
-}
-
-// ─── Badge ────────────────────────────────────────────────────────────────────
-const BADGE_MAP = {
-  male:     { bg:'#EFF6FF', color:'#1D4ED8' },
-  female:   { bg:'#FDF2F8', color:'#BE185D' },
-  married:  { bg:'#F0FDF4', color:'#166534' },
-  single:   { bg:'#EFF6FF', color:'#1D4ED8' },
-  widowed:  { bg:'#F5F3FF', color:'#6D28D9' },
-  divorced: { bg:'#FFF7ED', color:'#C2410C' },
-  deceased: { bg:'#F3F4F6', color:'#6B7280' },
-  child:    { bg:'#FFFBEB', color:'#B45309' },
-  youth:    { bg:'#F0FDFA', color:'#0F766E' },
-  adult:    { bg:C.surfaceAlt, color:C.textMid },
-  baptised: { bg:'#F0FDF4', color:'#166534' },
-}
-function Badge({ variant='adult', children }) {
-  const s = BADGE_MAP[variant] || BADGE_MAP.adult
-  return (
-    <span style={{
-      display:'inline-flex', alignItems:'center', gap:'3px',
-      padding:'2px 8px', borderRadius:'20px', fontSize:'11px', fontWeight:600,
-      background:s.bg, color:s.color, whiteSpace:'nowrap',
-      fontFamily:"'DM Sans', system-ui, sans-serif",
-    }}>
-      {children}
-    </span>
-  )
-}
-
-// ─── StatCard ─────────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value, sub, dark }) {
-  return (
-    <div style={{
-      background: dark ? C.text : C.surface,
-      border:`1.5px solid ${dark ? C.text : C.border}`,
-      borderRadius:'16px', padding:'14px 16px',
-      display:'flex', flexDirection:'column', gap:'5px', minWidth:0,
-    }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <span style={{
-          fontSize:'10px', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase',
-          color: dark ? '#78716C' : C.textMuted,
-          fontFamily:"'DM Sans', system-ui, sans-serif",
-          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
-        }}>{label}</span>
-        {Icon && <Icon size={13} style={{ color: dark ? '#78716C' : C.accent, flexShrink:0 }} />}
-      </div>
-      <span style={{
-        fontSize:'30px', fontWeight:700, lineHeight:1,
-        color: dark ? '#FFFFFF' : C.text,
-        fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif",
-        fontVariantNumeric:'tabular-nums',
-      }}>{value}</span>
-      {sub && <span style={{ fontSize:'11px', color: dark ? '#78716C' : C.textMuted, fontFamily:"'DM Sans', system-ui, sans-serif" }}>{sub}</span>}
-    </div>
-  )
-}
-
-// ─── Field label ──────────────────────────────────────────────────────────────
-function FieldLabel({ children }) {
-  return (
-    <label style={{
-      display:'block', fontSize:'10px', fontWeight:700, letterSpacing:'0.09em',
-      textTransform:'uppercase', color:C.textMuted, marginBottom:'6px',
-      fontFamily:"'DM Sans', system-ui, sans-serif",
-    }}>{children}</label>
-  )
 }
 
 // ─── Section label ────────────────────────────────────────────────────────────
@@ -244,46 +184,6 @@ function MemberProfileModal({ member, onClose, isMobile }) {
   )
 }
 
-// ─── Modal Shell (form & import) ──────────────────────────────────────────────
-function ModalShell({ title, onClose, isMobile, children }) {
-  const overlayStyle = {
-    position:'fixed', inset:0, background:'rgba(0,0,0,0.5)',
-    display:'flex', zIndex:100, backdropFilter:'blur(2px)',
-    ...(isMobile
-      ? { alignItems:'flex-end', justifyContent:'center' }
-      : { alignItems:'center', justifyContent:'center', padding:'24px' }),
-  }
-  const panelStyle = {
-    background:C.surface, width:'100%', overflowY:'auto',
-    ...(isMobile
-      ? { borderRadius:'24px 24px 0 0', maxHeight:'92vh', boxShadow:'0 -8px 40px rgba(0,0,0,0.18)', paddingBottom:'env(safe-area-inset-bottom,16px)' }
-      : { borderRadius:'20px', maxWidth:'500px', maxHeight:'88vh', boxShadow:'0 24px 64px rgba(0,0,0,0.2)' }),
-  }
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={panelStyle} onClick={e => e.stopPropagation()}>
-        {isMobile && (
-          <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 4px' }}>
-            <div style={{ width:'40px', height:'4px', borderRadius:'99px', background:C.border }} />
-          </div>
-        )}
-        <div style={{ padding: isMobile ? '8px 20px 16px' : '24px 24px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h2 style={{ margin:0, fontSize:isMobile?'20px':'22px', fontWeight:700, color:C.text, fontFamily:"'Lora', 'Georgia', 'Times New Roman', serif" }}>
-            {title}
-          </h2>
-          <button onClick={onClose} style={{ width:'32px', height:'32px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <X size={15} style={{ color:C.textMid }} />
-          </button>
-        </div>
-        <div style={{ height:'1px', background:C.border }} />
-        <div style={{ padding: isMobile ? '16px 20px 8px' : '20px 24px 24px' }}>
-          {children}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Shared button styles ───────────────────────────────────────────────────
 const btnBase = {
   display:'inline-flex', alignItems:'center', justifyContent:'center',
@@ -311,30 +211,18 @@ export default function MemberManager() {
   const [editingId,       setEditingId]       = useState(null)
   const [importPreview,   setImportPreview]   = useState([])
   const [importErrors,    setImportErrors]    = useState([])
-  const [savedMessage,    setSavedMessage]    = useState(null)
   const [selectedMember,  setSelectedMember]  = useState(null)
-  const [isMobile,        setIsMobile]        = useState(false)
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const isMobile = useIsMobile()
+  const { toast, showToast } = useToast()
 
   const handleLogout = async () => { await signOut(); navigate('/login') }
-
-  const showSaved = (text, isError=false) => {
-    setSavedMessage({ text, isError })
-    setTimeout(() => setSavedMessage(null), 2500)
-  }
 
   const loadMembers = async () => {
     setLoading(true)
     const { data, error } = await supabase.from('members').select('*').order('name', { ascending:true })
-    if (error) { showSaved('Error loading members', true); console.error(error) }
+    if (error) { showToast('Error loading members', true); console.error(error) }
     else if (data) setMembers(data)
     setLoading(false)
   }
@@ -388,10 +276,10 @@ export default function MemberManager() {
     }
     if (editingId !== null) {
       const { error } = await supabase.from('members').update(payload).eq('id', editingId)
-      error ? showSaved('Error updating member', true) : (showSaved('Member updated'), loadMembers())
+      error ? showToast('Error updating member', true) : (showToast('Member updated'), loadMembers())
     } else {
       const { error } = await supabase.from('members').insert(payload)
-      error ? showSaved('Error adding member', true) : (showSaved('Member added'), loadMembers())
+      error ? showToast('Error adding member', true) : (showToast('Member added'), loadMembers())
     }
     closeForm()
   }
@@ -410,7 +298,7 @@ export default function MemberManager() {
   const handleDelete = async (id, name) => {
     if (window.confirm(`Remove "${name}" from the directory?`)) {
       const { error } = await supabase.from('members').delete().eq('id', id)
-      error ? showSaved('Error deleting member', true) : (showSaved('Member removed'), loadMembers())
+      error ? showToast('Error deleting member', true) : (showToast('Member removed'), loadMembers())
     }
   }
 
@@ -426,7 +314,7 @@ export default function MemberManager() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href=url; a.download=`church_members_${new Date().toISOString().split('T')[0]}.csv`; a.click()
-    URL.revokeObjectURL(url); showSaved('Exported successfully')
+    URL.revokeObjectURL(url); showToast('Exported successfully')
   }
 
   const downloadTemplate = () => {
@@ -486,7 +374,7 @@ export default function MemberManager() {
 
   const confirmImport = async () => {
     const { error } = await supabase.from('members').insert(importPreview)
-    error ? showSaved('Error importing members', true) : (showSaved(`${importPreview.length} members imported`), loadMembers())
+    error ? showToast('Error importing members', true) : (showToast(`${importPreview.length} members imported`), loadMembers())
     setIsBulkImportOpen(false); setImportPreview([]); setImportErrors([])
     if (fileInputRef.current) fileInputRef.current.value=''
   }
@@ -495,13 +383,7 @@ export default function MemberManager() {
   const maritalVariant = s => s==='Married'?'married':s==='Widowed'?'widowed':s==='Divorced'?'divorced':'single'
   const ageVariant     = a => a<=12?'child':a<=25?'youth':'adult'
 
-  if (loading) return (
-    <div style={{ minHeight:'100vh', background:C.bg, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'14px' }}>
-      <div style={{ width:'34px', height:'34px', borderRadius:'50%', border:`3px solid ${C.border}`, borderTopColor:C.accent, animation:'spin 0.8s linear infinite' }} />
-      <p style={{ color:C.textMuted, fontSize:'13px', margin:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Loading directory…</p>
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
-    </div>
-  )
+  if (loading) return <LoadingSpinner accentColor="#C4A88B"><p style={{ color:'#9A8B80', fontSize:'13px', margin:0, fontFamily:"'DM Sans', system-ui, sans-serif" }}>Loading directory…</p></LoadingSpinner>
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
@@ -510,21 +392,7 @@ export default function MemberManager() {
       <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
       {/* ── Toast */}
-      {savedMessage && (
-        <div style={{ position:'fixed', top:'76px', left:'50%', transform:'translateX(-50%)', zIndex:200, animation:'slideDown 0.2s ease-out', pointerEvents:'none' }}>
-          <div style={{
-            display:'flex', alignItems:'center', gap:'7px',
-            padding:'9px 18px', borderRadius:'99px',
-            background: savedMessage.isError ? '#DC2626' : C.text,
-            color:'#fff', fontSize:'13px', fontWeight:600,
-            fontFamily:"'DM Sans', system-ui, sans-serif",
-            boxShadow:'0 4px 20px rgba(0,0,0,0.2)', whiteSpace:'nowrap',
-          }}>
-            {savedMessage.isError ? <AlertCircle size={14} /> : <CheckCircle size={14} />}
-            {savedMessage.text}
-          </div>
-        </div>
-      )}
+      {toast && <Toast message={toast.text} isError={toast.isError} />}
 
       {/* Profile modal */}
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} isMobile={isMobile} />}
@@ -851,8 +719,7 @@ export default function MemberManager() {
       </div>
 
       {/* ── Add / Edit Modal (unchanged) */}
-      {isFormOpen && (
-        <ModalShell title={editingId ? 'Edit Member' : 'New Member'} onClose={closeForm} isMobile={isMobile}>
+        <Modal isOpen={isFormOpen} onClose={closeForm} title={editingId ? 'Edit Member' : 'New Member'} isMobile={isMobile}>
           <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             <div>
               <FieldLabel>Full Name *</FieldLabel>
@@ -934,12 +801,10 @@ export default function MemberManager() {
               <button type="submit" style={btnPrimaryFull}>{editingId ? 'Update' : 'Add Member'}</button>
             </div>
           </form>
-        </ModalShell>
-      )}
+        </Modal>
 
       {/* ── Bulk Import Modal (unchanged) */}
-      {isBulkImportOpen && (
-        <ModalShell title="Bulk Import" onClose={closeImport} isMobile={isMobile}>
+        <Modal isOpen={isBulkImportOpen} onClose={closeImport} title="Bulk Import" isMobile={isMobile}>
           <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             {[
               { n:1, title:'Download the template', sub:'Fill in with member data. Dates in DD/MM/YYYY format.', btn: <button onClick={downloadTemplate} style={{ ...btnPrimary, fontSize:'13px', padding:'8px 16px' }}><Download size={13} />Download Template</button> },
@@ -993,8 +858,7 @@ export default function MemberManager() {
               </div>
             )}
           </div>
-        </ModalShell>
-      )}
+        </Modal>
 
       <style>{`
         .mm-input {
