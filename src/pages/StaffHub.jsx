@@ -6,7 +6,9 @@ import {
   CalendarDays, DollarSign, Music2, ChevronRight
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { fetchUpcomingEvents } from '../services/events'
+import { fetchMembers } from '../services/members'
+import { fetchRenewals } from '../services/finance'
 import useIsMobile from '../hooks/useIsMobile'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -167,14 +169,18 @@ export default function StaffHub() {
 
   useEffect(() => {
     const load = async () => {
-      const today = new Date().toISOString().split('T')[0]
-      const year  = new Date().getFullYear()
-      const [{ count: ev }, { count: total }, { count: paid }] = await Promise.all([
-        supabase.from('events').select('*', { count: 'exact', head: true }).gte('date', today),
-        supabase.from('members').select('*', { count: 'exact', head: true }),
-        supabase.from('membership_renewals').select('*', { count: 'exact', head: true }).eq('renewal_year', year),
-      ])
-      setStats({ upcomingEvents: ev || 0, pendingRenewals: Math.max(0, (total || 0) - (paid || 0)) })
+      const year = new Date().getFullYear()
+      try {
+        const [events, members, renewals] = await Promise.all([
+          fetchUpcomingEvents(),
+          fetchMembers(),
+          fetchRenewals(),
+        ])
+        const upcomingEvents = events?.length || 0
+        const totalMembers = members?.length || 0
+        const paidRenewals = renewals?.filter(r => r.renewal_year === year)?.length || 0
+        setStats({ upcomingEvents, pendingRenewals: Math.max(0, totalMembers - paidRenewals) })
+      } catch (err) { console.error(err) }
     }
     load()
   }, [])

@@ -8,7 +8,8 @@ import {
   Link, MoveUp, MoveDown
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { fetchVerseLibrary, fetchActiveVerse, fetchVerseByReference, createVerse, deactivateAllVerses, activateVerse as activateVerseService, deleteVerse as removeVerseFromDB, fetchCarouselItems, createCarouselItem, updateCarouselItem, deleteCarouselItem, toggleCarouselItem, updateCarouselOrder, fetchRoster, updateRoster } from '../services/content'
+import { fetchUpcomingEvents, createEvent, updateEvent, deleteEvent } from '../services/events'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Modal from '../components/ui/Modal'
 import FormLabel from '../components/ui/FormLabel'
@@ -95,18 +96,20 @@ export default function ContentManager() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [vLib, vActive, evts, rst, ann] = await Promise.all([
-      supabase.from('verse_library').select('*').order('created_at', { ascending: false }),
-      supabase.from('verse_library').select('*').eq('is_active', true).maybeSingle(),
-      supabase.from('events').select('*').gte('date', new Date().toISOString().split('T')[0]).order('date').order('time'),
-      supabase.from('roster').select('*').order('week_start').limit(4),
-      supabase.from('carousel_items').select('*').order('display_order').order('created_at'),
-    ])
-    if (!vLib.error)    setVerseLib(vLib.data || [])
-    if (!vActive.error && vActive.data) setActiveVerse({ id: vActive.data.id, reference: vActive.data.reference, text: vActive.data.text, theme: vActive.data.theme || '' })
-    if (!evts.error)    setEvents((evts.data || []).map(e => ({ id: e.id, date: e.date, titleEn: e.title_en, time: e.time, descriptionEn: e.description_en, location: e.location||'', pic: e.pic||'' })))
-    if (!rst.error)     setRoster((rst.data || []).map(w => ({ id: w.id, weekStart: w.week_start, leader: w.leader||'', pianist: w.pianist||'', reader: w.reader||'' })))
-    if (!ann.error)     setAnnounces(ann.data || [])
+    try {
+      const [vLib, vActive, evts, rst, ann] = await Promise.all([
+        fetchVerseLibrary(),
+        fetchActiveVerse(),
+        fetchUpcomingEvents(),
+        fetchRoster(4),
+        fetchCarouselItems(),
+      ])
+      setVerseLib(vLib || [])
+      if (vActive) setActiveVerse({ id: vActive.id, reference: vActive.reference, text: vActive.text, theme: vActive.theme || '' })
+      setEvents((evts || []).map(e => ({ id: e.id, date: e.date, titleEn: e.title_en, time: e.time, descriptionEn: e.description_en, location: e.location||'', pic: e.pic||'' })))
+      setRoster((rst || []).map(w => ({ id: w.id, weekStart: w.week_start, leader: w.leader||'', pianist: w.pianist||'', reader: w.reader||'' })))
+      setAnnounces(ann || [])
+    } catch (err) { console.error(err) }
     setLoading(false)
   }, [])
 
@@ -115,24 +118,25 @@ export default function ContentManager() {
   // ─── Verse ──────────────────────────────────────────────────────────────────
   const saveVerse = async () => {
     if (!newVerse.reference || !newVerse.text) { msg('Fill in reference and text', true); return }
-    const { data: ex } = await supabase.from('verse_library').select('id').eq('reference', newVerse.reference).maybeSingle()
-    if (ex) { msg('Reference already exists', true); return }
-    const { error } = await supabase.from('verse_library').insert({ ...newVerse, is_active: false })
-    if (!error) { msg('Verse added'); setNewVerse({ reference:'', text:'', theme:'' }); setShowAddVerse(false); loadAll() }
-    else msg('Error saving', true)
+    try {
+      const ex = await fetchVerseByReference(newVerse.reference)
+      if (ex) { msg('Reference already exists', true); return }
+      await createVerse(newVerse)
+      msg('Verse added'); setNewVerse({ reference:'', text:'', theme:'' }); setShowAddVerse(false); loadAll()
+    } catch { msg('Error saving', true) }
   }
 
   const activateVerse = async id => {
-    await supabase.from('verse_library').update({ is_active: false }).eq('is_active', true)
-    const { error } = await supabase.from('verse_library').update({ is_active: true }).eq('id', id)
-    if (!error) { msg('Verse activated'); setSelectedVerse(null); loadAll() }
-    else msg('Error activating', true)
+    try {
+      await deactivateAllVerses()
+      await activateVerseService(id)
+      msg('Verse activated'); setSelectedVerse(null); loadAll()
+    } catch { msg('Error activating', true) }
   }
 
   const deleteVerse = (id, ref) => confirmDelete(`Delete "${ref}"?`, async () => {
-    const { error } = await supabase.from('verse_library').delete().eq('id', id)
-    if (!error) { msg('Verse deleted'); if (selectedVerse?.id === id) setSelectedVerse(null); loadAll() }
-    else msg('Error deleting', true)
+    try { await removeVerseFromDB(id); msg('Verse deleted'); if (selectedVerse?.id === id) setSelectedVerse(null); loadAll() }
+    catch { msg('Error deleting', true) }
   })
 
   const exportCSV = () => {
@@ -154,7 +158,7 @@ export default function ContentManager() {
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue
         const r = lines[i].split(',').map(c => c.replace(/^"|"$/g,'').trim())
-        if (r[ri] && r[ti]) { const { error } = await supabase.from('verse_library').insert({ reference: r[ri], text: r[ti], theme: thi>=0 ? r[thi] : '', is_active: false }); error ? err++ : ok++ }
+        if (r[ri] && r[ti]) { try { await createVerse({ reference: r[ri], text: r[ti], theme: thi>=0 ? r[thi] : '' }); ok++ } catch { err++ } }
       }
       msg(`Imported ${ok}, ${err} errors`); loadAll()
     }
@@ -168,19 +172,19 @@ export default function ContentManager() {
   const saveEvt = async e => {
     e.preventDefault()
     const p = { date: evtForm.date, title_en: evtForm.titleEn, time: evtForm.time, description_en: evtForm.descriptionEn, location: evtForm.location, pic: evtForm.pic }
-    const { error } = editEvt ? await supabase.from('events').update(p).eq('id', editEvt.id) : await supabase.from('events').insert(p)
-    if (!error) { msg(editEvt ? 'Event updated' : 'Event added'); setEvtOpen(false); loadAll() }
-    else msg('Error saving event', true)
+    try {
+      if (editEvt) await updateEvent(editEvt.id, p); else await createEvent(p)
+      msg(editEvt ? 'Event updated' : 'Event added'); setEvtOpen(false); loadAll()
+    } catch { msg('Error saving event', true) }
   }
-  const delEvt = id => confirmDelete('Delete this event?', async () => { await supabase.from('events').delete().eq('id', id); msg('Deleted'); loadAll() })
+  const delEvt = id => confirmDelete('Delete this event?', async () => { try { await deleteEvent(id); msg('Deleted'); loadAll() } catch { msg('Error deleting', true) } })
 
   // ─── Roster ─────────────────────────────────────────────────────────────────
   const openRst = w => { setEditRst(w); setRstForm(w); setRstOpen(true) }
   const saveRst = async e => {
     e.preventDefault()
-    const { error } = await supabase.from('roster').update({ week_start: rstForm.weekStart, leader: rstForm.leader, pianist: rstForm.pianist, reader: rstForm.reader }).eq('id', editRst.id)
-    if (!error) { msg('Roster updated'); setRstOpen(false); loadAll() }
-    else msg('Error saving roster', true)
+    try { await updateRoster(editRst.id, { week_start: rstForm.weekStart, leader: rstForm.leader, pianist: rstForm.pianist, reader: rstForm.reader }); msg('Roster updated'); setRstOpen(false); loadAll() }
+    catch { msg('Error saving roster', true) }
   }
 
   // ─── Announcements ──────────────────────────────────────────────────────────
@@ -188,19 +192,20 @@ export default function ContentManager() {
   const saveAnn = async e => {
     e.preventDefault()
     const p = { ...annForm, image_url: annForm.image_url||null, link_url: annForm.link_url||null, updated_at: new Date() }
-    const { error } = editAnn ? await supabase.from('carousel_items').update(p).eq('id', editAnn.id) : await supabase.from('carousel_items').insert(p)
-    if (!error) { msg(editAnn ? 'Updated' : 'Added'); setAnnOpen(false); loadAll() }
-    else msg('Error saving', true)
+    try {
+      if (editAnn) await updateCarouselItem(editAnn.id, p); else await createCarouselItem(p)
+      msg(editAnn ? 'Updated' : 'Added'); setAnnOpen(false); loadAll()
+    } catch { msg('Error saving', true) }
   }
-  const delAnn = id => confirmDelete('Delete this announcement?', async () => { await supabase.from('carousel_items').delete().eq('id', id); msg('Deleted'); loadAll() })
-  const toggleAnn = async (id, cur) => { await supabase.from('carousel_items').update({ is_active: !cur, updated_at: new Date() }).eq('id', id); msg(`${!cur ? 'Activated' : 'Deactivated'}`); loadAll() }
+  const delAnn = id => confirmDelete('Delete this announcement?', async () => { try { await deleteCarouselItem(id); msg('Deleted'); loadAll() } catch { msg('Error deleting', true) } })
+  const toggleAnn = async (id, cur) => { try { await toggleCarouselItem(id, cur); msg(`${!cur ? 'Activated' : 'Deactivated'}`); loadAll() } catch { msg('Error toggling', true) } }
   const moveAnn = async (id, dir) => {
     const idx = announces.findIndex(a => a.id === id)
     if ((dir==='up' && idx===0) || (dir==='down' && idx===announces.length-1)) return
     const swap = dir==='up' ? idx-1 : idx+1
     const arr = [...announces]
     const tmp = arr[idx].display_order; arr[idx].display_order = arr[swap].display_order; arr[swap].display_order = tmp
-    await Promise.all([supabase.from('carousel_items').update({ display_order: arr[idx].display_order }).eq('id', arr[idx].id), supabase.from('carousel_items').update({ display_order: arr[swap].display_order }).eq('id', arr[swap].id)])
+    await Promise.all([updateCarouselOrder(arr[idx].id, arr[idx].display_order), updateCarouselOrder(arr[swap].id, arr[swap].display_order)])
     loadAll()
   }
 

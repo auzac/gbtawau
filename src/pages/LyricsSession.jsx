@@ -1,7 +1,7 @@
 // src/pages/LyricsSession.jsx
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { fetchSongs, fetchSongsByIds, fetchSessionByCode, fetchActiveSessions, checkSessionCode, createSession, createSessionSongs, fetchSessionSongIds } from '../services/lyrics'
 import {
   Search, Copy, CheckCircle, Music2, LogIn,
   ChevronLeft, ChevronRight, Plus, RefreshCw, X, Clock
@@ -39,7 +39,7 @@ import PillButton from '../components/ui/PillButton'
 const generateCode = async () => {
   for (let i = 0; i < 10; i++) {
     const code = Math.floor(1000 + Math.random() * 9000).toString()
-    const { data } = await supabase.from('public_sessions').select('session_code').eq('session_code', code).maybeSingle()
+    const data = await checkSessionCode(code)
     if (!data) return code
   }
   return Math.floor(1000 + Math.random() * 9000).toString()
@@ -82,8 +82,7 @@ export default function LyricsSession() {
 
   // ── Load songs ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    supabase.from('songs').select('id, title, lyrics').order('title')
-      .then(({ data, error }) => { if (!error) setSongs(data || []); setSongsLoading(false) })
+    fetchSongs().then(data => { setSongs(data || []); setSongsLoading(false) }).catch(() => setSongsLoading(false))
   }, [])
 
   // ── Auto-join from URL ──────────────────────────────────────────────────────
@@ -95,13 +94,10 @@ export default function LyricsSession() {
   // ── Load active sessions ────────────────────────────────────────────────────
   const refreshSessions = useCallback(async () => {
     setSessionsLoading(true)
-    const { data } = await supabase
-      .from('public_sessions')
-      .select('session_code, expires_at, created_at')
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-      .order('created_at', { ascending: false })
-      .limit(10)
-    setActiveSessions(data || [])
+    try {
+      const data = await fetchActiveSessions()
+      setActiveSessions(data || [])
+    } catch { setActiveSessions([]) }
     setSessionsLoading(false)
   }, [])
 
@@ -113,15 +109,14 @@ export default function LyricsSession() {
     if (!code) return
     setSessionLoading(true); setError(''); setSessionData(null)
     try {
-      const { data: sess, error: sErr } = await supabase
-        .from('public_sessions').select('*').eq('session_code', code).maybeSingle()
-      if (sErr || !sess)  { setError('Session not found'); return }
+      const sess = await fetchSessionByCode(code)
+      if (!sess)  { setError('Session not found'); return }
       if (sess.expires_at && new Date(sess.expires_at) < new Date()) { setError('This session has expired'); return }
 
-      const { data: links } = await supabase.from('session_songs').select('song_id').eq('session_id', sess.id)
+      const links = await fetchSessionSongIds(sess.id)
       if (!links?.length) { setSessionData({ ...sess, songs: [] }); return }
 
-      const { data: songData } = await supabase.from('songs').select('id, title, lyrics').in('id', links.map(l => l.song_id))
+      const songData = await fetchSongsByIds(links.map(l => l.song_id))
       setSessionData({ ...sess, songs: songData || [] })
       setActiveSongIdx(0)
     } catch { setError('Failed to load session') }
@@ -140,17 +135,14 @@ export default function LyricsSession() {
     setIsCreating(true); setError('')
     try {
       const expiresAt = new Date(); expiresAt.setHours(expiresAt.getHours() + expiryHours)
-      const { data: sess, error: sErr } = await supabase
-        .from('public_sessions').insert({ session_code: createCode, expires_at: expiresAt.toISOString() }).select().single()
-      if (sErr) {
-        if (sErr.code === '23505') { setError('Code taken — try again'); setCreateCode(await generateCode()) }
-        else throw sErr
-        return
-      }
-      await supabase.from('session_songs').insert(Array.from(selectedIds).map(id => ({ session_id: sess.id, song_id: id })))
+      const sess = await createSession({ sessionCode: createCode, expiresAt: expiresAt.toISOString() })
+      await createSessionSongs(Array.from(selectedIds).map(id => ({ session_id: sess.id, song_id: id })))
       setShowCreate(false)
       navigate(`/lyrics/join/${createCode}`)
-    } catch { setError('Failed to create session') }
+    } catch (err) {
+      if (err?.code === '23505') { setError('Code taken — try again'); setCreateCode(await generateCode()) }
+      else setError('Failed to create session')
+    }
     finally { setIsCreating(false) }
   }
 

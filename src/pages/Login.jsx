@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, ArrowLeft } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { signIn } from '../services/auth'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -16,16 +16,12 @@ function Login() {
     setError('')
     setIsLoading(true)
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (signInError) {
+    try {
+      await signIn(email, password)
+      navigate('/staff')
+    } catch (signInError) {
       setError(signInError.message)
       setIsLoading(false)
-    } else {
-      navigate('/staff')
     }
   }
 

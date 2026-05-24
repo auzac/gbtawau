@@ -8,7 +8,8 @@ import {
   X, Calendar, User, MapPinned, ArrowLeft, Users, ChevronDown,
   Clock, MapPin, Phone, ChevronLeft, ChevronRight, Heart, ArrowRight
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { fetchActiveVerse, fetchActiveCarouselItems, fetchAllRosters } from '../services/content'
+import { fetchUpcomingEvents } from '../services/events'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useLocale } from '../contexts/LocaleContext'
 import '@splidejs/splide/css'
@@ -108,43 +109,29 @@ export default function LandingPage() {
   }
 
   const loadActiveVerse = async () => {
-    const { data, error } = await supabase
-      .from('verse_library')
-      .select('*')
-      .eq('is_active', true)
-      .maybeSingle()
-    if (!error && data) setVerse({ reference: data.reference, text: data.text, theme: data.theme || '' })
+    try {
+      const data = await fetchActiveVerse()
+      if (data) setVerse({ reference: data.reference, text: data.text, theme: data.theme || '' })
+    } catch (err) { console.error(err) }
   }
 
   const loadUpcomingEvents = async () => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .gte('date', new Date().toISOString().split('T')[0])
-      .order('date', { ascending: true })
-      .order('time', { ascending: true })
-    if (!error && data) setEvents(data)
-    else setEvents([])
+    try {
+      const data = await fetchUpcomingEvents()
+      setEvents(data || [])
+    } catch (err) { setEvents([]); console.error(err) }
   }
 
   const loadCarouselItems = async () => {
-    const { data, error } = await supabase
-      .from('carousel_items')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: true })
-    if (!error && data && data.length > 0) setCarouselItems(data)
-    else setCarouselItems([])
+    try {
+      const data = await fetchActiveCarouselItems()
+      setCarouselItems(data || [])
+    } catch (err) { setCarouselItems([]); console.error(err) }
   }
 
   const loadRosters = async () => {
-    const { data, error } = await supabase
-      .from('roster')
-      .select('*')
-      .order('week_start', { ascending: true })
-
-    if (!error && data) {
+    try {
+      const data = await fetchAllRosters()
       setRosters(data)
       const monthsSet = new Set()
       const map = {}
@@ -179,7 +166,7 @@ export default function LandingPage() {
       setAvailableMonths(monthsArray)
       setRosterMap(map)
       if (monthsArray.length > 0) setSelectedMonth(monthsArray[0].value)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const getRosterForWeek = (weekNumber) => {

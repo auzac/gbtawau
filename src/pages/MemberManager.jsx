@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { fetchMembers, createMember, updateMember, deleteMember, bulkImportMembers } from '../services/members'
 import {
   X, Phone, Calendar, MapPin, Heart, Cross, AlertCircle,
   ArrowLeft, LogOut, Plus, Upload, Download, Search,
@@ -221,9 +221,10 @@ export default function MemberManager() {
 
   const loadMembers = async () => {
     setLoading(true)
-    const { data, error } = await supabase.from('members').select('*').order('name', { ascending:true })
-    if (error) { showToast('Error loading members', true); console.error(error) }
-    else if (data) setMembers(data)
+    try {
+      const data = await fetchMembers()
+      setMembers(data)
+    } catch (err) { showToast('Error loading members', true); console.error(err) }
     setLoading(false)
   }
   useEffect(() => { loadMembers() }, [])
@@ -275,11 +276,11 @@ export default function MemberManager() {
       updated_at:new Date()
     }
     if (editingId !== null) {
-      const { error } = await supabase.from('members').update(payload).eq('id', editingId)
-      error ? showToast('Error updating member', true) : (showToast('Member updated'), loadMembers())
+      try { await updateMember(editingId, payload); showToast('Member updated'); loadMembers() }
+      catch { showToast('Error updating member', true) }
     } else {
-      const { error } = await supabase.from('members').insert(payload)
-      error ? showToast('Error adding member', true) : (showToast('Member added'), loadMembers())
+      try { await createMember(payload); showToast('Member added'); loadMembers() }
+      catch { showToast('Error adding member', true) }
     }
     closeForm()
   }
@@ -297,8 +298,8 @@ export default function MemberManager() {
 
   const handleDelete = async (id, name) => {
     if (window.confirm(`Remove "${name}" from the directory?`)) {
-      const { error } = await supabase.from('members').delete().eq('id', id)
-      error ? showToast('Error deleting member', true) : (showToast('Member removed'), loadMembers())
+      try { await deleteMember(id); showToast('Member removed'); loadMembers() }
+      catch { showToast('Error deleting member', true) }
     }
   }
 
@@ -373,8 +374,8 @@ export default function MemberManager() {
   }
 
   const confirmImport = async () => {
-    const { error } = await supabase.from('members').insert(importPreview)
-    error ? showToast('Error importing members', true) : (showToast(`${importPreview.length} members imported`), loadMembers())
+    try { await bulkImportMembers(importPreview); showToast(`${importPreview.length} members imported`); loadMembers() }
+    catch { showToast('Error importing members', true) }
     setIsBulkImportOpen(false); setImportPreview([]); setImportErrors([])
     if (fileInputRef.current) fileInputRef.current.value=''
   }

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { fetchMembersForFinance, fetchRenewals, createRenewal } from '../services/finance'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import Modal from '../components/ui/Modal'
 import StatCard from '../components/ui/StatCard'
@@ -118,12 +118,11 @@ export default function FinanceManager() {
 
   const loadData = async () => {
     setLoading(true)
-    const [{ data: md, error: me }, { data: rd, error: re }] = await Promise.all([
-      supabase.from('members').select('id, name, contact_number, address').order('name'),
-      supabase.from('membership_renewals').select('*').order('payment_date', { ascending: false }),
-    ])
-    if (!me) setMembers(md || [])
-    if (!re) setRenewals(rd || [])
+    try {
+      const [md, rd] = await Promise.all([fetchMembersForFinance(), fetchRenewals()])
+      setMembers(md || [])
+      setRenewals(rd || [])
+    } catch (err) { console.error(err) }
     setLoading(false)
   }
 
@@ -167,20 +166,18 @@ export default function FinanceManager() {
     e.preventDefault()
     const amount = parseFloat(paymentForm.amount)
     if (isNaN(amount) || amount <= 0) { showSaved('Enter a valid amount', true); return }
-    const { error } = await supabase.from('membership_renewals').insert({
-      member_id: selectedMember.id, renewal_year: selectedYear,
-      amount_paid: amount, payment_date: paymentForm.paymentDate,
-      payment_method: paymentForm.paymentMethod,
-      receipt_number: paymentForm.receiptNumber || null,
-      notes: paymentForm.notes || null,
-    })
-    if (error) {
-      showSaved(error.code === '23505' ? `Already recorded for ${selectedYear}` : 'Error recording payment', true)
-    } else {
+    try {
+      await createRenewal({
+        member_id: selectedMember.id, renewal_year: selectedYear,
+        amount_paid: amount, payment_date: paymentForm.paymentDate,
+        payment_method: paymentForm.paymentMethod,
+        receipt_number: paymentForm.receiptNumber || null,
+        notes: paymentForm.notes || null,
+      })
       showSaved(`Renewal recorded — ${selectedMember.name}`)
       await loadData()
       setIsPaymentModalOpen(false)
-    }
+    } catch { showSaved('Error recording payment', true) }
   }
 
   const exportCSV = () => {
