@@ -14,6 +14,7 @@ import HowWeDoChurch from './HowWeDoChurch'
 import Footer from './Footer'
 import EventsModal from './EventsModal'
 import RosterModal from './RosterModal'
+import FeedbackForm from './FeedbackForm'
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────────
 
@@ -276,6 +277,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <FeedbackForm />
 
       <Footer t={t} onOpenEvents={openEventsModal} />
 
