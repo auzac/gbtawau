@@ -9,6 +9,7 @@ import StaffLayout from '../../components/layout/StaffLayout'
 import { fetchUpcomingEvents } from '../../services/events'
 import { fetchMembers } from '../../services/members'
 import { fetchRenewals } from '../../services/finance'
+import { fetchMemberRequests } from '../../services/memberRequests'
 import useIsMobile from '../../hooks/useIsMobile'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -34,6 +35,8 @@ const MODULES = [
     Icon: Users,
     path: '/staff/members',
     active: true,
+    badgeKey: 'pendingRequests',
+    badgeLabel: 'pending',
   },
   {
     id: 'content',
@@ -81,22 +84,24 @@ import { MobileCard, DesktopCard, SoonBadge } from './ModuleCard'
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function StaffHub() {
   const navigate  = useNavigate()
-  const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0 })
+  const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0, pendingRequests: 0 })
   const isMobile = useIsMobile()
 
   useEffect(() => {
     const load = async () => {
       const year = new Date().getFullYear()
       try {
-        const [events, members, renewals] = await Promise.all([
+        const [events, members, renewals, requests] = await Promise.all([
           fetchUpcomingEvents(),
           fetchMembers(),
           fetchRenewals(),
+          fetchMemberRequests(),
         ])
         const upcomingEvents = events?.length || 0
         const totalMembers = members?.length || 0
         const paidRenewals = renewals?.filter(r => r.renewal_year === year)?.length || 0
-        setStats({ upcomingEvents, pendingRenewals: Math.max(0, totalMembers - paidRenewals) })
+        const pendingRequests = (requests || []).filter(r => r.status === 'pending').length
+        setStats({ upcomingEvents, pendingRenewals: Math.max(0, totalMembers - paidRenewals), pendingRequests })
       } catch (err) { console.error(err) }
     }
     load()
