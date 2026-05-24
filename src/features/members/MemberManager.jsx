@@ -212,12 +212,12 @@ export default function MemberManager() {
             <div>
               <SectionLabel>Overview</SectionLabel>
               <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                <StatCard icon={Users}    label="Total Members" value={stats.total} dark />
-                <StatCard icon={BookOpen} label="Baptised"      value={stats.baptised}
+                <StatCard icon={<Users size={14} />}    label="Total Members" value={stats.total} dark />
+                <StatCard icon={<BookOpen size={14} />} label="Baptised"      value={stats.baptised}
                   sub={stats.total ? `${Math.round((stats.baptised/stats.total)*100)}% of total` : '—'} />
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                  <StatCard icon={Mars}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
-                  <StatCard icon={Venus} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
+                  <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
+                  <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
                 </div>
               </div>
             </div>
@@ -274,18 +274,18 @@ export default function MemberManager() {
             <section>
               <SectionLabel>Congregation Overview</SectionLabel>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'10px' }}>
-                <StatCard icon={Users}    label="Total Members" value={stats.total} dark />
-                <StatCard icon={BookOpen} label="Baptised"      value={stats.baptised} sub={stats.total?`${Math.round((stats.baptised/stats.total)*100)}%`:'—'} />
+                <StatCard icon={<Users size={14} />}    label="Total Members" value={stats.total} dark />
+                <StatCard icon={<BookOpen size={14} />} label="Baptised"      value={stats.baptised} sub={stats.total?`${Math.round((stats.baptised/stats.total)*100)}%`:'—'} />
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'10px' }}>
-                <StatCard icon={Mars}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
-                <StatCard icon={Venus} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
+                <StatCard icon={<Mars size={14} />}  label="Male"   value={stats.male}   sub={stats.total?`${Math.round((stats.male/stats.total)*100)}%`:'—'} />
+                <StatCard icon={<Venus size={14} />} label="Female" value={stats.female} sub={stats.total?`${Math.round((stats.female/stats.total)*100)}%`:'—'} />
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                <StatCard icon={Baby}  label="Children (0–12)" value={stats.children} />
-                <StatCard icon={Zap}   label="Youth (13–25)"   value={stats.youth} />
-                <StatCard icon={User}  label="Adults (26+)"    value={stats.adults} />
-                <StatCard icon={Skull} label="Deceased"         value={stats.deceased} />
+                <StatCard icon={<Baby size={14} />}  label="Children (0–12)" value={stats.children} />
+                <StatCard icon={<Zap size={14} />}   label="Youth (13–25)"   value={stats.youth} />
+                <StatCard icon={<User size={14} />}  label="Adults (26+)"    value={stats.adults} />
+                <StatCard icon={<Skull size={14} />} label="Deceased"         value={stats.deceased} />
               </div>
             </section>
           )}
