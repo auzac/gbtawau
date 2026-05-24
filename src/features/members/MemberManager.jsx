@@ -268,10 +268,10 @@ export default function MemberManager() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <UserCheck size={14} style={{ color: C.textMuted }} />
                   <div>
-                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: C.text, fontFamily: f.serif }}>
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: C.text, fontFamily: "'Lora', 'Georgia', serif" }}>
                       {view === 'requests' ? 'Viewing Requests' : 'Registrations'}
                     </p>
-                    <p style={{ margin: '1px 0 0', fontSize: '10px', color: C.textMuted, fontFamily: f.sans }}>
+                    <p style={{ margin: '1px 0 0', fontSize: '10px', color: C.textMuted, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                       {pendingRequests} pending
                     </p>
                   </div>
@@ -351,10 +351,10 @@ export default function MemberManager() {
                   <UserCheck size={16} color={view === 'requests' ? C.accentDark : C.textMuted} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: C.text, fontFamily: f.serif }}>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: C.text, fontFamily: "'Lora', 'Georgia', serif" }}>
                     Membership Requests
                   </p>
-                  <p style={{ margin: '1px 0 0', fontSize: '11px', color: C.textMuted, fontFamily: f.sans }}>
+                  <p style={{ margin: '1px 0 0', fontSize: '11px', color: C.textMuted, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                     {pendingRequests > 0 ? `${pendingRequests} pending review` : 'No pending requests'}
                   </p>
                 </div>
