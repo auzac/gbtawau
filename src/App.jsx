@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 
 import LandingPage from './features/public-home/LandingPage'
+import MembershipRegistration from './features/public-home/MembershipRegistration'
 import Login from './features/auth/Login'
 import StaffHub from './features/dashboard/StaffHub'
 import MemberManager from './features/members/MemberManager'
@@ -33,6 +34,7 @@ function AppRoutes() {
     <Routes>
       {/* Public Website */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/register" element={<MembershipRegistration />} />
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />

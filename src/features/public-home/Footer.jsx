@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { en: 'About',  bm: 'Tentang Kami',  href: '#about' },
   { en: 'Events', bm: 'Acara',         href: '#events', isModal: true },
   { en: 'Roster', bm: 'Petugas',       href: '#roster', isModal: true },
+  { en: 'Join',   bm: 'Daftar',        href: '/register' },
   { en: 'Lyrics', bm: 'Lirik',         href: '/lyrics' },
   { en: 'Staff',  bm: 'Kakitangan',    href: '/login',  isRouterLink: true },
 ]
