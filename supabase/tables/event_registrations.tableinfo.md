@@ -1,13 +1,13 @@
 # event_registrations
 
-Tracks public registrations for specific events.
+Tracks public registrations for special events (camps, conferences, one-off gatherings).
 
 ## Columns
 
 | Column | Type | Nullable | Default | Notes |
 |---|---|---|---|---|
 | id | uuid | no | gen_random_uuid() | Primary key |
-| event_id | uuid | no | — | FK → events(id) |
+| special_event_id | uuid | no | — | FK → special_events(id) |
 | name | text | no | — | Attendee full name |
 | email | text | no | — | Attendee email |
 | phone | text | yes | — | Optional contact number |
@@ -16,11 +16,11 @@ Tracks public registrations for specific events.
 
 ## Indexes
 
-- `idx_event_registrations_event_id` on `event_id` — for looking up who registered for an event
+- `idx_event_registrations_event` on `special_event_id`
 
 ## Relations
 
-- Many-to-one to `events` via `event_id`
+- Many-to-one to `special_events` via `special_event_id`
 
 ## Notes
 
