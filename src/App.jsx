@@ -3,32 +3,27 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 
-import LandingPage from './pages/LandingPage'
-import Login from './pages/Login'
-import StaffHub from './pages/StaffHub'
-import MemberManager from './pages/MemberManager'
-import ContentManager from './pages/ContentManager'
-import AdminTools from './pages/AdminTools'
-import FinanceManager from './pages/FinanceManager'
-import LyricsSession from './pages/LyricsSession'
-
-
-
-
-
+import LandingPage from './features/public-home/LandingPage'
+import Login from './features/auth/Login'
+import StaffHub from './features/dashboard/StaffHub'
+import MemberManager from './features/members/MemberManager'
+import ContentManager from './features/content/ContentManager'
+import AdminTools from './features/admin-tools/AdminTools'
+import FinanceManager from './features/finance/FinanceManager'
+import LyricsSession from './features/lyrics/LyricsSession'
 
 // Protected Route wrapper component
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
-  
+
   if (loading) {
     return <LoadingSpinner size="32px" thickness="2px" />
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />
   }
-  
+
   return children
 }
 
@@ -38,7 +33,6 @@ function AppRoutes() {
     <Routes>
       {/* Public Website */}
       <Route path="/" element={<LandingPage />} />
-      
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />
@@ -64,14 +58,12 @@ function AppRoutes() {
           <AdminTools />
         </ProtectedRoute>
       } />
-<Route path="/staff/finance" element={
-  <ProtectedRoute>
-    <FinanceManager />
-  </ProtectedRoute>
-} />
+      <Route path="/staff/finance" element={
+        <ProtectedRoute>
+          <FinanceManager />
+        </ProtectedRoute>
+      } />
       <Route path="/lyrics/*" element={<LyricsSession />} />
-
-
     </Routes>
   )
 }

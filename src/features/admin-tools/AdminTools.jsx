@@ -1,4 +1,4 @@
-// src/pages/AdminTools.jsx
+// src/features/admin-tools/AdminTools.jsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 

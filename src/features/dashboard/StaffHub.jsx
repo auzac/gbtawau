@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Users, FileText, ShieldCheck, LogOut,
-  CalendarDays, DollarSign, Music2, ChevronRight
+  Users, FileText, ShieldCheck,
+  CalendarDays, DollarSign, Music2
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { fetchUpcomingEvents } from '../services/events'
-import { fetchMembers } from '../services/members'
-import { fetchRenewals } from '../services/finance'
-import useIsMobile from '../hooks/useIsMobile'
+import StaffLayout from '../../components/layout/StaffLayout'
+import { fetchUpcomingEvents } from '../../services/events'
+import { fetchMembers } from '../../services/members'
+import { fetchRenewals } from '../../services/finance'
+import useIsMobile from '../../hooks/useIsMobile'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const C = {
@@ -74,96 +74,13 @@ const MODULES = [
 ]
 
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
-import { Badge } from '../components/ui/Badge'
+import { MobileCard, DesktopCard } from './ModuleCard'
 
-const SoonBadge = () => (
-  <span style={{ fontSize: '10px', fontWeight: 600, background: '#EDE8E2', color: '#9A8B80', borderRadius: '99px', padding: '2px 8px', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
-    Soon
-  </span>
-)
 
-// ─── Mobile card ──────────────────────────────────────────────────────────────
-function MobileCard({ mod, stats, onClick }) {
-  const { Icon, title, desc, active, badgeKey, badgeLabel } = mod
-  const [hov, setHov] = useState(false)
-  const badgeVal = badgeKey && stats[badgeKey] > 0 ? stats[badgeKey] : null
-
-  return (
-    <button
-      onClick={onClick} disabled={!active}
-      onMouseEnter={() => active && setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: '14px', textAlign: 'left', fontFamily: f.sans,
-        background: hov ? C.accentBg : active ? C.surface : '#F5F1EC',
-        border: `1.5px solid ${hov ? C.accentDark : C.border}`,
-        borderRadius: '18px', cursor: active ? 'pointer' : 'default',
-        opacity: active ? 1 : 0.55, transition: 'background 0.15s, border-color 0.15s', minHeight: 0,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: hov ? '#EFE0CC' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
-          <Icon size={17} strokeWidth={1.75} color={hov ? C.accentDark : C.textMid} />
-        </div>
-        {badgeVal ? <Badge>{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
-      </div>
-      <div>
-        <p style={{ margin: '0 0 3px', fontSize: '14px', fontWeight: 600, fontFamily: f.serif, color: C.text, lineHeight: 1.2 }}>{title}</p>
-        <p style={{ margin: 0, fontSize: '11px', color: C.textMuted, lineHeight: 1.4 }}>{desc}</p>
-      </div>
-      {active && (
-        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-          <ChevronRight size={15} color={hov ? C.accentDark : C.border} />
-        </div>
-      )}
-    </button>
-  )
-}
-
-// ─── Desktop card ─────────────────────────────────────────────────────────────
-function DesktopCard({ mod, stats, onClick }) {
-  const { Icon, title, desc, active, badgeKey, badgeLabel } = mod
-  const [hov, setHov] = useState(false)
-  const badgeVal = badgeKey && stats[badgeKey] > 0 ? stats[badgeKey] : null
-
-  return (
-    <button
-      onClick={onClick} disabled={!active}
-      onMouseEnter={() => active && setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: 'flex', flexDirection: 'column', padding: '24px', textAlign: 'left',
-        fontFamily: f.sans, background: hov ? C.accentBg : active ? C.surface : '#F8F5F1',
-        border: `1.5px solid ${hov ? C.accentDark : C.border}`,
-        borderRadius: '20px', cursor: active ? 'pointer' : 'default',
-        opacity: active ? 1 : 0.6, transition: 'background 0.15s, border-color 0.15s', gap: '18px',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: hov ? '#EFE0CC' : C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}>
-          <Icon size={21} strokeWidth={1.75} color={hov ? C.accentDark : C.textMid} />
-        </div>
-        {badgeVal ? <Badge>{badgeVal} {badgeLabel}</Badge> : !active ? <SoonBadge /> : null}
-      </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 500, fontFamily: f.serif, color: C.text, lineHeight: 1.2 }}>{title}</p>
-        <p style={{ margin: 0, fontSize: '13px', color: C.textMuted, lineHeight: 1.5 }}>{desc}</p>
-      </div>
-      {active && (
-        <div style={{ paddingTop: '14px', borderTop: `1px solid ${hov ? '#DFC0A0' : C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'border-color 0.15s' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: hov ? C.accentDark : C.textMuted, fontFamily: f.sans }}>Open module</span>
-          <ChevronRight size={15} color={hov ? C.accentDark : C.border} />
-        </div>
-      )}
-    </button>
-  )
-}
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function StaffHub() {
   const navigate  = useNavigate()
-  const { signOut } = useAuth()
   const [stats,    setStats]    = useState({ upcomingEvents: 0, pendingRenewals: 0 })
   const isMobile = useIsMobile()
 
@@ -185,7 +102,6 @@ export default function StaffHub() {
     load()
   }, [])
 
-  const handleLogout = async () => { await signOut(); navigate('/login') }
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const date     = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -195,20 +111,7 @@ export default function StaffHub() {
 
   // ── MOBILE ────────────────────────────────────────────────────────────────
   if (isMobile) return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: f.sans, display: 'flex', flexDirection: 'column' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <header style={{ background: C.surface, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ padding: '0 18px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.webp" alt="GBT" style={{ height: '26px', width: 'auto', objectFit: 'contain' }} />
-            <div style={{ width: '1px', height: '18px', background: C.border }} />
-            <span style={{ fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.textMuted }}>Staff Portal</span>
-          </div>
-          <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: f.sans }}>
-            <LogOut size={13} /> Sign out
-          </button>
-        </div>
-      </header>
+    <StaffLayout title="Staff Portal" hideBack>
 
       <main style={{ padding: '22px 16px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div>
@@ -246,13 +149,12 @@ export default function StaffHub() {
           GBT · Internal Staff System · Powered by Supabase
         </p>
       </main>
-    </div>
+    </StaffLayout>
   )
 
   // ── DESKTOP ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: f.sans, display: 'flex' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <StaffLayout title="Staff Portal" hideBack>
 
       {/* Sidebar */}
       <aside style={{ width: '272px', flexShrink: 0, background: C.text, minHeight: '100vh', position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', padding: '36px 28px', overflowY: 'auto' }}>
@@ -288,14 +190,6 @@ export default function StaffHub() {
 
         {/* Footer */}
         <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <button
-            onClick={handleLogout}
-            style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#5A4E48', background: 'none', border: 'none', cursor: 'pointer', fontFamily: f.sans, padding: 0 }}
-            onMouseEnter={e => e.currentTarget.style.color = '#C9A882'}
-            onMouseLeave={e => e.currentTarget.style.color = '#5A4E48'}
-          >
-            <LogOut size={14} /> Sign out
-          </button>
           <p style={{ margin: '20px 0 0', fontSize: '10px', letterSpacing: '0.05em', color: '#3A3230', lineHeight: 1.7 }}>
             GBT · Internal Staff System<br />Powered by Supabase
           </p>
@@ -341,6 +235,6 @@ export default function StaffHub() {
           <p style={{ margin: '6px 0 0', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#C0B4A8', fontFamily: f.sans }}>Jeremiah 29:11</p>
         </div>
       </div>
-    </div>
+    </StaffLayout>
   )
 }

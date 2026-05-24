@@ -1,24 +1,21 @@
-// src/pages/ContentManager.jsx
+// src/features/content/ContentManager.jsx
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft, LogOut, BookOpen, CalendarDays, Music, Save,
-  Plus, Pencil, Trash2, Search, X, CheckCircle, AlertCircle,
-  Download, Upload, MapPin, User, Megaphone, Image, Eye, EyeOff,
-  Link, MoveUp, MoveDown
-} from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { fetchVerseLibrary, fetchActiveVerse, fetchVerseByReference, createVerse, deactivateAllVerses, activateVerse as activateVerseService, deleteVerse as removeVerseFromDB, fetchCarouselItems, createCarouselItem, updateCarouselItem, deleteCarouselItem, toggleCarouselItem, updateCarouselOrder, fetchRoster, updateRoster } from '../services/content'
-import { fetchUpcomingEvents, createEvent, updateEvent, deleteEvent } from '../services/events'
-import LoadingSpinner from '../components/ui/LoadingSpinner'
-import Modal from '../components/ui/Modal'
-import FormLabel from '../components/ui/FormLabel'
-import Field from '../components/ui/Field'
-import IconButton from '../components/ui/IconButton'
-import PillButton from '../components/ui/PillButton'
-import Toast from '../components/ui/Toast'
-import useIsMobile from '../hooks/useIsMobile'
-import { useToast } from '../hooks/useToast'
+import { BookOpen, CalendarDays, Music, Megaphone } from 'lucide-react'
+import StaffLayout from '../../components/layout/StaffLayout'
+import { fetchVerseLibrary, fetchActiveVerse, fetchVerseByReference, createVerse, deactivateAllVerses, activateVerse as activateVerseService, deleteVerse as removeVerseFromDB, fetchCarouselItems, createCarouselItem, updateCarouselItem, deleteCarouselItem, toggleCarouselItem, updateCarouselOrder, fetchRoster, updateRoster } from '../../services/content'
+import { fetchUpcomingEvents, createEvent, updateEvent, deleteEvent } from '../../services/events'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import Modal from '../../components/ui/Modal'
+import Field from '../../components/ui/Field'
+import IconButton from '../../components/ui/IconButton'
+import PillButton from '../../components/ui/PillButton'
+import Toast from '../../components/ui/Toast'
+import useIsMobile from '../../hooks/useIsMobile'
+import { useToast } from '../../hooks/useToast'
+import VerseTab from './VerseTab'
+import EventsTab from './EventsTab'
+import RosterTab from './RosterTab'
+import AnnouncementsTab from './AnnouncementsTab'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const C = {
@@ -34,21 +31,13 @@ const inp = {
   borderRadius: '10px', fontSize: '14px', background: C.surface,
   color: C.text, outline: 'none', boxSizing: 'border-box', fontFamily: f.sans,
 }
-const th = { padding: '11px 16px', textAlign: 'left', fontSize: '10px', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: C.textMuted, fontFamily: f.sans, whiteSpace: 'nowrap' }
-const td = { padding: '13px 16px', fontSize: '13px', color: C.textMid, fontFamily: f.sans, verticalAlign: 'middle' }
-
-// ─── Micro components use shared imports (FormLabel, Field, IconButton, PillButton, Modal)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const to12 = t => { if (!t) return ''; const [h, m] = t.split(':'); const hr = +h; return `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}` }
 const to24 = t => { if (!t) return ''; if (/^\d{2}:\d{2}$/.test(t)) return t; const m = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i); if (!m) return t; let h = +m[1]; if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12; if (m[3].toUpperCase() === 'AM' && h === 12) h = 0; return `${String(h).padStart(2,'0')}:${m[2]}` }
 const confirmDelete = (msg, fn) => { if (window.confirm(msg)) fn() }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function ContentManager() {
-  const navigate = useNavigate()
-  const { signOut } = useAuth()
-
   const [tab,         setTab]         = useState('verse')
   const [loading,     setLoading]     = useState(true)
   const isMobile = useIsMobile()
@@ -91,8 +80,6 @@ export default function ContentManager() {
   const [annForm,    setAnnForm]    = useState({ title_en:'', title_bm:'', description_en:'', description_bm:'', image_url:'', link_url:'', display_order:0, is_active:true })
 
   // ─── Init ───────────────────────────────────────────────────────────────────
-  // msg(text, isError) — provided by useToast with 2200ms duration via showToast(text, isError, 2200)
-  // Usage preserved: msg('text') / msg('text', true) — showToast handles the same signature
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -142,7 +129,7 @@ export default function ContentManager() {
   const exportCSV = () => {
     const rows = verseLib.map(v => [`"${v.reference}"`, `"${v.text.replace(/"/g,'""')}"`, `"${v.theme||''}"`])
     const csv = [['Reference','Text','Theme'].join(','), ...rows.map(r => r.join(','))].join('\n')
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv' })), download: `verses_${Date.now()}.csv` })
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['﻿'+csv], { type:'text/csv' })), download: `verses_${Date.now()}.csv` })
     a.click(); msg('Exported')
   }
 
@@ -164,8 +151,6 @@ export default function ContentManager() {
     }
     reader.readAsText(file, 'UTF-8'); e.target.value = ''
   }
-
-  const selVerse = selectedVerse ? verseLib.find(v => v.id === selectedVerse) : null
 
   // ─── Events ─────────────────────────────────────────────────────────────────
   const openEvt = (evt = null) => { setEditEvt(evt); setEvtForm(evt ? { ...evt, time: to24(evt.time) } : { date:'', titleEn:'', time:'', descriptionEn:'', location:'', pic:'' }); setEvtOpen(true) }
@@ -238,39 +223,18 @@ export default function ContentManager() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:'100vh', background:C.bg }}>
-      <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
+    <StaffLayout title="Content Manager" subtitle="Website content administration" rightActions={
+      <>
+        {isMobile ? (
+          <IconButton onClick={() => setCalOpen(true)}><CalendarDays size={15} color={C.textMid}/></IconButton>
+        ) : (
+          <PillButton onClick={() => setCalOpen(true)} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
+            <CalendarDays size={13}/> Calendar
+          </PillButton>
+        )}
+      </>
+    }>
       {toast && <Toast message={toast.text} isError={toast.isError} />}
-
-      {/* Header */}
-      <header style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, zIndex:50 }}>
-        <div style={{ maxWidth:'1400px', margin:'0 auto', padding:'0 20px', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-            <IconButton onClick={() => navigate('/staff')}><ArrowLeft size={15} color={C.textMid}/></IconButton>
-            <div>
-              <h1 style={{ margin:0, fontSize:'17px', fontWeight:600, color:C.text, fontFamily:f.serif, lineHeight:1.2 }}>Content Manager</h1>
-              {!isMobile && <p style={{ margin:0, fontSize:'11px', color:C.textMuted, fontFamily:f.sans }}>Website content administration</p>}
-            </div>
-          </div>
-          <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
-            {isMobile ? (
-              <IconButton onClick={() => setCalOpen(true)}><CalendarDays size={15} color={C.textMid}/></IconButton>
-            ) : (
-              <PillButton onClick={() => setCalOpen(true)} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
-                <CalendarDays size={13}/> Calendar
-              </PillButton>
-            )}
-            {isMobile ? (
-              <IconButton onClick={signOut}><LogOut size={15} color={C.textMid}/></IconButton>
-            ) : (
-              <PillButton onClick={signOut} style={{ padding:'7px 14px', borderRadius:'99px', fontSize:'12px' }}>
-                <LogOut size={13}/> Sign out
-              </PillButton>
-            )}
-          </div>
-        </div>
-      </header>
 
       {/* Tab bar */}
       <div style={{ borderBottom:`1px solid ${C.border}`, background:C.bg }}>
@@ -291,224 +255,57 @@ export default function ContentManager() {
 
         {/* ══ VERSE TAB ══════════════════════════════════════════════════════ */}
         {tab === 'verse' && (
-          <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'24px' }}>
-            {/* Library panel */}
-            <div style={{ flex:1, minWidth:0, background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'20px' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px' }}>
-                <h2 style={{ margin:0, fontSize:'17px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Verse Library</h2>
-                <div style={{ display:'flex', gap:'6px' }}>
-                  <IconButton onClick={exportCSV}><Download size={14} color={C.textMid}/></IconButton>
-                  <label style={{ width:'32px', height:'32px', borderRadius:'50%', border:`1.5px solid ${C.border}`, background:C.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <Upload size={14} color={C.textMid}/>
-                    <input type="file" accept=".csv" onChange={importCSV} style={{ display:'none' }}/>
-                  </label>
-                </div>
-              </div>
-              {/* Search */}
-              <div style={{ position:'relative', marginBottom:'14px' }}>
-                <Search size={13} style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:C.textMuted, pointerEvents:'none' }}/>
-                <input type="text" placeholder="Search reference or text…" value={verseSearch} onChange={e => setVerseSearch(e.target.value)} style={{ ...inp, paddingLeft:'34px' }}/>
-              </div>
-              {/* List */}
-              <div style={{ maxHeight:'300px', overflowY:'auto', marginBottom:'14px' }}>
-                {verseLib.filter(v => v.reference.toLowerCase().includes(verseSearch.toLowerCase()) || v.text.toLowerCase().includes(verseSearch.toLowerCase())).map(v => (
-                  <div key={v.id} onClick={() => setSelectedVerse(v.id)} style={{ padding:'11px 12px', borderRadius:'10px', marginBottom:'7px', background: v.is_active ? C.accentBg : 'transparent', border:`1.5px solid ${selectedVerse===v.id ? C.accentDark : C.border}`, cursor:'pointer' }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:'8px' }}>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontWeight:600, fontFamily:f.serif, margin:0, fontSize:'14px' }}>{v.reference}</p>
-                        <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'3px', wordBreak:'break-word' }}>{v.text}</p>
-                      </div>
-                      <div style={{ display:'flex', gap:'5px', alignItems:'center', flexShrink:0 }}>
-                        {v.is_active && <span style={{ background:C.accentDark, color:'#fff', fontSize:'10px', padding:'2px 8px', borderRadius:'12px' }}>Active</span>}
-                        <IconButton onClick={e => { e.stopPropagation(); deleteVerse(v.id, v.reference) }} danger><Trash2 size={12} color="#DC2626"/></IconButton>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Add verse */}
-              {!showAddVerse ? (
-                <button onClick={() => setShowAddVerse(true)} style={{ width:'100%', padding:'10px', borderRadius:'12px', border:`1.5px dashed ${C.border}`, background:C.surface, cursor:'pointer', fontSize:'13px', fontWeight:600, color:C.textMid, fontFamily:f.sans, display:'flex', alignItems:'center', justifyContent:'center', gap:'6px' }}>
-                  <Plus size={14}/> Add New Verse
-                </button>
-              ) : (
-                <div style={{ padding:'14px', background:C.surfaceAlt, borderRadius:'12px', display:'flex', flexDirection:'column', gap:'10px' }}>
-                  <input placeholder="Reference" value={newVerse.reference} onChange={e => setNewVerse(p=>({...p,reference:e.target.value}))} style={inp}/>
-                  <textarea placeholder="Verse text" rows={3} value={newVerse.text} onChange={e => setNewVerse(p=>({...p,text:e.target.value}))} style={inp}/>
-                  <input placeholder="Theme (optional)" value={newVerse.theme} onChange={e => setNewVerse(p=>({...p,theme:e.target.value}))} style={inp}/>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                    <PillButton primary onClick={saveVerse}>Save</PillButton>
-                    <PillButton onClick={() => setShowAddVerse(false)}>Cancel</PillButton>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Preview panel */}
-            <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'16px' }}>
-              {/* Active verse */}
-              <div style={{ background:C.text, borderRadius:'18px', padding:'20px' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
-                  <CheckCircle size={15} color="#C4A88B"/>
-                  <span style={{ fontSize:'10px', letterSpacing:'0.1em', textTransform:'uppercase', color:'#C4A88B', fontFamily:f.sans }}>Currently Active</span>
-                </div>
-                <p style={{ fontSize:'17px', fontFamily:f.serif, color:'#fff', lineHeight:1.5, fontStyle:'italic', margin:0 }}>"{activeVerse.text}"</p>
-                <div style={{ marginTop:'14px', paddingTop:'12px', borderTop:'1px solid rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize:'14px', fontWeight:500, color:'#fff', margin:0 }}>{activeVerse.reference}</p>
-                  <p style={{ fontSize:'11px', color:'#78716C', marginTop:'2px', fontFamily:f.sans }}>{activeVerse.theme || 'No theme'}</p>
-                </div>
-              </div>
-              {/* Selected preview */}
-              {selVerse && (
-                <div style={{ background:C.surface, borderRadius:'18px', border:`2px solid ${C.accentDark}`, padding:'20px' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
-                    <AlertCircle size={15} color={C.accentDark}/>
-                    <span style={{ fontSize:'10px', letterSpacing:'0.1em', textTransform:'uppercase', color:C.textMid, fontFamily:f.sans }}>Preview — will become active</span>
-                  </div>
-                  <p style={{ fontSize:'17px', fontFamily:f.serif, color:C.text, lineHeight:1.5, fontStyle:'italic', margin:0 }}>"{selVerse.text}"</p>
-                  <div style={{ marginTop:'14px', paddingTop:'12px', borderTop:`1px solid ${C.border}` }}>
-                    <p style={{ fontSize:'14px', fontWeight:500, color:C.text, margin:0 }}>{selVerse.reference}</p>
-                    <p style={{ fontSize:'11px', color:C.textMuted, marginTop:'2px', fontFamily:f.sans }}>{selVerse.theme || 'No theme'}</p>
-                  </div>
-                  <PillButton primary onClick={() => activateVerse(selVerse.id)} style={{ marginTop:'16px', width:'100%' }}>
-                    <CheckCircle size={14}/> Activate This Verse
-                  </PillButton>
-                </div>
-              )}
-            </div>
-          </div>
+          <VerseTab
+            verseLib={verseLib}
+            verseSearch={verseSearch}
+            onVerseSearchChange={setVerseSearch}
+            selectedVerse={selectedVerse}
+            onVerseSelect={setSelectedVerse}
+            activeVerse={activeVerse}
+            showAddVerse={showAddVerse}
+            onToggleAddVerse={() => setShowAddVerse(p => !p)}
+            newVerse={newVerse}
+            onNewVerseChange={setNewVerse}
+            onSaveVerse={saveVerse}
+            onActivateVerse={activateVerse}
+            onDeleteVerse={deleteVerse}
+            onExportCSV={exportCSV}
+            onImportCSV={importCSV}
+            isMobile={isMobile}
+          />
         )}
 
         {/* ══ EVENTS TAB ═════════════════════════════════════════════════════ */}
         {tab === 'events' && (
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'18px', gap:'12px' }}>
-              <div>
-                <h2 style={{ margin:0, fontSize:'18px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Upcoming Events</h2>
-                <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>Manage public-facing church events</p>
-              </div>
-              <PillButton onClick={() => openEvt()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
-                {isMobile ? <Plus size={16}/> : <><Plus size={14}/> Add Event</>}
-              </PillButton>
-            </div>
-            {events.length === 0 ? (
-              <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'48px 24px', textAlign:'center', color:C.textMuted, fontFamily:f.sans }}>
-                No upcoming events. Click + to create one.
-              </div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                {events.map(evt => (
-                  <div key={evt.id} style={{ background:C.surface, borderRadius:'16px', border:`1.5px solid ${C.border}`, padding:'14px 16px' }}>
-                    <div style={{ display:'flex', gap:'14px', alignItems:'flex-start' }}>
-                      {/* Date badge */}
-                      <div style={{ width:'50px', height:'50px', borderRadius:'12px', background:C.surfaceAlt, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <span style={{ fontSize:'10px', fontWeight:600, color:C.textMuted, fontFamily:f.sans }}>{new Date(evt.date).toLocaleString('default',{month:'short'})}</span>
-                        <span style={{ fontSize:'20px', fontWeight:700, fontFamily:f.serif, lineHeight:1 }}>{new Date(evt.date).getDate()}</span>
-                      </div>
-                      {/* Info */}
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <h3 style={{ margin:0, fontSize:'15px', fontWeight:600, fontFamily:f.serif, color:C.text }}>{evt.titleEn}</h3>
-                        <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>{to12(evt.time)}</p>
-                        {evt.descriptionEn && <p style={{ margin:'6px 0 0', fontSize:'13px', color:C.textMid, fontFamily:f.sans }}>{evt.descriptionEn}</p>}
-                        {(evt.location||evt.pic) && (
-                          <div style={{ display:'flex', gap:'14px', marginTop:'7px', fontSize:'11px', color:C.textMuted, fontFamily:f.sans, flexWrap:'wrap' }}>
-                            {evt.location && <span style={{ display:'flex', alignItems:'center', gap:'4px' }}><MapPin size={11}/>{evt.location}</span>}
-                            {evt.pic && <span style={{ display:'flex', alignItems:'center', gap:'4px' }}><User size={11}/>{evt.pic}</span>}
-                          </div>
-                        )}
-                      </div>
-                      {/* Actions */}
-                      <div style={{ display:'flex', gap:'6px', flexShrink:0 }}>
-                        <IconButton onClick={() => openEvt(evt)}><Pencil size={13} color={C.textMid}/></IconButton>
-                        <IconButton onClick={() => delEvt(evt.id)} danger><Trash2 size={13} color="#DC2626"/></IconButton>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <EventsTab
+            events={events}
+            onAdd={() => openEvt()}
+            onEdit={openEvt}
+            onDelete={delEvt}
+            isMobile={isMobile}
+          />
         )}
 
         {/* ══ ROSTER TAB ═════════════════════════════════════════════════════ */}
         {tab === 'roster' && (
-          <div>
-            <div style={{ marginBottom:'18px' }}>
-              <h2 style={{ margin:0, fontSize:'18px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Worship Roster</h2>
-              <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>Weekly ministry scheduling</p>
-            </div>
-            <div style={{ display:'grid', gap:'14px', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)' }}>
-              {roster.map(week => (
-                <div key={week.id} style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'16px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px' }}>
-                    <div>
-                      <p style={{ fontSize:'10px', letterSpacing:'0.1em', textTransform:'uppercase', color:C.textMuted, margin:0, fontFamily:f.sans }}>Week of</p>
-                      <h3 style={{ margin:'3px 0 0', fontSize:'15px', fontWeight:600, fontFamily:f.serif, color:C.text }}>{week.weekStart}</h3>
-                    </div>
-                    <IconButton onClick={() => openRst(week)}><Pencil size={13} color={C.textMid}/></IconButton>
-                  </div>
-                  <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:'12px', display:'flex', flexDirection:'column', gap:'9px' }}>
-                    {[['Leader', week.leader], ['Pianist', week.pianist], ['Reader', week.reader]].map(([role, name]) => (
-                      <div key={role} style={{ display:'flex', justifyContent:'space-between', fontSize:'13px', fontFamily:f.sans }}>
-                        <span style={{ color:C.textMuted }}>{role}</span>
-                        <span style={{ fontWeight:500, color:C.text }}>{name || '—'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RosterTab
+            roster={roster}
+            onEdit={openRst}
+            isMobile={isMobile}
+          />
         )}
 
         {/* ══ ANNOUNCEMENTS TAB ══════════════════════════════════════════════ */}
         {tab === 'announcements' && (
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'18px', gap:'12px' }}>
-              <div>
-                <h2 style={{ margin:0, fontSize:'18px', fontWeight:600, fontFamily:f.serif, color:C.text }}>Carousel Announcements</h2>
-                <p style={{ margin:'3px 0 0', fontSize:'12px', color:C.textMuted, fontFamily:f.sans }}>Slides shown on the homepage carousel</p>
-              </div>
-              <PillButton onClick={() => openAnn()} style={{ padding:'8px 16px', borderRadius:'99px', fontSize:'13px', flexShrink:0 }}>
-                {isMobile ? <Plus size={16}/> : <><Plus size={14}/> Add Announcement</>}
-              </PillButton>
-            </div>
-            {announces.length === 0 ? (
-              <div style={{ background:C.surface, borderRadius:'18px', border:`1.5px solid ${C.border}`, padding:'48px 24px', textAlign:'center', color:C.textMuted, fontFamily:f.sans }}>No announcements yet. Click + to create one.</div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                {announces.map((item, idx) => (
-                  <div key={item.id} style={{ background: item.is_active ? C.surface : '#F9F7F4', borderRadius:'16px', border:`1.5px solid ${C.border}`, padding:'14px 16px', opacity: item.is_active ? 1 : 0.7 }}>
-                    <div style={{ display:'flex', gap:'12px', alignItems:'center' }}>
-                      {/* Order controls */}
-                      <div style={{ display:'flex', flexDirection:'column', gap:'3px', flexShrink:0 }}>
-                        <IconButton onClick={() => moveAnn(item.id,'up')} style={{ width:'26px', height:'26px', opacity: idx===0?0.35:1 }}><MoveUp size={11} color={C.textMid}/></IconButton>
-                        <IconButton onClick={() => moveAnn(item.id,'down')} style={{ width:'26px', height:'26px', opacity: idx===announces.length-1?0.35:1 }}><MoveDown size={11} color={C.textMid}/></IconButton>
-                      </div>
-                      {/* Thumbnail */}
-                      <div style={{ width:'52px', height:'52px', borderRadius:'10px', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
-                        {item.image_url ? <img src={item.image_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <Image size={20} color={C.textMuted}/>}
-                      </div>
-                      {/* Text */}
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontWeight:600, fontFamily:f.serif, margin:0, fontSize:'14px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title_en}</p>
-                        <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'2px', fontFamily:f.sans }}>{item.title_bm}</p>
-                        {item.link_url && <p style={{ fontSize:'11px', color:C.accentDark, marginTop:'4px', display:'flex', alignItems:'center', gap:'3px', fontFamily:f.sans }}><Link size={11}/>{item.link_url.substring(0,40)}…</p>}
-                      </div>
-                      {/* Actions */}
-                      <div style={{ display:'flex', gap:'6px', flexShrink:0, alignItems:'center' }}>
-                        <IconButton onClick={() => toggleAnn(item.id, item.is_active)} style={{ background: item.is_active ? '#E6F4E6' : C.surfaceAlt }}>
-                          {item.is_active ? <Eye size={13} color="#2E7D32"/> : <EyeOff size={13} color={C.textMuted}/>}
-                        </IconButton>
-                        <IconButton onClick={() => openAnn(item)}><Pencil size={13} color={C.textMid}/></IconButton>
-                        <IconButton onClick={() => delAnn(item.id)} danger><Trash2 size={13} color="#DC2626"/></IconButton>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <AnnouncementsTab
+            announces={announces}
+            onAdd={() => openAnn()}
+            onEdit={openAnn}
+            onDelete={delAnn}
+            onToggle={toggleAnn}
+            onMove={moveAnn}
+            isMobile={isMobile}
+          />
         )}
       </div>
 
@@ -538,7 +335,7 @@ export default function ContentManager() {
               <div style={{ background:C.surfaceAlt, borderRadius:'14px', padding:'14px' }}>
                 <p style={{ fontSize:'11px', textTransform:'uppercase', letterSpacing:'0.09em', color:C.textMuted, margin:'0 0 6px', fontFamily:f.sans }}>Weekly Verse</p>
                 <p style={{ fontFamily:f.serif, margin:0, fontWeight:600 }}>{activeVerse.reference}</p>
-                <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'4px', fontFamily:f.sans }}>{activeVerse.text.substring(0,120)}…</p>
+                <p style={{ fontSize:'12px', color:C.textMuted, marginTop:'4px', fontFamily:f.sans }}>{activeVerse.text.substring(0,120)}...</p>
               </div>
               <div style={{ background:C.surfaceAlt, borderRadius:'14px', padding:'14px' }}>
                 <p style={{ fontSize:'11px', textTransform:'uppercase', letterSpacing:'0.09em', color:C.textMuted, margin:'0 0 8px', fontFamily:f.sans }}>Worship Roster</p>
@@ -604,8 +401,8 @@ export default function ContentManager() {
             <Field label="Description (English)"><textarea rows={2} value={annForm.description_en} onChange={e => setAnnForm(p=>({...p,description_en:e.target.value}))} style={inp}/></Field>
             <Field label="Description (Bahasa Malaysia)"><textarea rows={2} value={annForm.description_bm} onChange={e => setAnnForm(p=>({...p,description_bm:e.target.value}))} style={inp}/></Field>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
-              <Field label="Image URL"><input type="url" value={annForm.image_url||''} onChange={e => setAnnForm(p=>({...p,image_url:e.target.value}))} style={inp} placeholder="https://…"/></Field>
-              <Field label="Link URL"><input type="url" value={annForm.link_url||''} onChange={e => setAnnForm(p=>({...p,link_url:e.target.value}))} style={inp} placeholder="https://…"/></Field>
+              <Field label="Image URL"><input type="url" value={annForm.image_url||''} onChange={e => setAnnForm(p=>({...p,image_url:e.target.value}))} style={inp} placeholder="https://..."/></Field>
+              <Field label="Link URL"><input type="url" value={annForm.link_url||''} onChange={e => setAnnForm(p=>({...p,link_url:e.target.value}))} style={inp} placeholder="https://..."/></Field>
             </div>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <Field label="Display Order"><input type="number" value={annForm.display_order} onChange={e => setAnnForm(p=>({...p,display_order:+e.target.value||0}))} style={{ ...inp, width:'80px' }}/></Field>
@@ -621,12 +418,6 @@ export default function ContentManager() {
           </form>
         </Modal>
 
-      <style>{`
-        @keyframes spin      { to { transform: rotate(360deg); } }
-        @keyframes slideDown { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
-        input:focus, textarea:focus, select:focus { border-color: ${C.accentDark} !important; box-shadow: 0 0 0 3px ${C.accentBg} !important; outline: none; }
-        ::-webkit-scrollbar { display: none; }
-      `}</style>
-    </div>
+    </StaffLayout>
   )
 }

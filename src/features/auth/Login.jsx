@@ -1,8 +1,8 @@
-// src/pages/Login.jsx
+// src/features/auth/Login.jsx
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, ArrowLeft } from 'lucide-react'
-import { signIn } from '../services/auth'
+import { signIn } from '../../services/auth'
 
 function Login() {
   const [email, setEmail] = useState('')
