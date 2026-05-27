@@ -19,7 +19,7 @@ import FeedbackForm from './FeedbackForm'
 // ─── CONFIG ────────────────────────────────────────────────────────────────────
 
 const MARQUEE_VALUES = [
-  'Christ Centred', 'People Empowering', 'Life Giving', 'Outward Focused', 'Spirit of Excellence',
+  'KEJUJURAN', 'KHIDMAT', 'KERJASAMA', 'KECEMERLANGAN',
 ]
 
 // ─── COMPONENT ─────────────────────────────────────────────────────────────────
